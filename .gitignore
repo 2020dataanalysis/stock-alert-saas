@@ -12,8 +12,8 @@ __pycache__/
 # macOS
 .DS_Store
 
-# App runtime output (YOUR STREAM DATA)
+# App runtime output
 output/
 
-# Optional: databases (decide later)
+# Optional databases
 # *.db
