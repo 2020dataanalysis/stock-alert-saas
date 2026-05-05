@@ -1,6 +1,19 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
+
+# Env / secrets
 .env
+
+# Logs
 *.log
+
+# macOS
 .DS_Store
+
+# App runtime output (YOUR STREAM DATA)
+output/
+
+# Optional: databases (decide later)
+# *.db
