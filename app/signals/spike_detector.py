@@ -17,7 +17,7 @@ class SpikeDetector:
         self.volume_spike_pct = volume_spike_pct
         self.window_size = window_size
 
-    def check(self, quote):
+    def process_quote(self, quote):
         symbol = quote["symbol"]
         price = quote["last"]
         volume = quote["volume"]

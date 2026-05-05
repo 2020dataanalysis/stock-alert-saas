@@ -5,8 +5,8 @@ import time
 from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.signals.spike_detector import SpikeDetector
 
-adapter = SchwabAdapter()
 
+adapter = SchwabAdapter()
 
 detector = SpikeDetector(
     price_spike_pct=0.5,
@@ -22,9 +22,13 @@ def stream_quotes():
         for symbol in SYMBOLS:
             quote = adapter.get_quote(symbol)
 
+            if quote is None:
+                print(f"⚠️ No quote returned for {symbol}; skipping.")
+                continue
+
             print("QUOTE:", quote)
 
-            alerts = detector.check(quote)
+            alerts = detector.process_quote(quote)
 
             for alert in alerts:
                 print("🚨 ALERT:", alert)
