@@ -1,6 +1,23 @@
+# Python
 .venv/
 __pycache__/
 *.pyc
+
+# Environment
 .env
+
+# Logs
 *.log
+
+# macOS
 .DS_Store
+
+# App output / generated data
+output/
+*.json
+
+# VS Code
+.vscode/
+
+# Misc
+*.sqlite3

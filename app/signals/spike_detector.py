@@ -1,52 +1,83 @@
 # app/signals/spike_detector.py
 
+from collections import deque
+
+
 class SpikeDetector:
-    def __init__(self, volume_spike_pct=20, price_spike_pct=1.0):
-        self.previous_quotes = {}
-        self.volume_spike_pct = volume_spike_pct
+    def __init__(
+        self,
+        price_spike_pct=0.5,
+        volume_spike_pct=5,
+        window_size=5,
+    ):
+        self.price_history = {}
+        self.volume_history = {}
+
         self.price_spike_pct = price_spike_pct
+        self.volume_spike_pct = volume_spike_pct
+        self.window_size = window_size
 
     def check(self, quote):
         symbol = quote["symbol"]
-        current_volume = quote.get("volume")
-        current_price = quote.get("last")
+        price = quote["last"]
+        volume = quote["volume"]
 
-        previous = self.previous_quotes.get(symbol)
+        if symbol not in self.price_history:
+            self.price_history[symbol] = deque(maxlen=self.window_size)
+            self.volume_history[symbol] = deque(maxlen=self.window_size)
 
-        # Always store latest quote
-        self.previous_quotes[symbol] = quote
+        self.price_history[symbol].append(price)
+        self.volume_history[symbol].append(volume)
 
-        # First quote has nothing to compare against
-        if not previous:
+        # Wait until we have enough history
+        if len(self.price_history[symbol]) < self.window_size:
             return []
+
+        oldest_price = self.price_history[symbol][0]
+        newest_price = self.price_history[symbol][-1]
+
+        oldest_volume = self.volume_history[symbol][0]
+        newest_volume = self.volume_history[symbol][-1]
+
+        price_change_pct = ((newest_price - oldest_price) / oldest_price) * 100
+        volume_change_pct = ((newest_volume - oldest_volume) / oldest_volume) * 100
 
         alerts = []
 
-        previous_volume = previous.get("volume")
-        previous_price = previous.get("last")
+        # Price-only alert
+        if abs(price_change_pct) >= self.price_spike_pct:
+            alerts.append({
+                "type": "PRICE_SPIKE",
+                "symbol": symbol,
+                "price_change_pct": round(price_change_pct, 2),
+                "oldest_price": oldest_price,
+                "newest_price": newest_price,
+            })
 
-        if previous_volume and current_volume:
-            volume_change_pct = ((current_volume - previous_volume) / previous_volume) * 100
+        # Volume-only alert
+        if volume_change_pct >= self.volume_spike_pct:
+            alerts.append({
+                "type": "VOLUME_SPIKE",
+                "symbol": symbol,
+                "volume_change_pct": round(volume_change_pct, 2),
+                "oldest_volume": oldest_volume,
+                "newest_volume": newest_volume,
+            })
 
-            if volume_change_pct >= self.volume_spike_pct:
-                alerts.append({
-                    "type": "VOLUME_SPIKE",
-                    "symbol": symbol,
-                    "previous_volume": previous_volume,
-                    "current_volume": current_volume,
-                    "change_pct": round(volume_change_pct, 2),
-                })
-
-        if previous_price and current_price:
-            price_change_pct = ((current_price - previous_price) / previous_price) * 100
-
-            if abs(price_change_pct) >= self.price_spike_pct:
-                alerts.append({
-                    "type": "PRICE_SPIKE",
-                    "symbol": symbol,
-                    "previous_price": previous_price,
-                    "current_price": current_price,
-                    "change_pct": round(price_change_pct, 2),
-                })
+        # Stronger combined alert
+        if (
+            abs(price_change_pct) >= self.price_spike_pct
+            and volume_change_pct >= self.volume_spike_pct
+        ):
+            alerts.append({
+                "type": "PRICE_VOLUME_SPIKE",
+                "symbol": symbol,
+                "price_change_pct": round(price_change_pct, 2),
+                "volume_change_pct": round(volume_change_pct, 2),
+                "oldest_price": oldest_price,
+                "newest_price": newest_price,
+                "oldest_volume": oldest_volume,
+                "newest_volume": newest_volume,
+            })
 
         return alerts
