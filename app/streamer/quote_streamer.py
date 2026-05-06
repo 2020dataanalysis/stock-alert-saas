@@ -6,6 +6,7 @@ from datetime import datetime
 from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.signals.spike_detector import SpikeDetector
 from app.storage.sqlite_store import init_db, save_quote
+from app.storage.sqlite_store import init_db, save_quote, save_alert
 
 
 adapter = SchwabAdapter()
@@ -38,8 +39,14 @@ def stream_quotes():
 
             alerts = detector.process_quote(quote)
 
+            # for alert in alerts:
+            #     print("🚨 ALERT:", alert)
+            
             for alert in alerts:
+                alert["timestamp"] = quote["timestamp"]
                 print("🚨 ALERT:", alert)
+                save_alert(alert)
+
 
         time.sleep(2)
 
