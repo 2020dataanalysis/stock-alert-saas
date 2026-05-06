@@ -37,3 +37,22 @@ class SchwabAdapter:
             "hard_to_borrow": ref.get("isHardToBorrow"),
             "htb_rate": ref.get("htbRate"),
         }
+
+    def get_movers(self, symbol_id="$DJI", sort="VOLUME", frequency=0):
+        base_url = "https://api.schwabapi.com/marketdata/v1"
+        endpoint = f"/movers/{symbol_id}"
+
+        params = {
+            "sort": sort,
+            "frequency": frequency,
+        }
+
+        response = self.client.get_request_endpoint(
+            base_url,
+            endpoint,
+            params=params
+        )
+
+        # print("DEBUG RAW RESPONSE:", response)
+
+        return response

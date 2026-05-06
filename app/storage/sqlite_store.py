@@ -96,3 +96,21 @@ def save_alert(alert):
             alert.get("oldest_volume"),
             alert.get("newest_volume"),
         ))
+
+
+def get_top_movers(limit=5):
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.execute("""
+            SELECT
+                symbol,
+                type,
+                price_change_pct,
+                volume_change_pct,
+                timestamp
+            FROM alerts
+            WHERE price_change_pct IS NOT NULL
+            ORDER BY ABS(price_change_pct) DESC
+            LIMIT ?
+        """, (limit,))
+
+        return cursor.fetchall()
