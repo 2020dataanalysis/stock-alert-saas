@@ -4,6 +4,7 @@ import time
 from datetime import datetime, UTC
 
 from app.config import load_settings
+from app.data_adapters.movers_adapter import get_mover_symbols
 from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.signals.spike_detector import SpikeDetector
 from app.storage.sqlite_store import init_db, save_quote, save_alert
@@ -21,7 +22,14 @@ detector = SpikeDetector(
 
 init_db()
 
-SYMBOLS = settings["symbols"]
+SYMBOLS = get_mover_symbols(limit=10)
+
+print("MOVERS WATCHLIST:", SYMBOLS)
+
+if not SYMBOLS:
+    print("⚠️ No movers returned. Falling back to config symbols.")
+    SYMBOLS = settings["symbols"]
+
 POLL_SECONDS = settings["poll_seconds"]
 
 
