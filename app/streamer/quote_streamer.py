@@ -1,9 +1,11 @@
 # app/streamer/quote_streamer.py
 
 import time
+from datetime import datetime
 
 from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.signals.spike_detector import SpikeDetector
+from app.storage.sqlite_store import init_db, save_quote
 
 
 adapter = SchwabAdapter()
@@ -13,6 +15,8 @@ detector = SpikeDetector(
     volume_spike_pct=5,
     window_size=5,
 )
+
+init_db()
 
 SYMBOLS = ["AAPL", "TSLA", "NVDA"]
 
@@ -25,6 +29,10 @@ def stream_quotes():
             if quote is None:
                 print(f"⚠️ No quote returned for {symbol}; skipping.")
                 continue
+
+            quote["timestamp"] = datetime.utcnow().isoformat()
+
+            save_quote(quote)
 
             print("QUOTE:", quote)
 
