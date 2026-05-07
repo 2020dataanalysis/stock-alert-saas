@@ -26,7 +26,9 @@ async def dashboard(request: Request):
 
 @app.post("/settings")
 async def update_settings(
-    symbols: str = Form(...),
+    favorite_symbols: str = Form(...),
+    use_movers: bool = Form(False),
+    movers_limit: int = Form(...),
     price_spike_pct: float = Form(...),
     volume_spike_pct: float = Form(...),
     window_size: int = Form(...),
@@ -36,7 +38,13 @@ async def update_settings(
     from pathlib import Path
 
     settings = {
-        "symbols": [s.strip().upper() for s in symbols.split(",") if s.strip()],
+        "favorite_symbols": [
+            s.strip().upper()
+            for s in favorite_symbols.split(",")
+            if s.strip()
+        ],
+        "use_movers": use_movers,
+        "movers_limit": movers_limit,
         "price_spike_pct": price_spike_pct,
         "volume_spike_pct": volume_spike_pct,
         "window_size": window_size,

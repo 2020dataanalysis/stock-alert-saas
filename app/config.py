@@ -3,9 +3,10 @@
 import json
 from pathlib import Path
 
-
 DEFAULT_SETTINGS = {
-    "symbols": ["AAPL", "TSLA", "NVDA"],
+    "favorite_symbols": ["AAPL", "TSLA", "NVDA"],
+    "use_movers": True,
+    "movers_limit": 10,
     "price_spike_pct": 0.5,
     "volume_spike_pct": 5,
     "window_size": 5,

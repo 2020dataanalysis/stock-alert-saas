@@ -25,13 +25,21 @@ detector = SpikeDetector(
 
 init_db()
 
-SYMBOLS = get_mover_symbols(limit=10)
+favorite_symbols = settings["favorite_symbols"]
 
-print("MOVERS WATCHLIST:", SYMBOLS)
+mover_symbols = []
+if settings["use_movers"]:
+    mover_symbols = get_mover_symbols(limit=settings["movers_limit"])
+
+SYMBOLS = sorted(set(favorite_symbols + mover_symbols))
+
+print("FAVORITE SYMBOLS:", favorite_symbols)
+print("MOVERS WATCHLIST:", mover_symbols)
+print("FINAL STREAM WATCHLIST:", SYMBOLS)
 
 if not SYMBOLS:
-    print("⚠️ No movers returned. Falling back to config symbols.")
-    SYMBOLS = settings["symbols"]
+    print("⚠️ No symbols configured. Exiting.")
+    raise SystemExit(1)
 
 POLL_SECONDS = settings["poll_seconds"]
 
