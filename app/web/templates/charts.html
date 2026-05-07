@@ -2,23 +2,85 @@
 <html>
 <head>
     <title>Charts</title>
+    <meta http-equiv="refresh" content="10">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
-        body { font-family: Arial; margin: 40px; }
-        a { margin-right: 15px; }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 30px;
+        }
+
+        .nav { margin-bottom: 25px; }
+
+        .nav a {
+            margin-right: 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        canvas {
+            max-height: 400px;
+        }
     </style>
 </head>
+
 <body>
 
-<h1>Charts</h1>
+    <div class="nav">
+        <a href="/">Overview</a>
+        <a href="/status">Status</a>
+        <a href="/charts">Charts</a>
+        <a href="/settings">Settings</a>
+    </div>
 
-<nav>
-    <a href="/">Overview</a>
-    <a href="/settings">Settings</a>
-    <a href="/charts">Charts</a>
-    <a href="/alerts">Alerts</a>
-</nav>
+    <h1>Charts</h1>
 
-<p>Charts coming next...</p>
+    <div class="chart-card">
+        <h2>AAPL Price - Last 100 Quotes</h2>
+        <canvas id="priceChart"></canvas>
+    </div>
+
+    <script>
+        const quotes = {{ quotes | tojson }};
+
+        const labels = quotes.map(q => q.timestamp);
+        const prices = quotes.map(q => q.price);
+
+        const ctx = document.getElementById("priceChart");
+
+        new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "AAPL Price",
+                    data: prices,
+                    tension: 0.25
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        ticks: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 
 </body>
 </html>
