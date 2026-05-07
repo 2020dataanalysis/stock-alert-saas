@@ -1,4 +1,68 @@
-+------------------+
-| Quotes Stored    |
-| 11,552           |
-+------------------+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Status Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 30px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        .card-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-card {
+            background: white;
+            padding: 20px;
+            width: 220px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .card-value {
+            font-size: 36px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>System Status</h1>
+
+    <div class="card-container">
+
+        <div class="status-card">
+            <div class="card-title">Quotes Stored</div>
+            <div class="card-value">11,552</div>
+        </div>
+
+        <div class="status-card">
+            <div class="card-title">Streamer Status</div>
+            <div class="card-value">ONLINE</div>
+        </div>
+
+        <div class="status-card">
+            <div class="card-title">Symbols Tracked</div>
+            <div class="card-value">3</div>
+        </div>
+
+    </div>
+
+</body>
+</html>

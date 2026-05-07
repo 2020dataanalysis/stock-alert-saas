@@ -101,6 +101,15 @@ async def update_settings(
     return RedirectResponse("/settings", status_code=303)
 
 
+@app.get("/status", response_class=HTMLResponse)
+def status(request: Request):
+    return templates.TemplateResponse(
+        request,
+        "status.html",
+        {}
+    )
+
+
 @app.get("/charts", response_class=HTMLResponse)
 async def charts_page(request: Request):
     settings = load_settings()
