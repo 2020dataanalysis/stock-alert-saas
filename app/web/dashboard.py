@@ -1,5 +1,8 @@
 # app/web/dashboard.py
 
+import json
+from pathlib import Path
+
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
@@ -12,12 +15,25 @@ templates = Jinja2Templates(directory="app/web/templates")
 
 
 @app.get("/", response_class=HTMLResponse)
-async def dashboard(request: Request):
+async def overview(request: Request):
     settings = load_settings()
 
     return templates.TemplateResponse(
         request=request,
-        name="dashboard.html",
+        name="overview.html",
+        context={
+            "settings": settings,
+        },
+    )
+
+
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request):
+    settings = load_settings()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="settings.html",
         context={
             "settings": settings,
         },
@@ -34,9 +50,6 @@ async def update_settings(
     window_size: int = Form(...),
     poll_seconds: int = Form(...),
 ):
-    import json
-    from pathlib import Path
-
     settings = {
         "favorite_symbols": [
             s.strip().upper()
@@ -57,4 +70,30 @@ async def update_settings(
     with path.open("w") as f:
         json.dump(settings, f, indent=2)
 
-    return RedirectResponse("/", status_code=303)
+    return RedirectResponse("/settings", status_code=303)
+
+
+@app.get("/charts", response_class=HTMLResponse)
+async def charts_page(request: Request):
+    settings = load_settings()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="charts.html",
+        context={
+            "settings": settings,
+        },
+    )
+
+
+@app.get("/alerts", response_class=HTMLResponse)
+async def alerts_page(request: Request):
+    settings = load_settings()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="alerts.html",
+        context={
+            "settings": settings,
+        },
+    )

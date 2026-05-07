@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Overview</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        a { margin-right: 15px; }
+        .section { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<h1>Stock Alert Engine</h1>
+
+<nav>
+    <a href="/">Overview</a>
+    <a href="/settings">Settings</a>
+    <a href="/charts">Charts</a>
+    <a href="/alerts">Alerts</a>
+</nav>
+
+<div class="section">
+    <h2>Current Settings</h2>
+
+    <p><b>Favorite Symbols:</b> {{ settings['favorite_symbols'] | join(', ') }}</p>
+    <p><b>Use Movers:</b> {{ settings['use_movers'] }}</p>
+    <p><b>Movers Limit:</b> {{ settings['movers_limit'] }}</p>
+
+    <p><b>Price Spike %:</b> {{ settings['price_spike_pct'] }}</p>
+    <p><b>Volume Spike %:</b> {{ settings['volume_spike_pct'] }}</p>
+    <p><b>Window Size:</b> {{ settings['window_size'] }}</p>
+    <p><b>Poll Seconds:</b> {{ settings['poll_seconds'] }}</p>
+</div>
+
+</body>
+</html>
