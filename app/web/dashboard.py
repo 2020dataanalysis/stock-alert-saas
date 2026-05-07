@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from app.services.status_service import get_status_metrics
 
 from app.config import load_settings
 import sqlite3
@@ -103,12 +104,13 @@ async def update_settings(
 
 @app.get("/status", response_class=HTMLResponse)
 def status(request: Request):
+    metrics = get_status_metrics()
+
     return templates.TemplateResponse(
         request,
         "status.html",
-        {}
+        metrics
     )
-
 
 @app.get("/charts", response_class=HTMLResponse)
 async def charts_page(request: Request):

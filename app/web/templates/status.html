@@ -3,6 +3,8 @@
 <head>
     <title>Status Dashboard</title>
 
+    <meta http-equiv="refresh" content="5">
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -38,6 +40,14 @@
             font-size: 36px;
             font-weight: bold;
         }
+
+        .online {
+            color: green;
+        }
+
+        .offline {
+            color: red;
+        }
     </style>
 </head>
 
@@ -49,17 +59,31 @@
 
         <div class="status-card">
             <div class="card-title">Quotes Stored</div>
-            <div class="card-value">11,552</div>
+            <div class="card-value">{{ quote_count }}</div>
+        </div>
+
+        <div class="status-card">
+            <div class="card-title">Alerts Generated</div>
+            <div class="card-value">{{ alert_count }}</div>
         </div>
 
         <div class="status-card">
             <div class="card-title">Streamer Status</div>
-            <div class="card-value">ONLINE</div>
+
+            <div class="card-value
+                {% if streamer_status == 'ONLINE' %}
+                    online
+                {% else %}
+                    offline
+                {% endif %}
+            ">
+                {{ streamer_status }}
+            </div>
         </div>
 
         <div class="status-card">
             <div class="card-title">Symbols Tracked</div>
-            <div class="card-value">3</div>
+            <div class="card-value">{{ symbols_tracked }}</div>
         </div>
 
     </div>
