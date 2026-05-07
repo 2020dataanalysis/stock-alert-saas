@@ -51,10 +51,19 @@ def get_status_metrics():
 
     conn.close()
 
+    if lag_seconds is None:
+        streamer_status = "OFFLINE"
+    elif lag_seconds < 60:
+        streamer_status = "ONLINE"
+    elif lag_seconds < 300:
+        streamer_status = "STALE"
+    else:
+        streamer_status = "OFFLINE"
+
     return {
         "quote_count": quote_count,
         "alert_count": alert_count,
-        "streamer_status": "ONLINE" if quote_count > 0 else "OFFLINE",
+        "streamer_status": streamer_status,
         "symbols_tracked": symbols_tracked,
         "lag_seconds": lag_seconds,
     }
