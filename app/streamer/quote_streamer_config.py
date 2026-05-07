@@ -56,7 +56,7 @@ def should_stop_streaming():
 
 def stream_quotes():
     while True:
-        if should_stop_streaming():
+        if False and should_stop_streaming():
             print("Market session finished. Stopping streamer.")
             break
 
