@@ -8,7 +8,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from app.config import load_settings
-
+import sqlite3
 
 app = FastAPI()
 templates = Jinja2Templates(directory="app/web/templates")
@@ -18,14 +18,42 @@ templates = Jinja2Templates(directory="app/web/templates")
 async def overview(request: Request):
     settings = load_settings()
 
+    conn = sqlite3.connect("data/market_data.db")
+    conn.row_factory = sqlite3.Row
+
+    # counts
+    quote_count = conn.execute("SELECT COUNT(*) FROM quotes").fetchone()[0]
+    alert_count = conn.execute("SELECT COUNT(*) FROM alerts").fetchone()[0]
+
+    # last quotes
+    quotes = conn.execute("""
+        SELECT symbol, last, volume, timestamp
+        FROM quotes
+        ORDER BY id DESC
+        LIMIT 10
+    """).fetchall()
+
+    # last alerts
+    alerts = conn.execute("""
+        SELECT symbol, price_change_pct, volume_change_pct, timestamp
+        FROM alerts
+        ORDER BY id DESC
+        LIMIT 10
+    """).fetchall()
+
+    conn.close()
+
     return templates.TemplateResponse(
         request=request,
         name="overview.html",
         context={
             "settings": settings,
+            "quote_count": quote_count,
+            "alert_count": alert_count,
+            "quotes": quotes,
+            "alerts": alerts,
         },
     )
-
 
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
