@@ -23,6 +23,25 @@
     <a href="/logs">Logs</a>
 </nav>
 
+
+
+
+<h2>Streamer Control</h2>
+
+<button onclick="setMode('auto')">Auto</button>
+<button onclick="setMode('online')">Force Online</button>
+<button onclick="setMode('offline')">Force Offline</button>
+<button onclick="onlineFor(15)">Online 15m</button>
+<button onclick="onlineFor(60)">Online 60m</button>
+
+<p id="streamer-status"></p>
+
+---
+
+
+
+
+
 <h2>System Status</h2>
 
 <p><b>Total Quotes:</b> {{ quote_count }}</p>
@@ -78,6 +97,34 @@
 </tr>
 {% endfor %}
 </table>
+
+
+
+
+
+<script>
+function setMode(mode) {
+    fetch(`/api/streamer/mode/${mode}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("streamer-status").innerText =
+                "Mode set to: " + data.mode;
+        });
+}
+
+function onlineFor(minutes) {
+    fetch(`/api/streamer/online-for/${minutes}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("streamer-status").innerText =
+                "Online until: " + data.until;
+        });
+}
+</script>
+
+
+
+
 
 </body>
 </html>
