@@ -103,6 +103,34 @@ async def update_settings(
     return RedirectResponse("/settings", status_code=303)
 
 
+
+@app.get("/logs", response_class=HTMLResponse)
+async def logs_page(request: Request):
+    log_files = {
+        "debug_log": "logs/debug.log",
+        "streamer_out": "logs/streamer.out.log",
+        "streamer_err": "logs/streamer.err.log",
+    }
+
+    logs = {}
+
+    for name, path in log_files.items():
+        try:
+            with open(path, "r") as f:
+                lines = f.readlines()
+                logs[name] = "".join(lines[-100:])
+        except FileNotFoundError:
+            logs[name] = "Log file not found."
+
+    return templates.TemplateResponse(
+        request=request,
+        name="logs.html",
+        context={
+            "logs": logs,
+        },
+    )
+
+
 @app.get("/status", response_class=HTMLResponse)
 def status(request: Request):
     metrics = get_status_metrics()

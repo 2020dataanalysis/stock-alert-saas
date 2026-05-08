@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="refresh" content="10">
+    <title>Logs</title>
+    <style>
+        body { font-family: Arial; margin: 40px; }
+        a { margin-right: 15px; }
+        pre {
+            background: #111;
+            color: #eee;
+            padding: 15px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>System Logs</h1>
+
+<nav>
+    <a href="/">Overview</a>
+    <a href="/status">Status</a>
+    <a href="/settings">Settings</a>
+    <a href="/charts">Charts</a>
+    <a href="/alerts">Alerts</a>
+    <a href="/logs">Logs</a>
+</nav>
+
+<h2>Debug Log</h2>
+<pre>{{ logs.debug_log }}</pre>
+
+<h2>Streamer Output</h2>
+<pre>{{ logs.streamer_out }}</pre>
+
+<h2>Streamer Errors</h2>
+<pre>{{ logs.streamer_err }}</pre>
+
+</body>
+</html>
