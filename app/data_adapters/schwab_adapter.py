@@ -1,13 +1,23 @@
 from pathlib import Path
 import sys
 
-BASE_DIR = Path(__file__).resolve().parents[3]
-SCHWAB_PATH = BASE_DIR / "2024schwab"
+from app.storage.sqlite_store import save_provider_error
+
+
+PROJECT_PARENT = Path(__file__).resolve().parents[3]
+SCHWAB_PATH = PROJECT_PARENT / "2024schwab"
+
+if not SCHWAB_PATH.exists():
+    raise RuntimeError(f"Schwab repo not found at: {SCHWAB_PATH}")
 
 if str(SCHWAB_PATH) not in sys.path:
-    sys.path.append(str(SCHWAB_PATH))
+    sys.path.insert(0, str(SCHWAB_PATH))
 
 from SchwabAPIClient import SchwabAPIClient
+
+
+
+
 
 
 class SchwabAdapter:
@@ -20,7 +30,26 @@ class SchwabAdapter:
     def get_quote(self, symbol: str):
         data = self.client.get_ticker_data(symbol)
 
-        if not data or symbol not in data:
+        if not data:
+            save_provider_error(
+                provider="schwab",
+                symbol=symbol,
+                operation="get_quote",
+                error_type="empty_response",
+                message=f"Schwab returned no data for {symbol}",
+                raw_response=data,
+            )
+            return None
+
+        if symbol not in data:
+            save_provider_error(
+                provider="schwab",
+                symbol=symbol,
+                operation="get_quote",
+                error_type="missing_symbol",
+                message=f"Schwab response missing symbol {symbol}",
+                raw_response=data,
+            )
             return None
 
         q = data[symbol]["quote"]

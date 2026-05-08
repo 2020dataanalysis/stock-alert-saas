@@ -39,6 +39,21 @@ def init_db():
             )
         """)
 
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS provider_errors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                provider TEXT NOT NULL,
+                symbol TEXT,
+                operation TEXT,
+                error_type TEXT,
+                message TEXT,
+                raw_response TEXT
+            )
+        """)
+
+
     init_streamer_control_table()
 
 
@@ -142,3 +157,41 @@ def get_top_movers(limit=5):
         """, (limit,))
 
         return cursor.fetchall()
+
+
+
+def save_provider_error(
+    provider,
+    symbol=None,
+    operation=None,
+    error_type=None,
+    message=None,
+    raw_response=None,
+):
+    from datetime import datetime, UTC
+    import json
+
+    if raw_response is not None and not isinstance(raw_response, str):
+        raw_response = json.dumps(raw_response, default=str)
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            INSERT INTO provider_errors (
+                timestamp,
+                provider,
+                symbol,
+                operation,
+                error_type,
+                message,
+                raw_response
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            datetime.now(UTC).isoformat(),
+            provider,
+            symbol,
+            operation,
+            error_type,
+            message,
+            raw_response,
+        ))

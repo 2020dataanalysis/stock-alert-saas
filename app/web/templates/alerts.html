@@ -2,9 +2,36 @@
 <html>
 <head>
     <title>Alerts</title>
+
     <style>
-        body { font-family: Arial; margin: 40px; }
-        a { margin-right: 15px; }
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        nav a {
+            margin-right: 15px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f4f4f4;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
     </style>
 </head>
 <body>
@@ -18,7 +45,29 @@
     <a href="/alerts">Alerts</a>
 </nav>
 
-<p>Alerts view coming next...</p>
+<table>
+    <tr>
+        <th>Symbol</th>
+        <th>Type</th>
+        <th>Price %</th>
+        <th>Volume %</th>
+        <th>Old Price</th>
+        <th>New Price</th>
+        <th>Timestamp</th>
+    </tr>
+
+    {% for alert in alerts %}
+    <tr>
+        <td>{{ alert.symbol }}</td>
+        <td>{{ alert.type }}</td>
+        <td>{{ "%.2f"|format(alert.price_change_pct or 0) }}</td>
+        <td>{{ "%.2f"|format(alert.volume_change_pct or 0) }}</td>
+        <td>{{ alert.oldest_price }}</td>
+        <td>{{ alert.newest_price }}</td>
+        <td>{{ alert.timestamp }}</td>
+    </tr>
+    {% endfor %}
+</table>
 
 </body>
 </html>
