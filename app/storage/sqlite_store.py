@@ -40,6 +40,33 @@ def init_db():
         """)
 
 
+
+def init_streamer_control_table():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS streamer_control (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        mode TEXT,
+        until_timestamp TEXT
+    )
+    """)
+
+    # ensure single row exists
+    cur.execute("SELECT COUNT(*) FROM streamer_control")
+    if cur.fetchone()[0] == 0:
+        cur.execute("""
+        INSERT INTO streamer_control (id, mode, until_timestamp)
+        VALUES (1, 'auto', NULL)
+        """)
+
+    conn.commit()
+    conn.close()
+
+
+
+
 def save_quote(quote):
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""

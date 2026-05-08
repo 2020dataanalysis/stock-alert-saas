@@ -10,6 +10,61 @@ from app.config import load_settings
 router = APIRouter()
 
 
+
+
+
+# from fastapi import APIRouter
+# import sqlite3
+from datetime import datetime, timedelta, timezone
+# from app.config import load_settings
+
+router = APIRouter()
+
+
+@router.post("/api/streamer/mode/{mode}")
+def set_mode(mode: str):
+    conn = sqlite3.connect("data/market_data.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+    UPDATE streamer_control
+    SET mode = ?, until_timestamp = NULL
+    WHERE id = 1
+    """, (mode,))
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "ok", "mode": mode}
+
+
+@router.post("/api/streamer/online-for/{minutes}")
+def online_for(minutes: int):
+    until = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+
+    conn = sqlite3.connect("data/market_data.db")
+    cur = conn.cursor()
+
+    cur.execute("""
+    UPDATE streamer_control
+    SET mode = 'duration', until_timestamp = ?
+    WHERE id = 1
+    """, (until.isoformat(),))
+
+    conn.commit()
+    conn.close()
+
+    return {"status": "ok", "until": until.isoformat()}
+
+
+
+
+
+
+
+
+
+
 @router.get("/api/chart-data/{symbol}")
 def chart_data(symbol: str):
     settings = load_settings()

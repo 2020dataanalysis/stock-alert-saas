@@ -1,8 +1,33 @@
 import sqlite3
-from pathlib import Path
 from datetime import datetime, timezone
+from pathlib import Path
 
 DB_PATH = Path("data/market_data.db")
+
+
+def get_streamer_mode():
+    conn = sqlite3.connect(DB_PATH)
+    cur = conn.cursor()
+
+    cur.execute("SELECT mode, until_timestamp FROM streamer_control WHERE id = 1")
+    row = cur.fetchone()
+    conn.close()
+
+    if not row:
+        return "auto"
+
+    mode, until_ts = row
+
+    if mode == "duration" and until_ts:
+        now = datetime.now(timezone.utc)
+        until = datetime.fromisoformat(until_ts)
+
+        if now > until:
+            return "auto"
+        return "online"
+
+    return mode
+
 
 
 def get_status_metrics():

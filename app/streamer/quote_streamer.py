@@ -5,9 +5,8 @@ from datetime import datetime
 
 from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.signals.spike_detector import SpikeDetector
-from app.storage.sqlite_store import init_db, save_quote
 from app.storage.sqlite_store import init_db, save_quote, save_alert
-
+from app.services.status_service import get_streamer_mode
 
 adapter = SchwabAdapter()
 
@@ -24,6 +23,15 @@ SYMBOLS = ["AAPL", "TSLA", "NVDA"]
 
 def stream_quotes():
     while True:
+        mode = get_streamer_mode()
+
+        if mode == "offline":
+            print("⏸ Streamer OFFLINE")
+            time.sleep(5)
+            continue
+
+        print(f"▶ Streamer mode: {mode}")
+
         for symbol in SYMBOLS:
             quote = adapter.get_quote(symbol)
 
@@ -39,14 +47,10 @@ def stream_quotes():
 
             alerts = detector.process_quote(quote)
 
-            # for alert in alerts:
-            #     print("🚨 ALERT:", alert)
-            
             for alert in alerts:
                 alert["timestamp"] = quote["timestamp"]
                 print("🚨 ALERT:", alert)
                 save_alert(alert)
-
 
         time.sleep(2)
 
