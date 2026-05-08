@@ -85,7 +85,7 @@ def save_quote(quote):
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            quote["timestamp"],
+            quote.get("timestamp") or datetime.now(timezone.utc).isoformat(),
             quote["symbol"],
             quote.get("bid"),
             quote.get("ask"),

@@ -1,7 +1,7 @@
 # app/streamer/quote_streamer.py
 
 import time
-from datetime import datetime
+from datetime import datetime, UTC
 
 from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.signals.spike_detector import SpikeDetector
@@ -39,7 +39,7 @@ def stream_quotes():
                 print(f"⚠️ No quote returned for {symbol}; skipping.")
                 continue
 
-            quote["timestamp"] = datetime.utcnow().isoformat()
+            quote["timestamp"] = datetime.now(UTC).isoformat()
 
             save_quote(quote)
 
