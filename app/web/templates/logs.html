@@ -37,5 +37,35 @@
 <h2>Streamer Errors</h2>
 <pre>{{ logs.streamer_err }}</pre>
 
+
+
+
+
+
+<h2>Provider Errors</h2>
+
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+    <tr>
+        <th>Timestamp</th>
+        <th>Provider</th>
+        <th>Symbol</th>
+        <th>Error Type</th>
+        <th>Message</th>
+    </tr>
+
+    {% for err in provider_errors %}
+    <tr>
+        <td>{{ err.timestamp }}</td>
+        <td>{{ err.provider }}</td>
+        <td>{{ err.symbol }}</td>
+        <td>{{ err.error_type }}</td>
+        <td>{{ err.message }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+
+
+
 </body>
 </html>

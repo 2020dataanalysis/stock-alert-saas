@@ -10,6 +10,7 @@ from app.services.status_service import get_status_metrics
 from app.services.chart_service import get_recent_quotes
 from app.web.api import router as api_router
 from app.services.alert_service import get_recent_alerts
+from app.services.provider_error_service import get_recent_provider_errors
 
 from app.config import load_settings
 import sqlite3
@@ -126,14 +127,16 @@ async def logs_page(request: Request):
         except FileNotFoundError:
             logs[name] = "Log file not found."
 
+    provider_errors = get_recent_provider_errors()
+
     return templates.TemplateResponse(
         request=request,
         name="logs.html",
         context={
             "logs": logs,
+            "provider_errors": provider_errors,
         },
     )
-
 
 @app.get("/status", response_class=HTMLResponse)
 def status(request: Request):
