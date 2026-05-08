@@ -2,85 +2,87 @@
 <html>
 <head>
     <title>Charts</title>
+
     <meta http-equiv="refresh" content="10">
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            padding: 30px;
-        }
-
-        .nav { margin-bottom: 25px; }
-
-        .nav a {
-            margin-right: 15px;
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-        }
-
-        .chart-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            font-family: Arial;
+            margin: 40px;
         }
 
         canvas {
-            max-height: 400px;
+            max-width: 900px;
+            margin-bottom: 60px;
         }
     </style>
 </head>
-
 <body>
 
-    <div class="nav">
-        <a href="/">Overview</a>
-        <a href="/status">Status</a>
-        <a href="/charts">Charts</a>
-        <a href="/settings">Settings</a>
-    </div>
+<h1>Stock Charts</h1>
 
-    <h1>Charts</h1>
+<div id="charts"></div>
 
-    <div class="chart-card">
-        <h2>AAPL Price - Last 100 Quotes</h2>
-        <canvas id="priceChart"></canvas>
-    </div>
+<script>
 
-    <script>
-        const quotes = {{ quotes | tojson }};
+const symbols = {{ settings["favorite_symbols"] | tojson }};
 
-        const labels = quotes.map(q => q.timestamp);
-        const prices = quotes.map(q => q.price);
+async function loadChart(symbol) {
+    const response = await fetch(`/api/chart-data/${symbol}`);
+    const data = await response.json();
 
-        const ctx = document.getElementById("priceChart");
+    const canvas = document.createElement("canvas");
+    document.getElementById("charts").appendChild(canvas);
 
-        new Chart(ctx, {
-            type: "line",
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: "AAPL Price",
+    const ctx = canvas.getContext("2d");
+
+    const prices = data.prices;
+    const timestamps = data.timestamps;
+
+    // ALERT MARKERS
+    const alertPoints = data.alerts.map(a => {
+        if (a.index === null || a.index === undefined) return null;
+
+        return {
+            x: a.index,
+            y: prices[a.index],
+        };
+    }).filter(p => p !== null);
+
+    new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: timestamps,
+            datasets: [
+                {
+                    label: symbol,
                     data: prices,
-                    tension: 0.25
-                }]
-            },
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        ticks: {
-                            display: false
-                        }
-                    }
+                    borderWidth: 2,
+                    tension: 0.2
+                },
+                {
+                    label: "Alerts",
+                    data: alertPoints,
+                    pointRadius: 6,
+                    showLine: false,
+                }
+            ]
+        },
+        options: {
+            scales: {
+                x: {
+                    display: false
                 }
             }
-        });
-    </script>
+        }
+    });
+}
+
+symbols.forEach(loadChart);
+
+</script>
 
 </body>
 </html>

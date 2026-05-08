@@ -8,11 +8,14 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from app.services.status_service import get_status_metrics
 from app.services.chart_service import get_recent_quotes
+from app.web.api import router as api_router
 
 from app.config import load_settings
 import sqlite3
 
 app = FastAPI()
+app.include_router(api_router)
+
 templates = Jinja2Templates(directory="app/web/templates")
 
 
