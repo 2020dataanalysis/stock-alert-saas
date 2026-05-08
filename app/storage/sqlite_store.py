@@ -54,6 +54,20 @@ def init_db():
         """)
 
 
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS system_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                service TEXT,
+                status TEXT,
+                message TEXT,
+                metadata_json TEXT
+            )
+        """)
+
+
     init_streamer_control_table()
 
 
@@ -194,4 +208,39 @@ def save_provider_error(
             error_type,
             message,
             raw_response,
+        ))
+
+
+def save_system_event(
+    event_type,
+    service=None,
+    status=None,
+    message=None,
+    metadata=None,
+):
+    from datetime import datetime, UTC
+    import json
+
+    metadata_json = None
+    if metadata is not None:
+        metadata_json = json.dumps(metadata, default=str)
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            INSERT INTO system_events (
+                timestamp,
+                event_type,
+                service,
+                status,
+                message,
+                metadata_json
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            datetime.now(UTC).isoformat(),
+            event_type,
+            service,
+            status,
+            message,
+            metadata_json,
         ))

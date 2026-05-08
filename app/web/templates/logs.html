@@ -38,6 +38,27 @@
 <pre>{{ logs.streamer_err }}</pre>
 
 
+<h2>System Events</h2>
+
+<table border="1" cellpadding="8" cellspacing="0" width="100%">
+    <tr>
+        <th>Timestamp</th>
+        <th>Event Type</th>
+        <th>Service</th>
+        <th>Status</th>
+        <th>Message</th>
+    </tr>
+
+    {% for event in system_events %}
+    <tr>
+        <td>{{ event.timestamp }}</td>
+        <td>{{ event.event_type }}</td>
+        <td>{{ event.service }}</td>
+        <td>{{ event.status }}</td>
+        <td>{{ event.message }}</td>
+    </tr>
+    {% endfor %}
+</table>
 
 
 

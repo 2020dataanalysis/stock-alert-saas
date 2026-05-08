@@ -9,6 +9,7 @@ from app.data_adapters.movers_adapter import get_mover_symbols
 from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.signals.spike_detector import SpikeDetector
 from app.storage.sqlite_store import init_db, save_quote, save_alert
+from app.storage.sqlite_store import save_system_event
 
 
 PACIFIC = ZoneInfo("America/Los_Angeles")
@@ -31,17 +32,42 @@ mover_symbols = []
 if settings["use_movers"]:
     mover_symbols = get_mover_symbols(limit=settings["movers_limit"])
 
+
 SYMBOLS = sorted(set(favorite_symbols + mover_symbols))
+POLL_SECONDS = settings["poll_seconds"]
 
 print("FAVORITE SYMBOLS:", favorite_symbols)
 print("MOVERS WATCHLIST:", mover_symbols)
 print("FINAL STREAM WATCHLIST:", SYMBOLS)
 
 if not SYMBOLS:
+    save_system_event(
+        event_type="STREAMER_START_FAILED",
+        service="quote_streamer_config",
+        status="ERROR",
+        message="No symbols configured. Streamer exiting.",
+        metadata={
+            "favorite_symbols": favorite_symbols,
+            "mover_symbols": mover_symbols,
+        },
+    )
     print("⚠️ No symbols configured. Exiting.")
     raise SystemExit(1)
 
-POLL_SECONDS = settings["poll_seconds"]
+save_system_event(
+    event_type="STREAMER_STARTED",
+    service="quote_streamer_config",
+    status="ONLINE",
+    message="Quote streamer started successfully",
+    metadata={
+        "favorite_symbols": favorite_symbols,
+        "mover_symbols": mover_symbols,
+        "symbols": SYMBOLS,
+        "poll_seconds": POLL_SECONDS,
+    },
+)
+
+
 
 
 def should_stop_streaming():

@@ -11,6 +11,7 @@ from app.services.chart_service import get_recent_quotes
 from app.web.api import router as api_router
 from app.services.alert_service import get_recent_alerts
 from app.services.provider_error_service import get_recent_provider_errors
+from app.services.system_event_service import get_recent_system_events
 
 from app.config import load_settings
 import sqlite3
@@ -128,6 +129,7 @@ async def logs_page(request: Request):
             logs[name] = "Log file not found."
 
     provider_errors = get_recent_provider_errors()
+    system_events = get_recent_system_events()
 
     return templates.TemplateResponse(
         request=request,
@@ -135,6 +137,7 @@ async def logs_page(request: Request):
         context={
             "logs": logs,
             "provider_errors": provider_errors,
+            "system_events": system_events,
         },
     )
 
