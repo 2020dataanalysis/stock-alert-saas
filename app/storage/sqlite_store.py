@@ -39,6 +39,7 @@ def init_db():
             )
         """)
 
+    init_streamer_control_table()
 
 
 def init_streamer_control_table():

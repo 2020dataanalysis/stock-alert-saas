@@ -19,7 +19,7 @@ def get_streamer_mode():
     mode, until_ts = row
 
     if mode == "duration" and until_ts:
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
         until = datetime.fromisoformat(until_ts)
 
         if now > until:
@@ -64,7 +64,7 @@ def get_status_metrics():
 
     if last_quote_time:
         last_dt = datetime.fromisoformat(last_quote_time)
-        now = datetime.now(timezone.utc)
+        now = datetime.utcnow()
 
         lag_seconds = round(
             (now - last_dt).total_seconds(),
