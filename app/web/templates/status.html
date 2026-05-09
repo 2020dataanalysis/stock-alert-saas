@@ -93,6 +93,30 @@
             </div>
         </div>
 
+
+
+        <div class="status-card">
+            <div class="card-title">Market Status</div>
+            <div class="card-value
+                {% if market_status == 'OPEN' %}
+                    online
+                {% else %}
+                    offline
+                {% endif %}
+            ">
+                {{ market_status }}
+            </div>
+            <div style="font-size: 13px; color: #666; margin-top: 10px;">
+                {{ message }}
+            </div>
+        </div>
+
+
+
+
+
+
+
     </div>
 
 </body>

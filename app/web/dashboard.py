@@ -13,6 +13,7 @@ from app.services.alert_service import get_recent_alerts
 from app.services.provider_error_service import get_recent_provider_errors
 from app.services.system_event_service import get_recent_system_events
 from app.storage.sqlite_store import clear_alerts, save_system_event
+from app.services.market_hours_service import get_market_status
 
 from app.config import load_settings
 import sqlite3
@@ -142,16 +143,18 @@ async def logs_page(request: Request):
         },
     )
 
+
 @app.get("/status", response_class=HTMLResponse)
 def status(request: Request):
     metrics = get_status_metrics()
+    market = get_market_status()
+    metrics.update(market)
 
     return templates.TemplateResponse(
         request,
         "status.html",
         metrics
     )
-
 
 @app.get("/charts", response_class=HTMLResponse)
 async def charts_page(request: Request):
