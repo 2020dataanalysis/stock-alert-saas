@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
+from app.services.market_hours_service import is_trading_session
 
 DB_PATH = Path("data/market_data.db")
 
@@ -25,6 +26,16 @@ def get_streamer_mode():
         if now > until:
             return "auto"
         return "online"
+
+    if mode == "online":
+        if is_trading_session():
+            return "online"
+        return "offline"
+
+    if mode == "auto":
+        if is_trading_session():
+            return "online"
+        return "offline"
 
     return mode
 
@@ -91,4 +102,5 @@ def get_status_metrics():
         "streamer_status": streamer_status,
         "symbols_tracked": symbols_tracked,
         "lag_seconds": lag_seconds,
+        "control_mode": get_streamer_mode().upper(),
     }

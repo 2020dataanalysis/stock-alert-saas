@@ -81,6 +81,22 @@
             </div>
         </div>
 
+
+        <div class="status-card">
+            <div class="card-title">Control Mode</div>
+
+            <div class="card-value
+                {% if control_mode == 'ONLINE' %}
+                    online
+                {% elif control_mode == 'OFFLINE' %}
+                    offline
+                {% endif %}
+            ">
+                {{ control_mode }}
+            </div>            
+        </div>
+
+
         <div class="status-card">
             <div class="card-title">Symbols Tracked</div>
             <div class="card-value">{{ symbols_tracked }}</div>
@@ -96,7 +112,7 @@
 
 
         <div class="status-card">
-            <div class="card-title">Market Status</div>
+            <div class="card-title">Market Session</div>
             <div class="card-value
                 {% if market_status == 'OPEN' %}
                     online
@@ -104,7 +120,7 @@
                     offline
                 {% endif %}
             ">
-                {{ market_status }}
+                {{ market_session }}
             </div>
             <div style="font-size: 13px; color: #666; margin-top: 10px;">
                 {{ message }}
