@@ -12,6 +12,7 @@ from app.web.api import router as api_router
 from app.services.alert_service import get_recent_alerts
 from app.services.provider_error_service import get_recent_provider_errors
 from app.services.system_event_service import get_recent_system_events
+from app.storage.sqlite_store import clear_alerts, save_system_event
 
 from app.config import load_settings
 import sqlite3
@@ -167,6 +168,20 @@ async def charts_page(request: Request):
             "quotes": quotes,
         },
     )
+
+
+@app.post("/alerts/clear")
+async def clear_alerts_route():
+    clear_alerts()
+
+    save_system_event(
+        event_type="ALERTS_CLEARED",
+        service="web_dashboard",
+        status="OK",
+        message="User cleared market alert history",
+    )
+
+    return RedirectResponse("/alerts", status_code=303)
 
 
 @app.get("/alerts", response_class=HTMLResponse)

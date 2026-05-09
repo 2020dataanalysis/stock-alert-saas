@@ -127,6 +127,11 @@ def save_quote(quote):
         ))
 
 
+def clear_alerts():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("DELETE FROM alerts")
+
+
 def save_alert(alert):
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
