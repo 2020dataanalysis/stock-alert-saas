@@ -1,22 +1,12 @@
 # app/web/api.py
 
 import sqlite3
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter
 
 from app.config import load_settings
 
-
-router = APIRouter()
-
-
-
-
-
-# from fastapi import APIRouter
-# import sqlite3
-from datetime import datetime, timedelta, timezone
-# from app.config import load_settings
 
 router = APIRouter()
 
@@ -57,14 +47,6 @@ def online_for(minutes: int):
     return {"status": "ok", "until": until.isoformat()}
 
 
-
-
-
-
-
-
-
-
 @router.get("/api/chart-data/{symbol}")
 def chart_data(symbol: str):
     settings = load_settings()
@@ -95,9 +77,40 @@ def chart_data(symbol: str):
     quotes = list(reversed(quotes))
     alerts = list(reversed(alerts))
 
-    timestamp_index = {
-        t: i for i, t in enumerate([q["timestamp"] for q in quotes])
-    }
+    def nearest_quote_index(alert_timestamp):
+        alert_dt = datetime.fromisoformat(alert_timestamp)
+
+        best_index = None
+        best_delta = None
+
+        for i, q in enumerate(quotes):
+            quote_dt = datetime.fromisoformat(q["timestamp"])
+            delta = abs((quote_dt - alert_dt).total_seconds())
+
+            if best_delta is None or delta < best_delta:
+                best_delta = delta
+                best_index = i
+
+        if best_delta is not None and best_delta <= 30:
+            return best_index
+
+        return None
+
+    chart_alerts = []
+
+    for alert in alerts:
+        index = nearest_quote_index(alert["timestamp"])
+
+        if index is None:
+            continue
+
+        chart_alerts.append({
+            "index": index,
+            "timestamp": alert["timestamp"],
+            "type": alert["type"],
+            "price_change_pct": alert["price_change_pct"],
+            "volume_change_pct": alert["volume_change_pct"],
+        })
 
     return {
         "symbol": symbol,
@@ -108,15 +121,5 @@ def chart_data(symbol: str):
         "timestamps": [q["timestamp"] for q in quotes],
         "prices": [q["last"] for q in quotes],
         "volumes": [q["volume"] for q in quotes],
-        "alerts": [
-            {
-                "index": timestamp_index.get(a["timestamp"]),
-                "timestamp": a["timestamp"],
-                "type": a["type"],
-                "price_change_pct": a["price_change_pct"],
-                "volume_change_pct": a["volume_change_pct"],
-            }
-            for a in alerts
-            if a["timestamp"] in timestamp_index
-        ],
+        "alerts": chart_alerts,
     }
