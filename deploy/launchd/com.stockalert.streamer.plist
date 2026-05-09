@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.stockalert.streamer</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/Users/ultrasupersam/apps/stock-alert-platform/stock-alert-saas/scripts/start_streamer.sh</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/ultrasupersam/apps/stock-alert-platform/stock-alert-saas</string>
+
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Weekday</key>
+            <integer>1</integer>
+            <key>Hour</key>
+            <integer>6</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>2</integer>
+            <key>Hour</key>
+            <integer>6</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>3</integer>
+            <key>Hour</key>
+            <integer>6</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>4</integer>
+            <key>Hour</key>
+            <integer>6</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+        <dict>
+            <key>Weekday</key>
+            <integer>5</integer>
+            <key>Hour</key>
+            <integer>6</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+    </array>
+
+    <key>StandardOutPath</key>
+    <string>/Users/ultrasupersam/apps/stock-alert-platform/stock-alert-saas/logs/streamer.out.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>/Users/ultrasupersam/apps/stock-alert-platform/stock-alert-saas/logs/streamer.err.log</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+</dict>
+</plist>

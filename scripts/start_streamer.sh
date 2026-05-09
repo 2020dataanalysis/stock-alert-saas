@@ -21,16 +21,12 @@ if [ ! -f "$PYTHON" ]; then
     exit 1
 fi
 
-while true; do
-    echo "START RUN $(date)" >> logs/debug.log
+"$PYTHON" -u -m app.streamer.quote_streamer_config \
+    >> logs/streamer.out.log \
+    2>> logs/streamer.err.log
 
-    "$PYTHON" -u -m app.streamer.quote_streamer_config \
-        >> logs/streamer.out.log \
-        2>> logs/streamer.err.log
+EXIT_CODE=$?
 
-    EXIT_CODE=$?
+echo "STREAMER EXITED (code=$EXIT_CODE) $(date)" >> logs/debug.log
 
-    echo "STREAMER EXITED (code=$EXIT_CODE) $(date)" >> logs/debug.log
-
-    sleep 5
-done
+exit $EXIT_CODE
