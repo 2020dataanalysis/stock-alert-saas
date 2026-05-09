@@ -2,7 +2,7 @@
 
 import time
 from datetime import datetime, UTC
-from zoneinfo import ZoneInfo
+# from zoneinfo import ZoneInfo
 
 from app.config import load_settings
 from app.data_adapters.movers_adapter import get_mover_symbols
@@ -10,19 +10,24 @@ from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.signals.spike_detector import SpikeDetector
 from app.storage.sqlite_store import init_db, save_quote, save_alert
 from app.storage.sqlite_store import save_system_event
+# from app.services.status_service import get_streamer_mode
+from app.services.streamer_runtime_service import get_runtime_state
 
 
-PACIFIC = ZoneInfo("America/Los_Angeles")
+# PACIFIC = ZoneInfo("America/Los_Angeles")
 
 settings = load_settings()
 
 adapter = SchwabAdapter()
+
 
 detector = SpikeDetector(
     price_spike_pct=settings["price_spike_pct"],
     volume_spike_pct=settings["volume_spike_pct"],
     window_size=settings["window_size"],
 )
+
+service_running = True
 
 init_db()
 
@@ -68,34 +73,40 @@ save_system_event(
 )
 
 
-def is_regular_market_hours():
-    now = datetime.now(PACIFIC)
+# def is_regular_market_hours():
+#     now = datetime.now(PACIFIC)
 
-    # Monday=0, Sunday=6
-    if now.weekday() >= 5:
-        return False
+#     # Monday=0, Sunday=6
+#     if now.weekday() >= 5:
+#         return False
 
-    market_open = now.replace(hour=6, minute=30, second=0, microsecond=0)
-    market_close = now.replace(hour=13, minute=0, second=0, microsecond=0)
+#     market_open = now.replace(hour=6, minute=30, second=0, microsecond=0)
+#     market_close = now.replace(hour=13, minute=0, second=0, microsecond=0)
 
-    return market_open <= now <= market_close
+#     return market_open <= now <= market_close
 
 
-def should_stop_streaming():
-    now = datetime.now(PACIFIC)
+# def should_stop_streaming():
+#     now = datetime.now(PACIFIC)
 
-    # Stop after 1:15 PM Pacific
-    if now.hour > 13 or (now.hour == 13 and now.minute >= 15):
-        return True
+#     # Stop after 1:15 PM Pacific
+#     if now.hour > 13 or (now.hour == 13 and now.minute >= 15):
+#         return True
 
-    return False
+#     return False
 
 
 def stream_quotes():
-    while True:
-        if False and should_stop_streaming():
-            print("Market session finished. Stopping streamer.")
-            break
+    global service_running
+
+    while service_running:
+        runtime = get_runtime_state(POLL_SECONDS)
+
+        print("RUNTIME:", runtime)
+
+        if not runtime["should_fetch_quotes"]:
+            time.sleep(runtime["sleep_seconds"])
+            continue
 
         for symbol in SYMBOLS:
             quote = adapter.get_quote(symbol)
@@ -110,17 +121,15 @@ def stream_quotes():
 
             print("QUOTE:", quote)
 
-            if is_regular_market_hours():
+            if runtime["should_process_alerts"]:
                 alerts = detector.process_quote(quote)
 
                 for alert in alerts:
                     alert["timestamp"] = quote["timestamp"]
                     print("🚨 ALERT:", alert)
                     save_alert(alert)
-            else:
-                alerts = []
-    
-        time.sleep(POLL_SECONDS)
+
+        time.sleep(runtime["sleep_seconds"])
 
 
 if __name__ == "__main__":
