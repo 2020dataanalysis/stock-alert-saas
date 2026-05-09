@@ -68,6 +68,17 @@ save_system_event(
 )
 
 
+def is_regular_market_hours():
+    now = datetime.now(PACIFIC)
+
+    # Monday=0, Sunday=6
+    if now.weekday() >= 5:
+        return False
+
+    market_open = now.replace(hour=6, minute=30, second=0, microsecond=0)
+    market_close = now.replace(hour=13, minute=0, second=0, microsecond=0)
+
+    return market_open <= now <= market_close
 
 
 def should_stop_streaming():
@@ -99,13 +110,16 @@ def stream_quotes():
 
             print("QUOTE:", quote)
 
-            alerts = detector.process_quote(quote)
+            if is_regular_market_hours():
+                alerts = detector.process_quote(quote)
 
-            for alert in alerts:
-                alert["timestamp"] = quote["timestamp"]
-                print("🚨 ALERT:", alert)
-                save_alert(alert)
-
+                for alert in alerts:
+                    alert["timestamp"] = quote["timestamp"]
+                    print("🚨 ALERT:", alert)
+                    save_alert(alert)
+            else:
+                alerts = []
+    
         time.sleep(POLL_SECONDS)
 
 
