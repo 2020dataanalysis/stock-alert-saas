@@ -4,6 +4,18 @@ from pathlib import Path
 
 DB_PATH = Path("data/market_data.db")
 
+def get_active_alert_rules():
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+
+        cursor = conn.execute("""
+            SELECT *
+            FROM alert_rules
+            WHERE is_active = 1
+            ORDER BY id DESC
+        """)
+
+        return cursor.fetchall()
 
 def get_alert_rules():
     with sqlite3.connect(DB_PATH) as conn:
