@@ -214,7 +214,7 @@ async def create_alert_rule_route(
     metric: str = Form("last"),
     operator: str = Form(">"),
     threshold: float = Form(0),
-    direction: str = Form("up"),
+    direction: str = Form("both"),
     price_change_pct: float = Form(1.0),
     volume_change_pct: float = Form(10.0),
     window_size: int = Form(5),
@@ -222,6 +222,7 @@ async def create_alert_rule_route(
     auto_disable_on_trigger: bool = Form(False),
 ):
     if rule_type == "threshold":
+
         create_alert_rule(
             symbol=symbol,
             metric=metric,
@@ -230,19 +231,44 @@ async def create_alert_rule_route(
             is_active=is_active,
             auto_disable_on_trigger=auto_disable_on_trigger,
         )
+
     else:
-        create_whale_rule(
-            symbol=symbol,
-            direction=direction,
-            price_change_pct=price_change_pct,
-            volume_change_pct=volume_change_pct,
-            window_size=window_size,
-            is_active=is_active,
-            auto_disable_on_trigger=auto_disable_on_trigger,
-        )
+
+        if direction == "both":
+
+            create_whale_rule(
+                symbol=symbol,
+                direction="up",
+                price_change_pct=price_change_pct,
+                volume_change_pct=volume_change_pct,
+                window_size=window_size,
+                is_active=is_active,
+                auto_disable_on_trigger=auto_disable_on_trigger,
+            )
+
+            create_whale_rule(
+                symbol=symbol,
+                direction="down",
+                price_change_pct=price_change_pct,
+                volume_change_pct=volume_change_pct,
+                window_size=window_size,
+                is_active=is_active,
+                auto_disable_on_trigger=auto_disable_on_trigger,
+            )
+
+        else:
+
+            create_whale_rule(
+                symbol=symbol,
+                direction=direction,
+                price_change_pct=price_change_pct,
+                volume_change_pct=volume_change_pct,
+                window_size=window_size,
+                is_active=is_active,
+                auto_disable_on_trigger=auto_disable_on_trigger,
+            )
 
     return RedirectResponse("/alert-rules", status_code=303)
-
 
 @app.post("/alert-rules/{rule_id}/enable")
 async def enable_alert_rule(rule_id: int):
