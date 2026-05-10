@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Alert Rules</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        nav a {
+            margin-right: 15px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 25px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background: #f4f4f4;
+        }
+
+        form.inline {
+            display: inline;
+        }
+
+        .form-box {
+            margin-top: 25px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            max-width: 700px;
+        }
+
+        input, select, button {
+            margin: 5px;
+            padding: 6px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Alert Rules</h1>
+
+<nav>
+    <a href="/">Overview</a>
+    <a href="/status">Status</a>
+    <a href="/settings">Settings</a>
+    <a href="/charts">Charts</a>
+    <a href="/alerts">Alerts</a>
+    <a href="/alert-rules">Alert Rules</a>
+    <a href="/logs">Logs</a>
+</nav>
+
+<div class="form-box">
+    <h2>Create Alert Rule</h2>
+
+    <form method="post" action="/alert-rules/create">
+        <input name="symbol" placeholder="AAPL" required>
+
+        <select name="metric">
+            <option value="last">last</option>
+            <option value="bid">bid</option>
+            <option value="ask">ask</option>
+            <option value="volume">volume</option>
+        </select>
+
+        <select name="operator">
+            <option value=">">&gt;</option>
+            <option value="<">&lt;</option>
+            <option value=">=">&gt;=</option>
+            <option value="<=">&lt;=</option>
+        </select>
+
+        <input name="threshold" type="number" step="any" placeholder="295" required>
+
+        <label>
+            <input type="checkbox" name="is_active" checked>
+            Active
+        </label>
+
+        <label>
+            <input type="checkbox" name="auto_disable_on_trigger" checked>
+            Auto-disable on trigger
+        </label>
+
+        <button type="submit">Create Rule</button>
+    </form>
+</div>
+
+<h2>Existing Rules</h2>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Rule</th>
+        <th>Active</th>
+        <th>Auto Disable</th>
+        <th>Trigger Count</th>
+        <th>Last Triggered</th>
+        <th>Actions</th>
+    </tr>
+
+    {% for rule in rules %}
+    <tr>
+        <td>{{ rule.id }}</td>
+        <td>
+            {{ rule.symbol }}.{{ rule.metric }}
+            {{ rule.operator }}
+            {{ rule.threshold }}
+        </td>
+        <td>{{ "Yes" if rule.is_active else "No" }}</td>
+        <td>{{ "Yes" if rule.auto_disable_on_trigger else "No" }}</td>
+        <td>{{ rule.trigger_count }}</td>
+        <td>{{ rule.last_triggered_at or "" }}</td>
+        <td>
+            {% if rule.is_active %}
+            <form class="inline" method="post" action="/alert-rules/{{ rule.id }}/disable">
+                <button type="submit">Disable</button>
+            </form>
+            {% else %}
+            <form class="inline" method="post" action="/alert-rules/{{ rule.id }}/enable">
+                <button type="submit">Enable</button>
+            </form>
+            {% endif %}
+
+            <form class="inline" method="post" action="/alert-rules/{{ rule.id }}/delete">
+                <button type="submit">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+</body>
+</html>

@@ -68,6 +68,24 @@ def init_db():
         """)
 
 
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS alert_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                symbol TEXT NOT NULL,
+                metric TEXT NOT NULL,
+                operator TEXT NOT NULL,
+                threshold REAL NOT NULL,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                auto_disable_on_trigger INTEGER NOT NULL DEFAULT 1,
+                trigger_count INTEGER NOT NULL DEFAULT 0,
+                last_triggered_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+
+
     init_streamer_control_table()
 
 

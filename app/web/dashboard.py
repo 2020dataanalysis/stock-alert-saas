@@ -14,6 +14,12 @@ from app.services.provider_error_service import get_recent_provider_errors
 from app.services.system_event_service import get_recent_system_events
 from app.storage.sqlite_store import clear_alerts, save_system_event
 from app.services.market_hours_service import get_market_status
+from app.services.alert_rule_service import (
+    get_alert_rules,
+    create_alert_rule,
+    set_alert_rule_active,
+    delete_alert_rule,
+)
 
 from app.config import load_settings
 import sqlite3
@@ -185,6 +191,62 @@ async def clear_alerts_route():
     )
 
     return RedirectResponse("/alerts", status_code=303)
+
+
+
+@app.get("/alert-rules", response_class=HTMLResponse)
+async def alert_rules_page(request: Request):
+    rules = get_alert_rules()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="alert_rules.html",
+        context={
+            "rules": rules,
+        },
+    )
+
+
+@app.post("/alert-rules/create")
+async def create_alert_rule_route(
+    symbol: str = Form(...),
+    metric: str = Form(...),
+    operator: str = Form(...),
+    threshold: float = Form(...),
+    is_active: bool = Form(False),
+    auto_disable_on_trigger: bool = Form(False),
+):
+    create_alert_rule(
+        symbol=symbol,
+        metric=metric,
+        operator=operator,
+        threshold=threshold,
+        is_active=is_active,
+        auto_disable_on_trigger=auto_disable_on_trigger,
+    )
+
+    return RedirectResponse("/alert-rules", status_code=303)
+
+
+@app.post("/alert-rules/{rule_id}/enable")
+async def enable_alert_rule(rule_id: int):
+    set_alert_rule_active(rule_id, True)
+    return RedirectResponse("/alert-rules", status_code=303)
+
+
+@app.post("/alert-rules/{rule_id}/disable")
+async def disable_alert_rule(rule_id: int):
+    set_alert_rule_active(rule_id, False)
+    return RedirectResponse("/alert-rules", status_code=303)
+
+
+@app.post("/alert-rules/{rule_id}/delete")
+async def delete_alert_rule_route(rule_id: int):
+    delete_alert_rule(rule_id)
+    return RedirectResponse("/alert-rules", status_code=303)
+
+
+
 
 
 @app.get("/alerts", response_class=HTMLResponse)
