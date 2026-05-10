@@ -108,7 +108,7 @@ def create_whale_rule(
                 created_at,
                 updated_at
             )
-            VALUES (?, ?, ?, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, 'price_change_pct', '>=', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             symbol.upper(),
             rule_type,
