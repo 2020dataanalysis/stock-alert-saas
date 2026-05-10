@@ -61,9 +61,12 @@
 </nav>
 
 <div class="form-box">
-    <h2>Create Alert Rule</h2>
+
+        <h2>Create Threshold Rule</h2>
 
     <form method="post" action="/alert-rules/create">
+        <input type="hidden" name="rule_type" value="threshold">
+
         <input name="symbol" placeholder="AAPL" required>
 
         <select name="metric">
@@ -92,8 +95,43 @@
             Auto-disable on trigger
         </label>
 
-        <button type="submit">Create Rule</button>
+        <button type="submit">Create Threshold Rule</button>
     </form>
+
+    <h2>Create Whale Spike / Drop Rule</h2>
+
+    <form method="post" action="/alert-rules/create">
+        <input type="hidden" name="rule_type" value="whale">
+
+        <input name="symbol" placeholder="NVDA" required>
+
+        <select name="direction">
+            <option value="up">Spike Up</option>
+            <option value="down">Drop Down</option>
+        </select>
+
+        <input name="price_change_pct" type="number" step="any" value="1.5" required>
+        <span>% price change</span>
+
+        <input name="volume_change_pct" type="number" step="any" value="20" required>
+        <span>% volume change</span>
+
+        <input name="window_size" type="number" value="5" required>
+        <span>window size</span>
+
+        <label>
+            <input type="checkbox" name="is_active" checked>
+            Active
+        </label>
+
+        <label>
+            <input type="checkbox" name="auto_disable_on_trigger" checked>
+            Auto-disable on trigger
+        </label>
+
+        <button type="submit">Create Whale Rule</button>
+    </form>
+
 </div>
 
 <h2>Existing Rules</h2>
@@ -113,9 +151,18 @@
     <tr>
         <td>{{ rule.id }}</td>
         <td>
-            {{ rule.symbol }}.{{ rule.metric }}
-            {{ rule.operator }}
-            {{ rule.threshold }}
+            {% if rule.rule_type == "threshold" %}
+                {{ rule.symbol }}.{{ rule.metric }}
+                {{ rule.operator }}
+                {{ rule.threshold }}
+            {% else %}
+                {{ rule.symbol }}
+                {{ rule.rule_type }}
+                {{ rule.direction }}
+                price {{ rule.price_change_pct }}%
+                volume {{ rule.volume_change_pct }}%
+                window {{ rule.window_size }}
+            {% endif %}
         </td>
         <td>{{ "Yes" if rule.is_active else "No" }}</td>
         <td>{{ "Yes" if rule.auto_disable_on_trigger else "No" }}</td>

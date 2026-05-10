@@ -17,6 +17,7 @@ from app.services.market_hours_service import get_market_status
 from app.services.alert_rule_service import (
     get_alert_rules,
     create_alert_rule,
+    create_whale_rule,
     set_alert_rule_active,
     delete_alert_rule,
 )
@@ -206,24 +207,39 @@ async def alert_rules_page(request: Request):
         },
     )
 
-
 @app.post("/alert-rules/create")
 async def create_alert_rule_route(
     symbol: str = Form(...),
-    metric: str = Form(...),
-    operator: str = Form(...),
-    threshold: float = Form(...),
+    rule_type: str = Form("threshold"),
+    metric: str = Form("last"),
+    operator: str = Form(">"),
+    threshold: float = Form(0),
+    direction: str = Form("up"),
+    price_change_pct: float = Form(1.0),
+    volume_change_pct: float = Form(10.0),
+    window_size: int = Form(5),
     is_active: bool = Form(False),
     auto_disable_on_trigger: bool = Form(False),
 ):
-    create_alert_rule(
-        symbol=symbol,
-        metric=metric,
-        operator=operator,
-        threshold=threshold,
-        is_active=is_active,
-        auto_disable_on_trigger=auto_disable_on_trigger,
-    )
+    if rule_type == "threshold":
+        create_alert_rule(
+            symbol=symbol,
+            metric=metric,
+            operator=operator,
+            threshold=threshold,
+            is_active=is_active,
+            auto_disable_on_trigger=auto_disable_on_trigger,
+        )
+    else:
+        create_whale_rule(
+            symbol=symbol,
+            direction=direction,
+            price_change_pct=price_change_pct,
+            volume_change_pct=volume_change_pct,
+            window_size=window_size,
+            is_active=is_active,
+            auto_disable_on_trigger=auto_disable_on_trigger,
+        )
 
     return RedirectResponse("/alert-rules", status_code=303)
 

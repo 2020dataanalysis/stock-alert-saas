@@ -86,6 +86,42 @@ def init_db():
         """)
 
 
+        try:
+            conn.execute("ALTER TABLE alert_rules ADD COLUMN rule_type TEXT DEFAULT 'threshold'")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            conn.execute("ALTER TABLE alert_rules ADD COLUMN direction TEXT")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            conn.execute("ALTER TABLE alert_rules ADD COLUMN price_change_pct REAL")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            conn.execute("ALTER TABLE alert_rules ADD COLUMN volume_change_pct REAL")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            conn.execute("ALTER TABLE alert_rules ADD COLUMN window_size INTEGER")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            conn.execute("ALTER TABLE alert_rules ADD COLUMN auto_generated INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            conn.execute("ALTER TABLE alert_rules ADD COLUMN source TEXT")
+        except sqlite3.OperationalError:
+            pass
+
+
     init_streamer_control_table()
 
 
