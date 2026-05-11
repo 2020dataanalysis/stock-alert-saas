@@ -19,7 +19,12 @@ from app.signals.typed_rule_engine import evaluate_typed_rules
 
 settings = load_settings()
 
-adapter = SchwabAdapter()
+
+def create_adapter():
+    return SchwabAdapter()
+
+
+adapter = create_adapter()
 
 
 detector = SpikeDetector(
@@ -29,6 +34,9 @@ detector = SpikeDetector(
 )
 
 service_running = True
+
+FAILED_CYCLE_LIMIT = 3
+failed_quote_cycles = 0
 
 init_db()
 
@@ -57,7 +65,9 @@ if not SYMBOLS:
             "mover_symbols": mover_symbols,
         },
     )
+
     print("⚠️ No symbols configured. Exiting.")
+
     raise SystemExit(1)
 
 save_system_event(
@@ -74,9 +84,10 @@ save_system_event(
 )
 
 
-
 def stream_quotes():
     global service_running
+    global failed_quote_cycles
+    global adapter
 
     while service_running:
         runtime = get_runtime_state(POLL_SECONDS)
@@ -87,12 +98,16 @@ def stream_quotes():
             time.sleep(runtime["sleep_seconds"])
             continue
 
+        successful_quotes = 0
+
         for symbol in SYMBOLS:
             quote = adapter.get_quote(symbol)
 
             if quote is None:
                 print(f"⚠️ No quote returned for {symbol}; skipping.")
                 continue
+
+            successful_quotes += 1
 
             quote["timestamp"] = datetime.now(UTC).isoformat()
 
@@ -115,6 +130,70 @@ def stream_quotes():
                     print("🚨 ALERT:", alert)
 
                     save_alert(alert)
+
+        # provider degradation detection
+        if successful_quotes == 0:
+            failed_quote_cycles += 1
+
+            save_system_event(
+                event_type="PROVIDER_DEGRADED",
+                service="quote_streamer_config",
+                status="WARNING",
+                message="Quote cycle returned zero successful quotes",
+                metadata={
+                    "failed_quote_cycles": failed_quote_cycles,
+                    "symbols": SYMBOLS,
+                },
+            )
+
+            print(
+                f"⚠️ Provider degraded: "
+                f"failed quote cycle {failed_quote_cycles}"
+            )
+
+            # self-healing adapter restart
+            if failed_quote_cycles >= FAILED_CYCLE_LIMIT:
+
+                save_system_event(
+                    event_type="PROVIDER_SELF_HEALING_RESTART",
+                    service="quote_streamer_config",
+                    status="WARNING",
+                    message=(
+                        "Recreating Schwab adapter after "
+                        "repeated failed quote cycles"
+                    ),
+                    metadata={
+                        "failed_quote_cycles": failed_quote_cycles,
+                    },
+                )
+
+                print("🔄 Recreating Schwab adapter...")
+
+                adapter = create_adapter()
+
+                failed_quote_cycles = 0
+
+        else:
+            # recovery detection
+            if failed_quote_cycles > 0:
+
+                save_system_event(
+                    event_type="PROVIDER_RECOVERED",
+                    service="quote_streamer_config",
+                    status="OK",
+                    message="Quote provider recovered after failed cycles",
+                    metadata={
+                        "successful_quotes": successful_quotes,
+                    },
+                )
+
+                print(
+                    f"✅ Provider recovered with "
+                    f"{successful_quotes} successful quotes"
+                )
+
+            failed_quote_cycles = 0
+
         time.sleep(runtime["sleep_seconds"])
 
 
