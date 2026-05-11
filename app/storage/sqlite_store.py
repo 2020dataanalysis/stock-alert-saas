@@ -122,6 +122,24 @@ def init_db():
             pass
 
 
+
+        try:
+            conn.execute("ALTER TABLE alert_rules ADD COLUMN cooldown_seconds INTEGER DEFAULT 0")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            conn.execute("ALTER TABLE alert_rules ADD COLUMN last_triggered_price REAL")
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            conn.execute("ALTER TABLE alert_rules ADD COLUMN last_triggered_quote_time TEXT")
+        except sqlite3.OperationalError:
+            pass
+
+
+
     init_streamer_control_table()
 
 

@@ -1,4 +1,9 @@
-from app.services.alert_rule_service import get_active_alert_rules
+from app.services.alert_rule_service import (
+    get_active_alert_rules,
+    mark_rule_triggered,
+    disable_rule,
+    is_rule_in_cooldown,
+)
 from app.signals.threshold_rule_engine import evaluate_threshold_rule
 from app.signals.whale_rule_engine import evaluate_whale_rule
 
@@ -16,6 +21,10 @@ def evaluate_typed_rules(quote):
     rules = get_active_alert_rules_for_symbol(quote["symbol"])
 
     for rule in rules:
+
+        if is_rule_in_cooldown(rule):
+            continue
+
         triggered = False
 
         if rule["rule_type"] == "threshold":
@@ -25,6 +34,13 @@ def evaluate_typed_rules(quote):
             triggered = evaluate_whale_rule(rule, quote)
 
         if triggered:
+
+            mark_rule_triggered(rule["id"], quote)
+
+            if rule["auto_disable_on_trigger"]:
+                disable_rule(rule["id"])
+
+
             triggered_alerts.append({
                 "symbol": quote["symbol"],
                 "type": rule["rule_type"],

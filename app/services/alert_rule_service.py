@@ -1,6 +1,7 @@
 import sqlite3
 from datetime import datetime, UTC
 from pathlib import Path
+from datetime import timedelta
 
 DB_PATH = Path("data/market_data.db")
 
@@ -191,3 +192,57 @@ def delete_alert_rule(rule_id):
             DELETE FROM alert_rules
             WHERE id = ?
         """, (rule_id,))
+
+
+def mark_rule_triggered(rule_id, quote):
+    now = datetime.now(UTC).isoformat()
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            UPDATE alert_rules
+            SET
+                trigger_count = trigger_count + 1,
+                last_triggered_at = ?,
+                last_triggered_price = ?,
+                last_triggered_quote_time = ?,
+                updated_at = ?
+            WHERE id = ?
+        """, (
+            now,
+            quote.get("last"),
+            quote.get("timestamp"),
+            now,
+            rule_id,
+        ))
+
+
+def disable_rule(rule_id):
+    now = datetime.now(UTC).isoformat()
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.execute("""
+            UPDATE alert_rules
+            SET
+                is_active = 0,
+                updated_at = ?
+            WHERE id = ?
+        """, (
+            now,
+            rule_id,
+        ))
+
+
+def is_rule_in_cooldown(rule):
+    if not rule["last_triggered_at"]:
+        return False
+
+    cooldown_seconds = rule["cooldown_seconds"] or 0
+
+    if cooldown_seconds <= 0:
+        return False
+
+    last_trigger = datetime.fromisoformat(rule["last_triggered_at"])
+
+    return (
+        datetime.now(UTC) - last_trigger
+    ) < timedelta(seconds=cooldown_seconds)
