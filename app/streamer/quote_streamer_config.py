@@ -12,6 +12,7 @@ from app.storage.sqlite_store import init_db, save_quote, save_alert
 from app.storage.sqlite_store import save_system_event
 # from app.services.status_service import get_streamer_mode
 from app.services.streamer_runtime_service import get_runtime_state
+from app.signals.typed_rule_engine import evaluate_typed_rules
 
 
 # PACIFIC = ZoneInfo("America/Los_Angeles")
@@ -73,28 +74,6 @@ save_system_event(
 )
 
 
-# def is_regular_market_hours():
-#     now = datetime.now(PACIFIC)
-
-#     # Monday=0, Sunday=6
-#     if now.weekday() >= 5:
-#         return False
-
-#     market_open = now.replace(hour=6, minute=30, second=0, microsecond=0)
-#     market_close = now.replace(hour=13, minute=0, second=0, microsecond=0)
-
-#     return market_open <= now <= market_close
-
-
-# def should_stop_streaming():
-#     now = datetime.now(PACIFIC)
-
-#     # Stop after 1:15 PM Pacific
-#     if now.hour > 13 or (now.hour == 13 and now.minute >= 15):
-#         return True
-
-#     return False
-
 
 def stream_quotes():
     global service_running
@@ -122,13 +101,20 @@ def stream_quotes():
             print("QUOTE:", quote)
 
             if runtime["should_process_alerts"]:
-                alerts = detector.process_quote(quote)
+                alerts = []
+
+                # legacy detector
+                alerts.extend(detector.process_quote(quote))
+
+                # typed rule engine
+                alerts.extend(evaluate_typed_rules(quote))
 
                 for alert in alerts:
                     alert["timestamp"] = quote["timestamp"]
-                    print("🚨 ALERT:", alert)
-                    save_alert(alert)
 
+                    print("🚨 ALERT:", alert)
+
+                    save_alert(alert)
         time.sleep(runtime["sleep_seconds"])
 
 
