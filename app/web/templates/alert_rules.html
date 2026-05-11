@@ -183,6 +183,10 @@
     <tr>
         <th>ID</th>
         <th>Rule</th>
+
+        <th>Type</th>
+        <th>Source</th>
+
         <th>Active</th>
         <th>Auto Disable</th>
         <th>Trigger Count</th>
@@ -207,6 +211,21 @@
                 window {{ rule.window_size }}
             {% endif %}
         </td>
+
+
+        <td>
+            {{ rule.rule_type }}
+        </td>
+
+        <td>
+            {% if rule.auto_generated %}
+                Auto: {{ rule.source }}
+            {% else %}
+                Manual
+            {% endif %}
+        </td>
+
+
         <td>{{ "Yes" if rule.is_active else "No" }}</td>
         <td>{{ "Yes" if rule.auto_disable_on_trigger else "No" }}</td>
         <td>{{ rule.trigger_count }}</td>
