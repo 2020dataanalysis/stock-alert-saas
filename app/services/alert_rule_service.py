@@ -246,3 +246,60 @@ def is_rule_in_cooldown(rule):
     return (
         datetime.now(UTC) - last_trigger
     ) < timedelta(seconds=cooldown_seconds)
+
+
+def mover_rule_exists(symbol, direction):
+    rule_type = "whale_spike" if direction == "up" else "whale_drop"
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.execute("""
+            SELECT 1
+            FROM alert_rules
+            WHERE
+                symbol = ?
+                AND rule_type = ?
+                AND auto_generated = 1
+            LIMIT 1
+        """, (
+            symbol.upper(),
+            rule_type,
+        ))
+
+        return cursor.fetchone() is not None
+
+
+def generate_mover_rules(
+    movers,
+    price_change_pct=1.5,
+    volume_change_pct=20,
+    window_size=5,
+):
+    created = 0
+
+    for symbol in movers:
+
+        if not mover_rule_exists(symbol, "up"):
+            create_whale_rule(
+                symbol=symbol,
+                direction="up",
+                price_change_pct=price_change_pct,
+                volume_change_pct=volume_change_pct,
+                window_size=window_size,
+                auto_generated=True,
+                source="movers",
+            )
+            created += 1
+
+        if not mover_rule_exists(symbol, "down"):
+            create_whale_rule(
+                symbol=symbol,
+                direction="down",
+                price_change_pct=price_change_pct,
+                volume_change_pct=volume_change_pct,
+                window_size=window_size,
+                auto_generated=True,
+                source="movers",
+            )
+            created += 1
+
+    return created

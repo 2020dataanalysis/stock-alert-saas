@@ -14,13 +14,17 @@ from app.services.provider_error_service import get_recent_provider_errors
 from app.services.system_event_service import get_recent_system_events
 from app.storage.sqlite_store import clear_alerts, save_system_event
 from app.services.market_hours_service import get_market_status
+from app.data_adapters.movers_adapter import get_mover_symbols
+
 from app.services.alert_rule_service import (
     get_alert_rules,
     create_alert_rule,
     create_whale_rule,
+    generate_mover_rules,
     set_alert_rule_active,
     delete_alert_rule,
 )
+
 
 from app.config import load_settings
 import sqlite3
@@ -289,7 +293,17 @@ async def delete_alert_rule_route(rule_id: int):
 
 
 
+@app.post("/alert-rules/generate-movers")
+async def generate_mover_alert_rules():
 
+    movers = get_mover_symbols(limit=10)
+
+    created = generate_mover_rules(movers)
+
+    print(f"Generated {created} mover rules")
+
+    return RedirectResponse("/alert-rules", status_code=303)
+    
 
 @app.get("/alerts", response_class=HTMLResponse)
 async def alerts_page(request: Request):
