@@ -79,6 +79,41 @@
 
 
 
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.badge-threshold {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.badge-spike {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.badge-drop {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-auto {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.badge-manual {
+    background: #ede9fe;
+    color: #5b21b6;
+}
+
+
+
     </style>
 </head>
 <body>
@@ -212,21 +247,53 @@
             {% endif %}
         </td>
 
+<td>
 
+{% if rule.rule_type == "threshold" %}
+    <span class="badge badge-threshold">
+        threshold
+    </span>
+
+{% elif rule.rule_type == "whale_spike" %}
+    <span class="badge badge-spike">
+        whale spike
+    </span>
+
+{% elif rule.rule_type == "whale_drop" %}
+    <span class="badge badge-drop">
+        whale drop
+    </span>
+{% endif %}
+
+</td>
         <td>
-            {{ rule.rule_type }}
+
+            {% if rule.auto_generated %}
+                <span class="badge badge-auto">
+                    auto {{ rule.source }}
+                </span>
+            {% else %}
+                <span class="badge badge-manual">
+                    manual
+                </span>
+            {% endif %}
+
         </td>
 
+
         <td>
-            {% if rule.auto_generated %}
-                Auto: {{ rule.source }}
+            {% if rule.is_active %}
+                <span class="badge badge-spike">
+                    active
+                </span>
             {% else %}
-                Manual
+                <span class="badge badge-drop">
+                    inactive
+                </span>
             {% endif %}
         </td>
 
 
-        <td>{{ "Yes" if rule.is_active else "No" }}</td>
         <td>{{ "Yes" if rule.auto_disable_on_trigger else "No" }}</td>
         <td>{{ rule.trigger_count }}</td>
         <td>{{ rule.last_triggered_at or "" }}</td>
