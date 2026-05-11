@@ -52,11 +52,45 @@
             margin: 5px;
             padding: 6px;
         }
+
+
+
+        .flash-message {
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .flash-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .flash-message.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .flash-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+
+
     </style>
 </head>
 <body>
 
 <h1>Alert Rules</h1>
+
+{% if message %}
+<div class="flash-message {{ message_type }}">
+    {{ message }}
+</div>
+{% endif %}
+
 
 <nav>
     <a href="/">Overview</a>

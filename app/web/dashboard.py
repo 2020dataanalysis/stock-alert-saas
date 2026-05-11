@@ -198,9 +198,12 @@ async def clear_alerts_route():
     return RedirectResponse("/alerts", status_code=303)
 
 
-
 @app.get("/alert-rules", response_class=HTMLResponse)
-async def alert_rules_page(request: Request):
+async def alert_rules_page(
+    request: Request,
+    message: str = "",
+    message_type: str = "info",
+):
     rules = get_alert_rules()
 
     return templates.TemplateResponse(
@@ -208,8 +211,11 @@ async def alert_rules_page(request: Request):
         name="alert_rules.html",
         context={
             "rules": rules,
+            "message": message,
+            "message_type": message_type,
         },
     )
+
 
 @app.post("/alert-rules/create")
 async def create_alert_rule_route(
@@ -302,8 +308,16 @@ async def generate_mover_alert_rules():
 
     print(f"Generated {created} mover rules")
 
-    return RedirectResponse("/alert-rules", status_code=303)
-    
+    if created == 0:
+        return RedirectResponse(
+            "/alert-rules?message=No+movers+returned&message_type=warning",
+            status_code=303,
+        )
+
+    return RedirectResponse(
+        f"/alert-rules?message=Generated+{created}+mover+rules&message_type=success",
+        status_code=303,
+    )    
 
 @app.get("/alerts", response_class=HTMLResponse)
 async def alerts_page(request: Request):
