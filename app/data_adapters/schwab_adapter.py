@@ -2,7 +2,7 @@ from pathlib import Path
 import sys
 
 from app.storage.sqlite_store import save_provider_error
-
+from app.storage.sqlite_store import save_provider_error, save_system_event
 
 PROJECT_PARENT = Path(__file__).resolve().parents[3]
 SCHWAB_PATH = PROJECT_PARENT / "2024schwab"
