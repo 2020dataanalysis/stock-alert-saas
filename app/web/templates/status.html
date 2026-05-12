@@ -20,6 +20,15 @@
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
+
+
+
+
+
+
+
+
+            
         }
 
         .status-card {
@@ -48,6 +57,20 @@
         .offline {
             color: red;
         }
+
+
+.status-card {
+    overflow-wrap: break-word;
+}
+
+
+.card-value {
+    font-size: 36px;
+    font-weight: bold;
+    word-break: break-word;
+}
+
+
     </style>
 </head>
 
@@ -140,6 +163,59 @@
             </div>
         </div>
 
+
+
+        <div class="status-card">
+            <div class="card-title">OAuth Token Status</div>
+
+            <div class="card-value
+                {% if token_status.token_status == 'OK' %}
+                    online
+                {% else %}
+                    offline
+                {% endif %}
+            ">
+                {{ token_status.token_status }}
+            </div>
+
+
+<div style="font-size: 13px; color: #666; margin-top: 10px;">
+    Access Remaining:
+    {{ token_status.access_token_seconds_remaining }}s
+</div>
+
+<div style="font-size: 13px; color: #666;">
+    Refresh Remaining:
+    {{ token_status.refresh_token_seconds_remaining }}s
+</div>
+
+<hr style="margin: 10px 0;">
+
+<div style="font-size: 12px;">
+    Access Exp:
+    {{ token_status.access_token_expiry_display }}
+</div>
+
+<div style="font-size: 12px;">
+    Refresh Exp:
+    {{ token_status.refresh_token_expiry_display }}
+</div>
+
+<hr style="margin: 10px 0;">
+
+<div style="font-size: 11px; color: #999;">
+    Access Epoch:
+    {{ token_status.access_token_expiration_time }}
+</div>
+
+<div style="font-size: 11px; color: #999;">
+    Refresh Epoch:
+    {{ token_status.refresh_token_expiration_time }}
+</div>
+
+
+
+        </div>
 
 
 

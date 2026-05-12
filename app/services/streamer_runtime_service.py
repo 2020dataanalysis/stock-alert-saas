@@ -4,10 +4,10 @@ from app.services.market_hours_service import get_market_session, is_regular_mar
 
 def get_sleep_seconds(mode, session, poll_seconds):
     if mode == "offline":
-        return 300
+        return 5
 
     if session == "CLOSED":
-        return 300
+        return 5
 
     if session in {"PREMARKET", "AFTER_HOURS"}:
         return max(poll_seconds, 30)
