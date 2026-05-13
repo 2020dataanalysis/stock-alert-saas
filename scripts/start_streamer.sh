@@ -1,4 +1,5 @@
 #!/bin/zsh
+# stock-alert-saas/scripts/start_streamer.sh
 
 APP_DIR="/Users/ultrasupersam/apps/stock-alert-platform/stock-alert-saas"
 PYTHON="/Users/ultrasupersam/apps/stock-alert-platform/.venv/bin/python"
@@ -21,7 +22,7 @@ if [ ! -f "$PYTHON" ]; then
     exit 1
 fi
 
-"$PYTHON" -u -m app.streamer.quote_streamer_config \
+"$PYTHON" -u -m app.streamer.quote_streamer \
     >> logs/streamer.out.log \
     2>> logs/streamer.err.log
 
