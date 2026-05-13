@@ -3,6 +3,13 @@ from zoneinfo import ZoneInfo
 
 PACIFIC = ZoneInfo("America/Los_Angeles")
 
+def get_market_windows():
+    return {
+        "premarket_display": "4:00 AM–6:30 AM PT",
+        "regular_display": "6:30 AM–1:00 PM PT",
+        "after_hours_display": "1:00 PM–5:00 PM PT",
+        "source": "Schwab equity hours converted from ET to PT",
+    }
 
 def get_market_session():
     now = datetime.now(PACIFIC)
@@ -47,6 +54,7 @@ def get_market_status():
         "market_session": session,
         "market_status": "OPEN" if session != "CLOSED" else "CLOSED",
         "alerts_enabled": session == "REGULAR",
+        "market_hours": get_market_windows(),
         "message": (
             "Regular market hours. Alerts are active."
             if session == "REGULAR"

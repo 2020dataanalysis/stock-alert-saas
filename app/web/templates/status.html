@@ -165,6 +165,34 @@
 
 
 
+
+
+<div class="status-card">
+    <div class="card-title">Market Hours</div>
+
+    <div style="font-size: 14px; line-height: 1.8;">
+        <strong>Pre:</strong>
+        {{ market_hours.premarket_display }}
+        <br>
+
+        <strong>Regular:</strong>
+        {{ market_hours.regular_display }}
+        <br>
+
+        <strong>Post:</strong>
+        {{ market_hours.after_hours_display }}
+    </div>
+
+    <div style="font-size: 11px; color: #777; margin-top: 12px;">
+        {{ market_hours.source }}
+    </div>
+</div>
+
+
+
+
+
+
         <div class="status-card">
             <div class="card-title">OAuth Token Status</div>
 

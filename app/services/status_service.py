@@ -1,8 +1,13 @@
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from app.services.market_hours_service import is_trading_session
+
 from app.services.token_status_service import get_token_status
+from app.services.market_hours_service import (
+    is_trading_session,
+    get_market_status,
+)
+
 
 DB_PATH = Path("data/market_data.db")
 
@@ -98,6 +103,7 @@ def get_status_metrics():
         streamer_status = "OFFLINE"
 
     token_status = get_token_status()
+    market_status = get_market_status()
 
     return {
         "token_status": token_status,
