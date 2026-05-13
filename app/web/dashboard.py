@@ -141,7 +141,7 @@ async def logs_page(request: Request):
         try:
             with open(path, "r") as f:
                 lines = f.readlines()
-                logs[name] = "".join(lines[-100:])
+                logs[name] = "".join(lines[-50:])
         except FileNotFoundError:
             logs[name] = "Log file not found."
 

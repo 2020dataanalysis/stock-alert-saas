@@ -16,27 +16,27 @@
             margin-bottom: 30px;
         }
 
+        nav {
+            margin-bottom: 30px;
+        }
+
+        nav a {
+            margin-right: 15px;
+        }
+
         .card-container {
             display: flex;
             gap: 20px;
             flex-wrap: wrap;
-
-
-
-
-
-
-
-
-            
         }
 
         .status-card {
             background: white;
             padding: 20px;
-            width: 220px;
+            width: 260px;
             border-radius: 10px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-wrap: break-word;
         }
 
         .card-title {
@@ -48,6 +48,7 @@
         .card-value {
             font-size: 36px;
             font-weight: bold;
+            word-break: break-word;
         }
 
         .online {
@@ -58,26 +59,30 @@
             color: red;
         }
 
+        .small-text {
+            font-size: 13px;
+            color: #666;
+            margin-top: 10px;
+            line-height: 1.5;
+        }
 
-.status-card {
-    overflow-wrap: break-word;
-}
+        .tiny-text {
+            font-size: 11px;
+            color: #999;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
 
-
-.card-value {
-    font-size: 36px;
-    font-weight: bold;
-    word-break: break-word;
-}
-
+        hr {
+            margin: 10px 0;
+        }
 
     </style>
 </head>
 
 <body>
 
-    <h1>System Status</h1>
-
+<h1>System Status</h1>
 
 <nav>
     <a href="/">Overview</a>
@@ -89,168 +94,197 @@
     <a href="/logs">Logs</a>
 </nav>
 
+<div class="card-container">
 
-
-    <div class="card-container">
-
-        <div class="status-card">
-            <div class="card-title">Quotes Stored</div>
-            <div class="card-value">{{ quote_count }}</div>
-        </div>
-
-        <div class="status-card">
-            <div class="card-title">Alerts Generated</div>
-            <div class="card-value">{{ alert_count }}</div>
-        </div>
-
-        <div class="status-card">
-            <div class="card-title">Streamer Status</div>
-
-            <div class="card-value
-                {% if streamer_status == 'ONLINE' %}
-                    online
-                {% else %}
-                    offline
-                {% endif %}
-            ">
-                {{ streamer_status }}
-            </div>
-        </div>
-
-
-        <div class="status-card">
-            <div class="card-title">Control Mode</div>
-
-            <div class="card-value
-                {% if control_mode == 'ONLINE' %}
-                    online
-                {% elif control_mode == 'OFFLINE' %}
-                    offline
-                {% endif %}
-            ">
-                {{ control_mode }}
-            </div>            
-        </div>
-
-
-        <div class="status-card">
-            <div class="card-title">Symbols Tracked</div>
-            <div class="card-value">{{ symbols_tracked }}</div>
-        </div>
-
-        <div class="status-card">
-            <div class="card-title">Last Quote Lag</div>
-            <div class="card-value">
-                {{ lag_seconds }}s
-            </div>
-        </div>
-
-
-
-        <div class="status-card">
-            <div class="card-title">Market Session</div>
-            <div class="card-value
-                {% if market_status == 'OPEN' %}
-                    online
-                {% else %}
-                    offline
-                {% endif %}
-            ">
-                {{ market_session }}
-            </div>
-            <div style="font-size: 13px; color: #666; margin-top: 10px;">
-                {{ message }}
-            </div>
-        </div>
-
-
-
-
-
-<div class="status-card">
-    <div class="card-title">Market Hours</div>
-
-    <div style="font-size: 14px; line-height: 1.8;">
-        <strong>Pre:</strong>
-        {{ market_hours.premarket_display }}
-        <br>
-
-        <strong>Regular:</strong>
-        {{ market_hours.regular_display }}
-        <br>
-
-        <strong>Post:</strong>
-        {{ market_hours.after_hours_display }}
+    <div class="status-card">
+        <div class="card-title">Quotes Stored</div>
+        <div class="card-value">{{ quote_count }}</div>
     </div>
 
-    <div style="font-size: 11px; color: #777; margin-top: 12px;">
-        {{ market_hours.source }}
+    <div class="status-card">
+        <div class="card-title">Alerts Generated</div>
+        <div class="card-value">{{ alert_count }}</div>
     </div>
-</div>
 
+    <div class="status-card">
+        <div class="card-title">Streamer Status</div>
 
-
-
-
-
-        <div class="status-card">
-            <div class="card-title">OAuth Token Status</div>
-
-            <div class="card-value
-                {% if token_status.token_status == 'OK' %}
-                    online
-                {% else %}
-                    offline
-                {% endif %}
-            ">
-                {{ token_status.token_status }}
-            </div>
-
-
-<div style="font-size: 13px; color: #666; margin-top: 10px;">
-    Access Remaining:
-    {{ token_status.access_token_seconds_remaining }}s
-</div>
-
-<div style="font-size: 13px; color: #666;">
-    Refresh Remaining:
-    {{ token_status.refresh_token_seconds_remaining }}s
-</div>
-
-<hr style="margin: 10px 0;">
-
-<div style="font-size: 12px;">
-    Access Exp:
-    {{ token_status.access_token_expiry_display }}
-</div>
-
-<div style="font-size: 12px;">
-    Refresh Exp:
-    {{ token_status.refresh_token_expiry_display }}
-</div>
-
-<hr style="margin: 10px 0;">
-
-<div style="font-size: 11px; color: #999;">
-    Access Epoch:
-    {{ token_status.access_token_expiration_time }}
-</div>
-
-<div style="font-size: 11px; color: #999;">
-    Refresh Epoch:
-    {{ token_status.refresh_token_expiration_time }}
-</div>
-
-
-
+        <div class="card-value
+            {% if streamer_status == 'ONLINE' %}
+                online
+            {% else %}
+                offline
+            {% endif %}
+        ">
+            {{ streamer_status }}
         </div>
 
-
-
-
-
-
+        <div class="small-text">
+            Last Quote Lag: {{ lag_seconds }}s
+        </div>
     </div>
+
+    <div class="status-card">
+        <div class="card-title">Control Mode</div>
+
+        <div class="card-value
+            {% if control_mode == 'ONLINE' %}
+                online
+            {% elif control_mode == 'OFFLINE' %}
+                offline
+            {% endif %}
+        ">
+            {{ control_mode }}
+        </div>
+    </div>
+
+    <div class="status-card">
+        <div class="card-title">Symbols Tracked</div>
+        <div class="card-value">{{ symbols_tracked }}</div>
+    </div>
+
+    <div class="status-card">
+        <div class="card-title">Market Session</div>
+
+        <div class="card-value
+            {% if market_status == 'OPEN' %}
+                online
+            {% else %}
+                offline
+            {% endif %}
+        ">
+            {{ market_session }}
+        </div>
+
+        <div class="small-text">
+            {{ message }}
+        </div>
+    </div>
+
+    <div class="status-card">
+        <div class="card-title">Market Hours</div>
+
+        <div class="small-text">
+            <strong>Pre:</strong>
+            {{ market_hours.premarket_display }}
+            <br>
+
+            <strong>Regular:</strong>
+            {{ market_hours.regular_display }}
+            <br>
+
+            <strong>Post:</strong>
+            {{ market_hours.after_hours_display }}
+        </div>
+
+        <div class="tiny-text">
+            {{ market_hours.source }}
+        </div>
+    </div>
+
+    <div class="status-card">
+        <div class="card-title">OAuth Token Status</div>
+
+        <div class="card-value
+            {% if token_status.token_status == 'OK' %}
+                online
+            {% else %}
+                offline
+            {% endif %}
+        ">
+            {{ token_status.token_status }}
+        </div>
+
+        <div class="small-text">
+            Access Remaining:
+            {{ token_status.access_token_seconds_remaining }}s
+        </div>
+
+        <div class="small-text">
+            Refresh Remaining:
+            {{ token_status.refresh_token_seconds_remaining }}s
+        </div>
+
+        <hr>
+
+        <div class="tiny-text">
+            Access Exp:
+            {{ token_status.access_token_expiry_display }}
+        </div>
+
+        <div class="tiny-text">
+            Refresh Exp:
+            {{ token_status.refresh_token_expiry_display }}
+        </div>
+    </div>
+
+    <div class="status-card">
+        <div class="card-title">Latest System Event</div>
+
+        {% if latest_system_event %}
+
+            <div class="small-text">
+                <strong>{{ latest_system_event.event_type }}</strong>
+            </div>
+
+            <div class="small-text">
+                {{ latest_system_event.status }}
+            </div>
+
+            <div class="small-text">
+                {{ latest_system_event.message }}
+            </div>
+
+            <div class="tiny-text">
+                {{ latest_system_event.timestamp }}
+            </div>
+
+        {% else %}
+
+            <div class="small-text">
+                No system events yet.
+            </div>
+
+        {% endif %}
+    </div>
+
+    <div class="status-card">
+        <div class="card-title">Latest Provider Error</div>
+
+        {% if latest_provider_error %}
+
+            <div class="small-text">
+                <strong>{{ latest_provider_error.error_type }}</strong>
+            </div>
+
+            <div class="small-text">
+                Provider:
+                {{ latest_provider_error.provider }}
+            </div>
+
+            <div class="small-text">
+                Symbol:
+                {{ latest_provider_error.symbol }}
+            </div>
+
+            <div class="small-text">
+                {{ latest_provider_error.message }}
+            </div>
+
+            <div class="tiny-text">
+                {{ latest_provider_error.timestamp }}
+            </div>
+
+        {% else %}
+
+            <div class="small-text">
+                No provider errors.
+            </div>
+
+        {% endif %}
+    </div>
+
+</div>
 
 </body>
 </html>

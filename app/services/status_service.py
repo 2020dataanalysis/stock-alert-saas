@@ -47,6 +47,49 @@ def get_streamer_mode():
 
 
 
+def get_latest_system_event(cursor):
+    cursor.execute("""
+        SELECT event_type, service, status, message, timestamp
+        FROM system_events
+        ORDER BY timestamp DESC
+        LIMIT 1
+    """)
+    row = cursor.fetchone()
+
+    if not row:
+        return None
+
+    return {
+        "event_type": row[0],
+        "service": row[1],
+        "status": row[2],
+        "message": row[3],
+        "timestamp": row[4],
+    }
+
+
+def get_latest_provider_error(cursor):
+    cursor.execute("""
+        SELECT provider, symbol, error_type, message, timestamp
+        FROM provider_errors
+        ORDER BY timestamp DESC
+        LIMIT 1
+    """)
+    row = cursor.fetchone()
+
+    if not row:
+        return None
+
+    return {
+        "provider": row[0],
+        "symbol": row[1],
+        "error_type": row[2],
+        "message": row[3],
+        "timestamp": row[4],
+    }
+
+
+
 def get_status_metrics():
     if not DB_PATH.exists():
         return {
@@ -90,6 +133,8 @@ def get_status_metrics():
     else:
         lag_seconds = None
 
+    latest_system_event = get_latest_system_event(cursor)
+    latest_provider_error = get_latest_provider_error(cursor)
 
     conn.close()
 
@@ -106,6 +151,8 @@ def get_status_metrics():
     market_status = get_market_status()
 
     return {
+        "latest_system_event": latest_system_event,
+        "latest_provider_error": latest_provider_error,
         "token_status": token_status,
         "quote_count": quote_count,
         "alert_count": alert_count,
