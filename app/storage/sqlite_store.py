@@ -5,6 +5,23 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 DB_PATH = BASE_DIR / "data" / "market_data.db"
 
 
+
+def get_connection():
+    init_db()
+
+    conn = sqlite3.connect(
+        DB_PATH,
+        timeout=30,
+    )
+
+    conn.row_factory = sqlite3.Row
+
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA foreign_keys=ON")
+
+    return conn
+
+
 def init_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 

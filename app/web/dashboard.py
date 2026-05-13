@@ -25,6 +25,9 @@ from app.services.alert_rule_service import (
     delete_alert_rule,
 )
 
+from app.storage.sqlite_store import get_connection
+# conn = get_connection()
+
 
 from app.config import load_settings
 import sqlite3
@@ -39,7 +42,8 @@ templates = Jinja2Templates(directory="app/web/templates")
 async def overview(request: Request):
     settings = load_settings()
 
-    conn = sqlite3.connect("data/market_data.db")
+    conn = get_connection()
+
     conn.row_factory = sqlite3.Row
 
     # counts
