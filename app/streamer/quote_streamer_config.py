@@ -13,6 +13,7 @@ from app.storage.sqlite_store import save_system_event
 # from app.services.status_service import get_streamer_mode
 from app.services.streamer_runtime_service import get_runtime_state
 from app.signals.typed_rule_engine import evaluate_typed_rules
+from app.services.token_status_service import get_token_status
 
 
 # PACIFIC = ZoneInfo("America/Los_Angeles")
@@ -138,6 +139,8 @@ def stream_quotes():
         if successful_quotes == 0:
             failed_quote_cycles += 1
 
+            token_status = get_token_status()
+
             save_system_event(
                 event_type="PROVIDER_DEGRADED",
                 service="quote_streamer_config",
@@ -146,6 +149,7 @@ def stream_quotes():
                 metadata={
                     "failed_quote_cycles": failed_quote_cycles,
                     "symbols": SYMBOLS,
+                    "token_status": token_status,
                 },
             )
 
@@ -154,7 +158,26 @@ def stream_quotes():
                 f"failed quote cycle {failed_quote_cycles}"
             )
 
-            # self-healing adapter restart
+            # token-aware recovery
+            if token_status.get("access_status") != "OK":
+
+                save_system_event(
+                    event_type="ACCESS_TOKEN_REFRESH",
+                    service="quote_streamer_config",
+                    status="WARNING",
+                    message="Refreshing expired access token",
+                    metadata=token_status,
+                )
+
+                log("🔑 Access token expired. Refreshing token...")
+
+                adapter = create_adapter()
+
+                failed_quote_cycles = 0
+
+                continue
+
+            # generic self-healing recovery
             if failed_quote_cycles >= FAILED_CYCLE_LIMIT:
 
                 save_system_event(
