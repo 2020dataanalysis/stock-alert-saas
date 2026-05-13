@@ -19,6 +19,9 @@ from app.signals.typed_rule_engine import evaluate_typed_rules
 
 settings = load_settings()
 
+def log(message):
+    timestamp = datetime.now(UTC).isoformat()
+    print(f"{timestamp} {message}")
 
 def create_adapter():
     return SchwabAdapter()
@@ -50,9 +53,9 @@ if settings["use_movers"]:
 SYMBOLS = sorted(set(favorite_symbols + mover_symbols))
 POLL_SECONDS = settings["poll_seconds"]
 
-print("FAVORITE SYMBOLS:", favorite_symbols)
-print("MOVERS WATCHLIST:", mover_symbols)
-print("FINAL STREAM WATCHLIST:", SYMBOLS)
+log(f"FAVORITE SYMBOLS: {favorite_symbols}")
+log(f"MOVERS WATCHLIST: {mover_symbols}")
+log(f"FINAL STREAM WATCHLIST: {SYMBOLS}")
 
 if not SYMBOLS:
     save_system_event(
@@ -66,7 +69,7 @@ if not SYMBOLS:
         },
     )
 
-    print("⚠️ No symbols configured. Exiting.")
+    log("⚠️ No symbols configured. Exiting.")
 
     raise SystemExit(1)
 
@@ -92,7 +95,7 @@ def stream_quotes():
     while service_running:
         runtime = get_runtime_state(POLL_SECONDS)
 
-        print("RUNTIME:", runtime)
+        log(f"RUNTIME: {runtime}")
 
         if not runtime["should_fetch_quotes"]:
             time.sleep(runtime["sleep_seconds"])
@@ -104,7 +107,7 @@ def stream_quotes():
             quote = adapter.get_quote(symbol)
 
             if quote is None:
-                print(f"⚠️ No quote returned for {symbol}; skipping.")
+                log(f"⚠️ No quote returned for {symbol}; skipping.")
                 continue
 
             successful_quotes += 1
@@ -113,7 +116,7 @@ def stream_quotes():
 
             save_quote(quote)
 
-            print("QUOTE:", quote)
+            log(f"QUOTE: {quote}")
 
             if runtime["should_process_alerts"]:
                 alerts = []
@@ -127,7 +130,7 @@ def stream_quotes():
                 for alert in alerts:
                     alert["timestamp"] = quote["timestamp"]
 
-                    print("🚨 ALERT:", alert)
+                    log(f"🚨 ALERT: {alert}")
 
                     save_alert(alert)
 
@@ -146,7 +149,7 @@ def stream_quotes():
                 },
             )
 
-            print(
+            log(
                 f"⚠️ Provider degraded: "
                 f"failed quote cycle {failed_quote_cycles}"
             )
@@ -167,7 +170,7 @@ def stream_quotes():
                     },
                 )
 
-                print("🔄 Recreating Schwab adapter...")
+                log("🔄 Recreating Schwab adapter...")
 
                 adapter = create_adapter()
 
@@ -187,7 +190,7 @@ def stream_quotes():
                     },
                 )
 
-                print(
+                log(
                     f"✅ Provider recovered with "
                     f"{successful_quotes} successful quotes"
                 )
