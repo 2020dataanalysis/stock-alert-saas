@@ -1,3 +1,8 @@
+# stock-alert-saas/app/storage/sqlite_store.py
+
+
+from datetime import datetime, UTC
+import json
 import sqlite3
 from pathlib import Path
 
@@ -14,11 +19,15 @@ def get_connection():
         timeout=30,
     )
 
-    conn.row_factory = sqlite3.Row
-
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
+    conn.execute("PRAGMA busy_timeout=30000")
+    return conn
 
+
+def get_row_connection():
+    conn = get_connection()
+    conn.row_factory = sqlite3.Row
     return conn
 
 
@@ -188,7 +197,7 @@ def init_streamer_control_table():
 
 
 def save_quote(quote):
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("""
             INSERT INTO quotes (
                 timestamp,
@@ -218,12 +227,12 @@ def save_quote(quote):
 
 
 def clear_alerts():
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("DELETE FROM alerts")
 
 
 def save_alert(alert):
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("""
             INSERT INTO alerts (
                 timestamp,
@@ -251,7 +260,7 @@ def save_alert(alert):
 
 
 def get_top_movers(limit=5):
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         cursor = conn.execute("""
             SELECT
                 symbol,
@@ -277,13 +286,10 @@ def save_provider_error(
     message=None,
     raw_response=None,
 ):
-    from datetime import datetime, UTC
-    import json
-
     if raw_response is not None and not isinstance(raw_response, str):
         raw_response = json.dumps(raw_response, default=str)
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("""
             INSERT INTO provider_errors (
                 timestamp,
@@ -313,14 +319,12 @@ def save_system_event(
     message=None,
     metadata=None,
 ):
-    from datetime import datetime, UTC
-    import json
 
     metadata_json = None
     if metadata is not None:
         metadata_json = json.dumps(metadata, default=str)
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("""
             INSERT INTO system_events (
                 timestamp,

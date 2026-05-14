@@ -1,11 +1,11 @@
 # app/web/api.py
 
-import sqlite3
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter
 
 from app.config import load_settings
+from app.storage.sqlite_store import get_connection
 
 
 router = APIRouter()
@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.post("/api/streamer/mode/{mode}")
 def set_mode(mode: str):
-    conn = sqlite3.connect("data/market_data.db")
+    conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
@@ -32,7 +32,7 @@ def set_mode(mode: str):
 def online_for(minutes: int):
     until = datetime.now(timezone.utc) + timedelta(minutes=minutes)
 
-    conn = sqlite3.connect("data/market_data.db")
+    conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
@@ -52,7 +52,7 @@ def chart_data(symbol: str):
     settings = load_settings()
     symbol = symbol.upper()
 
-    conn = sqlite3.connect("data/market_data.db")
+    conn = get_connection()
     conn.row_factory = sqlite3.Row
 
     quotes = conn.execute("""

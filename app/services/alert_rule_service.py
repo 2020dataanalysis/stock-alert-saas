@@ -1,27 +1,14 @@
-import sqlite3
 from datetime import datetime, UTC
-from pathlib import Path
 from datetime import timedelta
+from app.storage.sqlite_store import (
+    get_connection,
+    get_row_connection,
+)
 
-DB_PATH = Path("data/market_data.db")
-
-def get_active_alert_rules():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.row_factory = sqlite3.Row
-
-        cursor = conn.execute("""
-            SELECT *
-            FROM alert_rules
-            WHERE is_active = 1
-            ORDER BY id DESC
-        """)
-
-        return cursor.fetchall()
 
 def get_alert_rules():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.row_factory = sqlite3.Row
-
+    with get_row_connection() as conn:
+        
         cursor = conn.execute("""
             SELECT
                 id,
@@ -59,7 +46,7 @@ def create_threshold_rule(
 ):
     now = datetime.now(UTC).isoformat()
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("""
             INSERT INTO alert_rules (
                 symbol,
@@ -102,7 +89,7 @@ def create_whale_rule(
 
     rule_type = "whale_spike" if direction == "up" else "whale_drop"
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("""
             INSERT INTO alert_rules (
                 symbol,
@@ -158,8 +145,7 @@ def create_alert_rule(
 
 
 def get_active_alert_rules():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.row_factory = sqlite3.Row
+    with get_row_connection() as conn:
 
         cursor = conn.execute("""
             SELECT *
@@ -174,7 +160,7 @@ def get_active_alert_rules():
 def set_alert_rule_active(rule_id, is_active):
     now = datetime.now(UTC).isoformat()
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("""
             UPDATE alert_rules
             SET is_active = ?, updated_at = ?
@@ -187,7 +173,7 @@ def set_alert_rule_active(rule_id, is_active):
 
 
 def delete_alert_rule(rule_id):
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("""
             DELETE FROM alert_rules
             WHERE id = ?
@@ -197,7 +183,7 @@ def delete_alert_rule(rule_id):
 def mark_rule_triggered(rule_id, quote):
     now = datetime.now(UTC).isoformat()
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("""
             UPDATE alert_rules
             SET
@@ -219,7 +205,7 @@ def mark_rule_triggered(rule_id, quote):
 def disable_rule(rule_id):
     now = datetime.now(UTC).isoformat()
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         conn.execute("""
             UPDATE alert_rules
             SET
@@ -251,7 +237,7 @@ def is_rule_in_cooldown(rule):
 def mover_rule_exists(symbol, direction):
     rule_type = "whale_spike" if direction == "up" else "whale_drop"
 
-    with sqlite3.connect(DB_PATH) as conn:
+    with get_connection() as conn:
         cursor = conn.execute("""
             SELECT 1
             FROM alert_rules

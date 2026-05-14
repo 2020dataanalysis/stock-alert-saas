@@ -1,33 +1,21 @@
-import sqlite3
-from pathlib import Path
-
-
-DB_PATH = Path("data/market_data.db")
+from app.storage.sqlite_store import get_row_connection
 
 
 def get_recent_quotes(symbol="AAPL", limit=100):
-    if not DB_PATH.exists():
-        return []
+    with get_row_connection() as conn:
 
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+        cursor = conn.execute(
+            """
+            SELECT timestamp, last
+            FROM quotes
+            WHERE symbol = ?
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (symbol, limit),
+        )
 
-    cursor = conn.cursor()
-
-    cursor.execute(
-        """
-        SELECT timestamp, last
-        FROM quotes
-        WHERE symbol = ?
-        ORDER BY id DESC
-        LIMIT ?
-        """,
-        (symbol, limit),
-    )
-
-    rows = cursor.fetchall()
-
-    conn.close()
+        rows = cursor.fetchall()
 
     rows = list(reversed(rows))
 

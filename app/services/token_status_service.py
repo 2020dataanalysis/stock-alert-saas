@@ -2,7 +2,6 @@ import json
 from datetime import datetime, UTC
 from pathlib import Path
 
-
 TOKEN_FILE = Path(
     "/Users/ultrasupersam/apps/stock-alert-platform/2024schwab/private/refresh_token.json"
 )

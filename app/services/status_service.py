@@ -1,24 +1,19 @@
-import sqlite3
 from datetime import datetime, timezone
-from pathlib import Path
+from app.storage.sqlite_store import get_connection
 
 from app.services.token_status_service import get_token_status
 from app.services.market_hours_service import (
     is_trading_session,
-    get_market_status,
 )
 
 
-DB_PATH = Path("data/market_data.db")
-
 
 def get_streamer_mode():
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
+    with get_connection() as conn:
+        cur = conn.cursor()
 
-    cur.execute("SELECT mode, until_timestamp FROM streamer_control WHERE id = 1")
-    row = cur.fetchone()
-    conn.close()
+        cur.execute("SELECT mode, until_timestamp FROM streamer_control WHERE id = 1")
+        row = cur.fetchone()
 
     if not row:
         return "auto"
@@ -89,38 +84,32 @@ def get_latest_provider_error(cursor):
     }
 
 
-
 def get_status_metrics():
-    if not DB_PATH.exists():
-        return {
-            "quote_count": 0,
-            "alert_count": 0,
-            "streamer_status": "OFFLINE",
-            "symbols_tracked": 0,
-        }
+    with get_connection() as conn:
+        cursor = conn.cursor()
 
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM quotes")
+        quote_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM quotes")
-    quote_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM alerts")
+        alert_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM alerts")
-    alert_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(DISTINCT symbol) FROM quotes")
+        symbols_tracked = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(DISTINCT symbol) FROM quotes")
-    symbols_tracked = cursor.fetchone()[0]
+        cursor.execute("""
+            SELECT timestamp
+            FROM quotes
+            ORDER BY timestamp DESC
+            LIMIT 1
+        """)
 
-    cursor.execute("""
-        SELECT timestamp
-        FROM quotes
-        ORDER BY timestamp DESC
-        LIMIT 1
-    """)
+        result = cursor.fetchone()
 
-    result = cursor.fetchone()
+        last_quote_time = result[0] if result else None
 
-    last_quote_time = result[0] if result else None
+        latest_system_event = get_latest_system_event(cursor)
+        latest_provider_error = get_latest_provider_error(cursor)
 
     if last_quote_time:
         last_dt = datetime.fromisoformat(last_quote_time)
@@ -133,11 +122,6 @@ def get_status_metrics():
     else:
         lag_seconds = None
 
-    latest_system_event = get_latest_system_event(cursor)
-    latest_provider_error = get_latest_provider_error(cursor)
-
-    conn.close()
-
     if lag_seconds is None:
         streamer_status = "OFFLINE"
     elif lag_seconds < 60:
@@ -148,7 +132,6 @@ def get_status_metrics():
         streamer_status = "OFFLINE"
 
     token_status = get_token_status()
-    market_status = get_market_status()
 
     return {
         "latest_system_event": latest_system_event,

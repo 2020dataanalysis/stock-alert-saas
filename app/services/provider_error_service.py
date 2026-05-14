@@ -1,15 +1,9 @@
-import sqlite3
-from pathlib import Path
-
-DB_PATH = Path("data/market_data.db")
+from app.storage.sqlite_store import get_row_connection
 
 
 def get_recent_provider_errors(limit=50):
-    if not DB_PATH.exists():
-        return []
 
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.row_factory = sqlite3.Row
+    with get_row_connection() as conn:
 
         cursor = conn.execute("""
             SELECT
