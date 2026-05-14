@@ -5,14 +5,29 @@ from datetime import datetime, UTC
 import json
 import sqlite3
 from pathlib import Path
+from threading import Lock
+
+_DB_INITIALIZED = False
+_DB_INIT_LOCK = Lock()
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 DB_PATH = BASE_DIR / "data" / "market_data.db"
 
 
+def ensure_db_initialized():
+    global _DB_INITIALIZED
+
+    if _DB_INITIALIZED:
+        return
+
+    with _DB_INIT_LOCK:
+        if not _DB_INITIALIZED:
+            init_db()
+            _DB_INITIALIZED = True
+
 
 def get_connection():
-    init_db()
+    ensure_db_initialized()
 
     conn = sqlite3.connect(
         DB_PATH,
@@ -22,6 +37,7 @@ def get_connection():
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     conn.execute("PRAGMA busy_timeout=30000")
+
     return conn
 
 
@@ -213,7 +229,7 @@ def save_quote(quote):
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            quote.get("timestamp") or datetime.now(timezone.utc).isoformat(),
+            quote.get("timestamp") or datetime.now(UTC).isoformat(),
             quote["symbol"],
             quote.get("bid"),
             quote.get("ask"),
