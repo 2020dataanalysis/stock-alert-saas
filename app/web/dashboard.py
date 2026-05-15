@@ -15,6 +15,7 @@ from app.services.system_event_service import get_recent_system_events
 from app.storage.sqlite_store import clear_alerts, save_system_event
 from app.services.market_hours_service import get_market_status
 from app.data_adapters.movers_adapter import get_mover_symbols
+from fastapi.staticfiles import StaticFiles
 
 from app.services.alert_rule_service import (
     get_alert_rules,
@@ -33,6 +34,14 @@ from app.config import load_settings
 import sqlite3
 
 app = FastAPI()
+
+app.mount(
+    "/static",
+    StaticFiles(directory="app/web/static"),
+    name="static",
+)
+
+
 app.include_router(api_router)
 
 templates = Jinja2Templates(directory="app/web/templates")

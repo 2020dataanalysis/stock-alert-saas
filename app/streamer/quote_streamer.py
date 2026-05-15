@@ -14,7 +14,7 @@ from app.storage.sqlite_store import save_system_event
 from app.services.streamer_runtime_service import get_runtime_state
 from app.signals.typed_rule_engine import evaluate_typed_rules
 from app.services.token_status_service import get_token_status
-
+from datetime import datetime, UTC, timedelta
 
 # PACIFIC = ZoneInfo("America/Los_Angeles")
 
@@ -93,10 +93,29 @@ def stream_quotes():
     global failed_quote_cycles
     global adapter
 
+    last_heartbeat = datetime.now(UTC)
+
     while service_running:
         runtime = get_runtime_state(POLL_SECONDS)
 
         log(f"RUNTIME: {runtime}")
+
+
+
+        now = datetime.now(UTC)
+
+        if (now - last_heartbeat) >= timedelta(minutes=1):
+            save_system_event(
+                event_type="STREAMER_HEARTBEAT",
+                service="quote_streamer",
+                status="ONLINE",
+                message="Streamer heartbeat alive",
+            )
+
+            last_heartbeat = now
+
+
+
 
         if not runtime["should_fetch_quotes"]:
             time.sleep(runtime["sleep_seconds"])

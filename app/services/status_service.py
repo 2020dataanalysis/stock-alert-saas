@@ -7,6 +7,21 @@ from app.services.market_hours_service import (
 )
 
 
+def get_latest_heartbeat(cursor):
+    cursor.execute("""
+        SELECT timestamp
+        FROM system_events
+        WHERE event_type = 'STREAMER_HEARTBEAT'
+        ORDER BY timestamp DESC
+        LIMIT 1
+    """)
+    row = cursor.fetchone()
+
+    if not row:
+        return None
+
+    return row[0]
+    
 
 def get_streamer_mode():
     with get_connection() as conn:
@@ -105,11 +120,11 @@ def get_status_metrics():
         """)
 
         result = cursor.fetchone()
-
         last_quote_time = result[0] if result else None
 
         latest_system_event = get_latest_system_event(cursor)
         latest_provider_error = get_latest_provider_error(cursor)
+        last_heartbeat_time = get_latest_heartbeat(cursor)
 
     if last_quote_time:
         last_dt = datetime.fromisoformat(last_quote_time)
@@ -122,11 +137,20 @@ def get_status_metrics():
     else:
         lag_seconds = None
 
-    if lag_seconds is None:
+    if last_heartbeat_time:
+        last_heartbeat_dt = datetime.fromisoformat(last_heartbeat_time)
+        heartbeat_age_seconds = round(
+            (datetime.now(timezone.utc) - last_heartbeat_dt).total_seconds(),
+            1
+        )
+    else:
+        heartbeat_age_seconds = None
+
+    if heartbeat_age_seconds is None:
         streamer_status = "OFFLINE"
-    elif lag_seconds < 60:
+    elif heartbeat_age_seconds <= 20:
         streamer_status = "ONLINE"
-    elif lag_seconds < 300:
+    elif heartbeat_age_seconds <= 60:
         streamer_status = "STALE"
     else:
         streamer_status = "OFFLINE"
@@ -142,5 +166,7 @@ def get_status_metrics():
         "streamer_status": streamer_status,
         "symbols_tracked": symbols_tracked,
         "lag_seconds": lag_seconds,
+        "last_heartbeat_time": last_heartbeat_time,
+        "heartbeat_age_seconds": heartbeat_age_seconds,
         "control_mode": get_streamer_mode().upper(),
     }

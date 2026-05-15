@@ -5,78 +5,8 @@
 
     <meta http-equiv="refresh" content="5">
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f4f4;
-            padding: 30px;
-        }
-
-        h1 {
-            margin-bottom: 30px;
-        }
-
-        nav {
-            margin-bottom: 30px;
-        }
-
-        nav a {
-            margin-right: 15px;
-        }
-
-        .card-container {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .status-card {
-            background: white;
-            padding: 20px;
-            width: 260px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            overflow-wrap: break-word;
-        }
-
-        .card-title {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 10px;
-        }
-
-        .card-value {
-            font-size: 36px;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        .online {
-            color: green;
-        }
-
-        .offline {
-            color: red;
-        }
-
-        .small-text {
-            font-size: 13px;
-            color: #666;
-            margin-top: 10px;
-            line-height: 1.5;
-        }
-
-        .tiny-text {
-            font-size: 11px;
-            color: #999;
-            margin-top: 5px;
-            line-height: 1.4;
-        }
-
-        hr {
-            margin: 10px 0;
-        }
-
-    </style>
+    <link rel="stylesheet" href="/static/status.css">
+    <script src="/static/status.js" defer></script>
 </head>
 
 <body>
@@ -108,18 +38,35 @@
     <div class="status-card">
         <div class="card-title">Streamer Status</div>
 
-        <div class="card-value
+        <div class="card-value streamer-status-row">
+
             {% if streamer_status == 'ONLINE' %}
-                online
+                <span class="status-indicator status-online"></span>
+
+            {% elif streamer_status == 'STALE' %}
+                <span class="status-indicator status-stale"></span>
+
             {% else %}
-                offline
+                <span class="status-indicator status-offline"></span>
+
             {% endif %}
-        ">
-            {{ streamer_status }}
+
+            <span>{{ streamer_status }}</span>
+
         </div>
 
         <div class="small-text">
-            Last Quote Lag: {{ lag_seconds }}s
+            Heartbeat Age: {{ heartbeat_age_seconds }}s
+        </div>
+
+        <div class="tiny-text">
+            Last heartbeat:
+            {{ last_heartbeat_time }}
+        </div>
+
+        <div class="tiny-text">
+            Quote lag:
+            {{ lag_seconds }}s
         </div>
     </div>
 
@@ -152,7 +99,7 @@
                 offline
             {% endif %}
         ">
-            {{ market_session }}
+            {{ market_session.replace("_", " ").title() }}
         </div>
 
         <div class="small-text">
@@ -191,7 +138,7 @@
                 offline
             {% endif %}
         ">
-            {{ token_status.token_status }}
+            {{ token_status.token_status.replace("_", " ").title() }}
         </div>
 
         <div class="small-text">
