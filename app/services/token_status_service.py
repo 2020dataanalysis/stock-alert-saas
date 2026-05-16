@@ -33,23 +33,33 @@ def load_token_cache():
         _cache_loaded_at = now
         return _token_cache
 
-    with TOKEN_FILE.open() as f:
-        token_data = json.load(f)
+    try:
+        with TOKEN_FILE.open() as f:
+            token_data = json.load(f)
 
-    _token_cache = {
-        "token_file_exists": True,
-        "access_token_expiration_time": int(
-            token_data.get("access_token_expiration_time", 0)
-        ),
-        "refresh_token_expiration_time": int(
-            token_data.get("refresh_token_expiration_time", 0)
-        ),
-        "expires_in": int(token_data.get("expires_in", 0)),
-    }
+    except OSError as e:
+        _token_cache = {
+            "token_file_exists": True,
+            "token_status": "TOKEN_FILE_READ_ERROR",
+            "access_token_expiration_time": 0,
+            "refresh_token_expiration_time": 0,
+            "expires_in": 0,
+            "error": str(e),
+        }
+        _cache_loaded_at = now
+        return _token_cache
 
-    _cache_loaded_at = now
-    return _token_cache
-
+    except json.JSONDecodeError as e:
+        _token_cache = {
+            "token_file_exists": True,
+            "token_status": "TOKEN_FILE_JSON_ERROR",
+            "access_token_expiration_time": 0,
+            "refresh_token_expiration_time": 0,
+            "expires_in": 0,
+            "error": str(e),
+        }
+        _cache_loaded_at = now
+        return _token_cache
 
 
 def refresh_token_cache():
@@ -63,21 +73,20 @@ def get_token_status():
 
     now = int(datetime.now(UTC).timestamp())
 
-    access_exp = token_data["access_token_expiration_time"]
-    refresh_exp = token_data["refresh_token_expiration_time"]
-
+    access_exp = token_data.get("access_token_expiration_time", 0)
+    refresh_exp = token_data.get("refresh_token_expiration_time", 0)
 
     access_expiry_display = (
-        datetime.fromtimestamp(access_exp)
-        .strftime("%Y-%m-%d %I:%M:%S %p")
+        datetime.fromtimestamp(access_exp).strftime("%Y-%m-%d %I:%M:%S %p")
+        if access_exp
+        else "N/A"
     )
 
     refresh_expiry_display = (
-        datetime.fromtimestamp(refresh_exp)
-        .strftime("%Y-%m-%d %I:%M:%S %p")
+        datetime.fromtimestamp(refresh_exp).strftime("%Y-%m-%d %I:%M:%S %p")
+        if refresh_exp
+        else "N/A"
     )
-
-
 
     access_remaining = max(0, access_exp - now)
     refresh_remaining = max(0, refresh_exp - now)
