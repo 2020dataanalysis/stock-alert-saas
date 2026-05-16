@@ -62,6 +62,22 @@ def load_token_cache():
         return _token_cache
 
 
+    _token_cache = {
+        "token_file_exists": True,
+        "access_token_expiration_time": int(
+            token_data.get("access_token_expiration_time", 0)
+        ),
+        "refresh_token_expiration_time": int(
+            token_data.get("refresh_token_expiration_time", 0)
+        ),
+        "expires_in": int(token_data.get("expires_in", 0)),
+    }
+
+    _cache_loaded_at = now
+    return _token_cache
+
+
+
 def refresh_token_cache():
     global _token_cache
     _token_cache = None

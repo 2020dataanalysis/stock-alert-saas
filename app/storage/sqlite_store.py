@@ -292,8 +292,6 @@ def get_top_movers(limit=5):
 
         return cursor.fetchall()
 
-
-
 def save_provider_error(
     provider,
     symbol=None,
@@ -302,30 +300,34 @@ def save_provider_error(
     message=None,
     raw_response=None,
 ):
-    if raw_response is not None and not isinstance(raw_response, str):
-        raw_response = json.dumps(raw_response, default=str)
+    try:
+        if raw_response is not None and not isinstance(raw_response, str):
+            raw_response = json.dumps(raw_response, default=str)
 
-    with get_connection() as conn:
-        conn.execute("""
-            INSERT INTO provider_errors (
-                timestamp,
+        with get_connection() as conn:
+            conn.execute("""
+                INSERT INTO provider_errors (
+                    timestamp,
+                    provider,
+                    symbol,
+                    operation,
+                    error_type,
+                    message,
+                    raw_response
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (
+                datetime.now(UTC).isoformat(),
                 provider,
                 symbol,
                 operation,
                 error_type,
                 message,
-                raw_response
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (
-            datetime.now(UTC).isoformat(),
-            provider,
-            symbol,
-            operation,
-            error_type,
-            message,
-            raw_response,
-        ))
+                raw_response,
+            ))
+
+    except Exception as e:
+        print(f"FAILED TO SAVE PROVIDER ERROR: {type(e).__name__}: {e}")
 
 
 def save_system_event(
@@ -335,27 +337,30 @@ def save_system_event(
     message=None,
     metadata=None,
 ):
+    try:
+        metadata_json = None
+        if metadata is not None:
+            metadata_json = json.dumps(metadata, default=str)
 
-    metadata_json = None
-    if metadata is not None:
-        metadata_json = json.dumps(metadata, default=str)
-
-    with get_connection() as conn:
-        conn.execute("""
-            INSERT INTO system_events (
-                timestamp,
+        with get_connection() as conn:
+            conn.execute("""
+                INSERT INTO system_events (
+                    timestamp,
+                    event_type,
+                    service,
+                    status,
+                    message,
+                    metadata_json
+                )
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (
+                datetime.now(UTC).isoformat(),
                 event_type,
                 service,
                 status,
                 message,
-                metadata_json
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-        """, (
-            datetime.now(UTC).isoformat(),
-            event_type,
-            service,
-            status,
-            message,
-            metadata_json,
-        ))
+                metadata_json,
+            ))
+
+    except Exception as e:
+        print(f"FAILED TO SAVE SYSTEM EVENT: {type(e).__name__}: {e}")
