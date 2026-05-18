@@ -11,8 +11,11 @@ _DB_INITIALIZED = False
 _DB_INIT_LOCK = Lock()
 
 BASE_DIR = Path(__file__).resolve().parents[2]
-DB_PATH = BASE_DIR / "data" / "market_data.db"
 
+MARKET_DB_PATH = BASE_DIR / "data" / "market_data.db"
+LOG_DB_PATH = BASE_DIR / "data" / "logs.db"
+
+DB_PATH = MARKET_DB_PATH  # backwards-compatible default
 
 def ensure_db_initialized():
     global _DB_INITIALIZED
@@ -26,12 +29,12 @@ def ensure_db_initialized():
             _DB_INITIALIZED = True
 
 
-def get_connection():
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+def get_connection(db_path=MARKET_DB_PATH):
+    db_path.parent.mkdir(parents=True, exist_ok=True)
     ensure_db_initialized()
 
     conn = sqlite3.connect(
-        DB_PATH,
+        db_path,
         timeout=30,
     )
 
@@ -40,6 +43,10 @@ def get_connection():
     conn.execute("PRAGMA busy_timeout=30000")
 
     return conn
+
+
+def get_log_connection():
+    return get_connection(LOG_DB_PATH)
 
 
 def get_row_connection():
@@ -82,35 +89,6 @@ def init_db():
                 newest_volume REAL
             )
         """)
-
-
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS provider_errors (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
-                provider TEXT NOT NULL,
-                symbol TEXT,
-                operation TEXT,
-                error_type TEXT,
-                message TEXT,
-                raw_response TEXT
-            )
-        """)
-
-
-
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS system_events (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp TEXT NOT NULL,
-                event_type TEXT NOT NULL,
-                service TEXT,
-                status TEXT,
-                message TEXT,
-                metadata_json TEXT
-            )
-        """)
-
 
 
         conn.execute("""
@@ -187,6 +165,9 @@ def init_db():
     init_streamer_control_table()
 
 
+    init_log_db()
+
+
 def init_streamer_control_table():
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
@@ -212,6 +193,40 @@ def init_streamer_control_table():
 
 
 
+
+
+def init_log_db():
+    LOG_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    with sqlite3.connect(LOG_DB_PATH) as conn:
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
+        conn.execute("PRAGMA busy_timeout=30000")
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS provider_errors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                provider TEXT NOT NULL,
+                symbol TEXT,
+                operation TEXT,
+                error_type TEXT,
+                message TEXT,
+                raw_response TEXT
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS system_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                event_type TEXT NOT NULL,
+                service TEXT,
+                status TEXT,
+                message TEXT,
+                metadata_json TEXT
+            )
+        """)
 
 def save_quote(quote):
     with get_connection() as conn:
@@ -305,7 +320,7 @@ def save_provider_error(
         if raw_response is not None and not isinstance(raw_response, str):
             raw_response = json.dumps(raw_response, default=str)
 
-        with get_connection() as conn:
+        with get_log_connection() as conn:
             conn.execute("""
                 INSERT INTO provider_errors (
                     timestamp,
@@ -343,7 +358,7 @@ def save_system_event(
         if metadata is not None:
             metadata_json = json.dumps(metadata, default=str)
 
-        with get_connection() as conn:
+        with get_log_connection() as conn:
             conn.execute("""
                 INSERT INTO system_events (
                     timestamp,

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from app.storage.sqlite_store import get_connection
+from app.storage.sqlite_store import get_connection, get_log_connection
 
 from app.services.token_status_service import get_token_status
 from app.services.market_hours_service import (
@@ -119,12 +119,20 @@ def get_status_metrics():
             LIMIT 1
         """)
 
+
+
+
+
         result = cursor.fetchone()
         last_quote_time = result[0] if result else None
 
-        latest_system_event = get_latest_system_event(cursor)
-        latest_provider_error = get_latest_provider_error(cursor)
-        last_heartbeat_time = get_latest_heartbeat(cursor)
+    with get_log_connection() as log_conn:
+        log_cursor = log_conn.cursor()
+
+        latest_system_event = get_latest_system_event(log_cursor)
+        latest_provider_error = get_latest_provider_error(log_cursor)
+        last_heartbeat_time = get_latest_heartbeat(log_cursor)
+
 
     if last_quote_time:
         last_dt = datetime.fromisoformat(last_quote_time)

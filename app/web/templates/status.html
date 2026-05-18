@@ -134,10 +134,12 @@
         <div class="card-value
             {% if token_status.token_status == 'OK' %}
                 online
-            {% else %}
+            {% elif token_status.token_status == 'Expired' %}
                 offline
             {% endif %}
         ">
+
+
             {{ token_status.token_status.replace("_", " ").title() }}
         </div>
 
