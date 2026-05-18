@@ -27,6 +27,7 @@ def ensure_db_initialized():
 
 
 def get_connection():
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     ensure_db_initialized()
 
     conn = sqlite3.connect(

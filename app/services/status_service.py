@@ -146,14 +146,22 @@ def get_status_metrics():
     else:
         heartbeat_age_seconds = None
 
-    if heartbeat_age_seconds is None:
-        streamer_status = "OFFLINE"
-    elif heartbeat_age_seconds <= 20:
+
+    if lag_seconds is not None and lag_seconds <= 30:
         streamer_status = "ONLINE"
-    elif heartbeat_age_seconds <= 60:
+    elif heartbeat_age_seconds is not None and heartbeat_age_seconds <= 20:
+        streamer_status = "ONLINE"
+    elif heartbeat_age_seconds is not None and heartbeat_age_seconds <= 60:
         streamer_status = "STALE"
     else:
         streamer_status = "OFFLINE"
+
+    display_heartbeat_age_seconds = heartbeat_age_seconds
+
+    if streamer_status == "OFFLINE" and heartbeat_age_seconds is not None:
+        display_heartbeat_age_seconds = min(heartbeat_age_seconds, 60)
+
+
 
     token_status = get_token_status()
 
@@ -167,6 +175,6 @@ def get_status_metrics():
         "symbols_tracked": symbols_tracked,
         "lag_seconds": lag_seconds,
         "last_heartbeat_time": last_heartbeat_time,
-        "heartbeat_age_seconds": heartbeat_age_seconds,
+        "heartbeat_age_seconds": display_heartbeat_age_seconds,
         "control_mode": get_streamer_mode().upper(),
     }

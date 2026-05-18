@@ -29,6 +29,7 @@ def create_adapter():
 
 
 adapter = create_adapter()
+log("✅ Schwab adapter initialized")
 
 
 detector = SpikeDetector(
@@ -96,7 +97,22 @@ def stream_quotes():
     last_heartbeat = datetime.now(UTC)
 
     while service_running:
-        runtime = get_runtime_state(POLL_SECONDS)
+        try:
+            runtime = get_runtime_state(POLL_SECONDS)
+
+        except Exception as e:
+            log(
+                f"FAILED TO GET RUNTIME STATE: "
+                f"{type(e).__name__}: {e}"
+            )
+
+            runtime = {
+                "mode": "online",
+                "session": "REGULAR",
+                "should_fetch_quotes": True,
+                "should_process_alerts": False,
+                "sleep_seconds": POLL_SECONDS,
+            }
 
         log(f"RUNTIME: {runtime}")
 
@@ -105,12 +121,20 @@ def stream_quotes():
         now = datetime.now(UTC)
 
         if (now - last_heartbeat) >= timedelta(minutes=1):
-            save_system_event(
-                event_type="STREAMER_HEARTBEAT",
-                service="quote_streamer",
-                status="ONLINE",
-                message="Streamer heartbeat alive",
-            )
+            try:
+                save_system_event(
+                    event_type="STREAMER_HEARTBEAT",
+                    service="quote_streamer",
+                    status="ONLINE",
+                    message="Streamer heartbeat alive",
+                )
+
+            except Exception as e:
+                log(
+                    f"FAILED TO SAVE HEARTBEAT: "
+                    f"{type(e).__name__}: {e}"
+                )
+
 
             last_heartbeat = now
 
@@ -134,9 +158,18 @@ def stream_quotes():
 
             quote["timestamp"] = datetime.now(UTC).isoformat()
 
-            save_quote(quote)
+            try:
+                save_quote(quote)
+
+            except Exception as e:
+                log(
+                    f"FAILED TO SAVE QUOTE: "
+                    f"{type(e).__name__}: {e}"
+                )
 
             log(f"QUOTE: {quote}")
+
+
 
             if runtime["should_process_alerts"]:
                 alerts = []
@@ -145,7 +178,19 @@ def stream_quotes():
                 alerts.extend(detector.process_quote(quote))
 
                 # typed rule engine
-                alerts.extend(evaluate_typed_rules(quote))
+                # alerts.extend(evaluate_typed_rules(quote))
+                # typed rule engine
+                try:
+                    alerts.extend(evaluate_typed_rules(quote))
+
+                except Exception as e:
+                    log(
+                        f"FAILED TO EVALUATE TYPED RULES: "
+                        f"{type(e).__name__}: {e}"
+                    )
+
+
+
 
                 for alert in alerts:
                     alert["timestamp"] = quote["timestamp"]
@@ -178,7 +223,7 @@ def stream_quotes():
             )
 
             # token-aware recovery
-            if token_status.get("access_status") != "OK":
+            if token_status.get("token_status") == "EXPIRED":
 
                 save_system_event(
                     event_type="ACCESS_TOKEN_REFRESH",
@@ -188,13 +233,24 @@ def stream_quotes():
                     metadata=token_status,
                 )
 
-                log("🔑 Access token expired. Refreshing token...")
+                log("🔑 Access token expired. Refreshing token directly...")
 
-                adapter = create_adapter()
+                try:
+                    adapter.client.oauth_client.refresh_token_grant_flow("REFRESH_TOKEN")
+                    log("✅ Access token refreshed directly")
+
+                except Exception as e:
+                    log(
+                        f"FAILED TO REFRESH ACCESS TOKEN DIRECTLY: "
+                        f"{type(e).__name__}: {e}"
+                    )
 
                 failed_quote_cycles = 0
 
                 continue
+
+
+
 
             # generic self-healing recovery
             if failed_quote_cycles >= FAILED_CYCLE_LIMIT:
@@ -214,7 +270,8 @@ def stream_quotes():
 
                 log("🔄 Recreating Schwab adapter...")
 
-                adapter = create_adapter()
+                # adapter = create_adapter()
+                log("⚠️ Skipping adapter recreation for now to avoid file-handle leak")
 
                 failed_quote_cycles = 0
 
