@@ -1,6 +1,7 @@
 # app/web/api.py
 
 from datetime import datetime, timedelta, timezone
+import sqlite3
 
 from fastapi import APIRouter
 
@@ -13,79 +14,84 @@ router = APIRouter()
 
 @router.post("/api/streamer/mode/{mode}")
 def set_mode(mode: str):
-    conn = get_connection()
-    cur = conn.cursor()
 
-    cur.execute("""
-    UPDATE streamer_control
-    SET mode = ?, until_timestamp = NULL
-    WHERE id = 1
-    """, (mode,))
+    with get_connection() as conn:
+        cur = conn.cursor()
 
-    conn.commit()
-    conn.close()
+        cur.execute("""
+        UPDATE streamer_control
+        SET mode = ?, until_timestamp = NULL
+        WHERE id = 1
+        """, (mode,))
+
+        conn.commit()
 
     return {"status": "ok", "mode": mode}
 
 
 @router.post("/api/streamer/online-for/{minutes}")
 def online_for(minutes: int):
+
     until = datetime.now(timezone.utc) + timedelta(minutes=minutes)
 
-    conn = get_connection()
-    cur = conn.cursor()
+    with get_connection() as conn:
+        cur = conn.cursor()
 
-    cur.execute("""
-    UPDATE streamer_control
-    SET mode = 'duration', until_timestamp = ?
-    WHERE id = 1
-    """, (until.isoformat(),))
+        cur.execute("""
+        UPDATE streamer_control
+        SET mode = 'duration', until_timestamp = ?
+        WHERE id = 1
+        """, (until.isoformat(),))
 
-    conn.commit()
-    conn.close()
+        conn.commit()
 
     return {"status": "ok", "until": until.isoformat()}
 
 
 @router.get("/api/chart-data/{symbol}")
 def chart_data(symbol: str):
+
     settings = load_settings()
     symbol = symbol.upper()
 
-    conn = get_connection()
-    conn.row_factory = sqlite3.Row
+    with get_connection() as conn:
 
-    quotes = conn.execute("""
-        SELECT id, timestamp, last, volume
-        FROM quotes
-        WHERE symbol = ?
-        AND timestamp >= datetime('now', '-2 hours')
-        ORDER BY id DESC
-        LIMIT 200
-    """, (symbol,)).fetchall()
+        conn.row_factory = sqlite3.Row
 
-    alerts = conn.execute("""
-        SELECT timestamp, type, price_change_pct, volume_change_pct
-        FROM alerts
-        WHERE symbol = ?
-        ORDER BY id DESC
-        LIMIT 50
-    """, (symbol,)).fetchall()
+        quotes = conn.execute("""
+            SELECT id, timestamp, last, volume
+            FROM quotes
+            WHERE symbol = ?
+            AND timestamp >= datetime('now', '-2 hours')
+            ORDER BY id DESC
+            LIMIT 200
+        """, (symbol,)).fetchall()
 
-    conn.close()
+        alerts = conn.execute("""
+            SELECT timestamp, type, price_change_pct, volume_change_pct
+            FROM alerts
+            WHERE symbol = ?
+            ORDER BY id DESC
+            LIMIT 50
+        """, (symbol,)).fetchall()
 
     quotes = list(reversed(quotes))
     alerts = list(reversed(alerts))
 
     def nearest_quote_index(alert_timestamp):
+
         alert_dt = datetime.fromisoformat(alert_timestamp)
 
         best_index = None
         best_delta = None
 
         for i, q in enumerate(quotes):
+
             quote_dt = datetime.fromisoformat(q["timestamp"])
-            delta = abs((quote_dt - alert_dt).total_seconds())
+
+            delta = abs(
+                (quote_dt - alert_dt).total_seconds()
+            )
 
             if best_delta is None or delta < best_delta:
                 best_delta = delta
@@ -99,6 +105,7 @@ def chart_data(symbol: str):
     chart_alerts = []
 
     for alert in alerts:
+
         index = nearest_quote_index(alert["timestamp"])
 
         if index is None:

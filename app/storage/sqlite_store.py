@@ -31,7 +31,7 @@ def ensure_db_initialized():
 
 def get_connection(db_path=MARKET_DB_PATH):
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    ensure_db_initialized()
+    # ensure_db_initialized()
 
     conn = sqlite3.connect(
         db_path,

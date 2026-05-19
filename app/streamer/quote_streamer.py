@@ -239,7 +239,7 @@ def stream_quotes():
                     adapter.client.oauth_client.refresh_token_grant_flow("REFRESH_TOKEN")
                     log("✅ Access token refreshed directly")
 
-                    adapter = create_adapter()
+                    # adapter = create_adapter()
                     log("✅ Schwab adapter recreated after access token refresh")
 
                 except Exception as e:
@@ -275,7 +275,7 @@ def stream_quotes():
                 log("🔄 Recreating Schwab adapter...")
 
                 try:
-                    adapter = create_adapter()
+                    # adapter = create_adapter()
                     log("✅ Schwab adapter recreated by self-healing")
 
                 except Exception as e:

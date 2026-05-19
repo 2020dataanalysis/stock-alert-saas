@@ -47,35 +47,35 @@ app.include_router(api_router)
 templates = Jinja2Templates(directory="app/web/templates")
 
 
+
 @app.get("/", response_class=HTMLResponse)
 async def overview(request: Request):
     settings = load_settings()
 
-    conn = get_connection()
+    with get_connection() as conn:
+        conn.row_factory = sqlite3.Row
 
-    conn.row_factory = sqlite3.Row
+        quote_count = conn.execute(
+            "SELECT COUNT(*) FROM quotes"
+        ).fetchone()[0]
 
-    # counts
-    quote_count = conn.execute("SELECT COUNT(*) FROM quotes").fetchone()[0]
-    alert_count = conn.execute("SELECT COUNT(*) FROM alerts").fetchone()[0]
+        alert_count = conn.execute(
+            "SELECT COUNT(*) FROM alerts"
+        ).fetchone()[0]
 
-    # last quotes
-    quotes = conn.execute("""
-        SELECT symbol, last, volume, timestamp
-        FROM quotes
-        ORDER BY id DESC
-        LIMIT 10
-    """).fetchall()
+        quotes = conn.execute("""
+            SELECT symbol, last, volume, timestamp
+            FROM quotes
+            ORDER BY id DESC
+            LIMIT 10
+        """).fetchall()
 
-    # last alerts
-    alerts = conn.execute("""
-        SELECT symbol, price_change_pct, volume_change_pct, timestamp
-        FROM alerts
-        ORDER BY id DESC
-        LIMIT 10
-    """).fetchall()
-
-    conn.close()
+        alerts = conn.execute("""
+            SELECT symbol, price_change_pct, volume_change_pct, timestamp
+            FROM alerts
+            ORDER BY id DESC
+            LIMIT 10
+        """).fetchall()
 
     return templates.TemplateResponse(
         request=request,
