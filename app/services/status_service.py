@@ -126,6 +126,30 @@ def get_status_metrics():
         result = cursor.fetchone()
         last_quote_time = result[0] if result else None
 
+
+
+
+        cursor.execute("""
+            SELECT mode, until_timestamp
+            FROM streamer_control
+            WHERE id = 1
+        """)
+        streamer_mode_row = cursor.fetchone()
+
+
+
+
+
+
+
+    control_mode = "auto"
+
+    if streamer_mode_row:
+        mode, until_ts = streamer_mode_row
+        control_mode = mode
+
+
+
     with get_log_connection() as log_conn:
         log_cursor = log_conn.cursor()
 
@@ -184,5 +208,5 @@ def get_status_metrics():
         "lag_seconds": lag_seconds,
         "last_heartbeat_time": last_heartbeat_time,
         "heartbeat_age_seconds": display_heartbeat_age_seconds,
-        "control_mode": get_streamer_mode().upper(),
+        "control_mode": control_mode.upper(),
     }
