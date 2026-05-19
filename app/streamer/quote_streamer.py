@@ -223,7 +223,7 @@ def stream_quotes():
             )
 
             # token-aware recovery
-            if token_status.get("token_status") == "EXPIRED":
+            if token_status.get("token_status") == "ACCESS_TOKEN_EXPIRED":
 
                 save_system_event(
                     event_type="ACCESS_TOKEN_REFRESH",
@@ -238,6 +238,9 @@ def stream_quotes():
                 try:
                     adapter.client.oauth_client.refresh_token_grant_flow("REFRESH_TOKEN")
                     log("✅ Access token refreshed directly")
+
+                    adapter = create_adapter()
+                    log("✅ Schwab adapter recreated after access token refresh")
 
                 except Exception as e:
                     log(
@@ -268,10 +271,19 @@ def stream_quotes():
                     },
                 )
 
+
                 log("🔄 Recreating Schwab adapter...")
 
-                # adapter = create_adapter()
-                log("⚠️ Skipping adapter recreation for now to avoid file-handle leak")
+                try:
+                    adapter = create_adapter()
+                    log("✅ Schwab adapter recreated by self-healing")
+
+                except Exception as e:
+                    log(
+                        f"FAILED TO RECREATE SCHWAB ADAPTER: "
+                        f"{type(e).__name__}: {e}"
+                    )
+
 
                 failed_quote_cycles = 0
 
