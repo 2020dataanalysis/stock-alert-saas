@@ -5,6 +5,7 @@ from app.services.token_status_service import get_token_status
 from app.services.market_hours_service import (
     is_trading_session,
 )
+from app.services.watchlist_service import build_watchlist
 
 
 def get_latest_heartbeat(cursor):
@@ -100,6 +101,11 @@ def get_latest_provider_error(cursor):
 
 
 def get_status_metrics():
+
+    watchlist = build_watchlist()
+
+    symbols_tracked = watchlist["count"]
+
     with get_connection() as conn:
         cursor = conn.cursor()
 
@@ -109,9 +115,6 @@ def get_status_metrics():
         cursor.execute("SELECT COUNT(*) FROM alerts")
         alert_count = cursor.fetchone()[0]
 
-        cursor.execute("SELECT COUNT(DISTINCT symbol) FROM quotes")
-        symbols_tracked = cursor.fetchone()[0]
-
         cursor.execute("""
             SELECT timestamp
             FROM quotes
@@ -119,81 +122,102 @@ def get_status_metrics():
             LIMIT 1
         """)
 
-
-
-
-
         result = cursor.fetchone()
+
         last_quote_time = result[0] if result else None
-
-
-
 
         cursor.execute("""
             SELECT mode, until_timestamp
             FROM streamer_control
             WHERE id = 1
         """)
+
         streamer_mode_row = cursor.fetchone()
-
-
-
-
-
-
 
     control_mode = "auto"
 
     if streamer_mode_row:
+
         mode, until_ts = streamer_mode_row
+
         control_mode = mode
 
-
-
     with get_log_connection() as log_conn:
+
         log_cursor = log_conn.cursor()
 
         latest_system_event = get_latest_system_event(log_cursor)
+
         latest_provider_error = get_latest_provider_error(log_cursor)
+
         last_heartbeat_time = get_latest_heartbeat(log_cursor)
 
-
     if last_quote_time:
+
         last_dt = datetime.fromisoformat(last_quote_time)
+
         now = datetime.now(timezone.utc)
 
         lag_seconds = round(
             (now - last_dt).total_seconds(),
             1
         )
+
     else:
+
         lag_seconds = None
 
     if last_heartbeat_time:
-        last_heartbeat_dt = datetime.fromisoformat(last_heartbeat_time)
+
+        last_heartbeat_dt = datetime.fromisoformat(
+            last_heartbeat_time
+        )
+
         heartbeat_age_seconds = round(
-            (datetime.now(timezone.utc) - last_heartbeat_dt).total_seconds(),
+            (
+                datetime.now(timezone.utc)
+                - last_heartbeat_dt
+            ).total_seconds(),
             1
         )
+
     else:
+
         heartbeat_age_seconds = None
 
-
     if lag_seconds is not None and lag_seconds <= 30:
+
         streamer_status = "ONLINE"
-    elif heartbeat_age_seconds is not None and heartbeat_age_seconds <= 20:
+
+    elif (
+        heartbeat_age_seconds is not None
+        and heartbeat_age_seconds <= 20
+    ):
+
         streamer_status = "ONLINE"
-    elif heartbeat_age_seconds is not None and heartbeat_age_seconds <= 60:
+
+    elif (
+        heartbeat_age_seconds is not None
+        and heartbeat_age_seconds <= 60
+    ):
+
         streamer_status = "STALE"
+
     else:
+
         streamer_status = "OFFLINE"
 
     display_heartbeat_age_seconds = heartbeat_age_seconds
 
-    if streamer_status == "OFFLINE" and heartbeat_age_seconds is not None:
-        display_heartbeat_age_seconds = min(heartbeat_age_seconds, 60)
+    if (
+        streamer_status == "OFFLINE"
+        and heartbeat_age_seconds is not None
+    ):
 
-
+        display_heartbeat_age_seconds = min(
+            heartbeat_age_seconds,
+            60
+        )
 
     token_status = get_token_status()
 
@@ -209,4 +233,7 @@ def get_status_metrics():
         "last_heartbeat_time": last_heartbeat_time,
         "heartbeat_age_seconds": display_heartbeat_age_seconds,
         "control_mode": control_mode.upper(),
+        "favorite_symbols": watchlist["favorites"],
+        "mover_symbols": watchlist["movers"],
+        "active_symbols": watchlist["symbols"],
     }

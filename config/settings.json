@@ -1,9 +1,13 @@
 {
-  "favorite_symbols": ["AAPL", "TSLA", "NVDA"],
+  "favorite_symbols": [
+    "AAPL",
+    "TSLA",
+    "NVDA"
+  ],
   "use_movers": true,
   "movers_limit": 10,
   "price_spike_pct": 0.5,
-  "volume_spike_pct": 5,
+  "volume_spike_pct": 5.0,
   "window_size": 5,
   "poll_seconds": 2
 }

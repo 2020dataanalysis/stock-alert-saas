@@ -21,6 +21,7 @@ from app.storage.sqlite_store import (
     save_quote_with_connection,
     save_alert,
 )
+from app.services.watchlist_service import build_watchlist
 
 
 # PACIFIC = ZoneInfo("America/Los_Angeles")
@@ -97,6 +98,7 @@ save_system_event(
 
 
 
+
 def stream_quotes():
     global service_running
     global failed_quote_cycles
@@ -142,7 +144,17 @@ def stream_quotes():
 
             successful_quotes = 0
 
-            for symbol in SYMBOLS:
+            # for symbol in SYMBOLS:
+            symbols = build_watchlist()
+            # for symbol in symbols:
+            watchlist = build_watchlist()
+
+            log(f"FAVORITE SYMBOLS: {watchlist['favorites']}")
+            log(f"MOVERS WATCHLIST: {watchlist['movers']}")
+            log(f"FINAL STREAM WATCHLIST: {watchlist['symbols']}")
+
+            for symbol in watchlist["symbols"]:
+
 
                 quote = adapter.get_quote(symbol)
 
