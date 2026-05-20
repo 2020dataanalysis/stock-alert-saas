@@ -8,13 +8,20 @@ from app.config import load_settings
 from app.data_adapters.movers_adapter import get_mover_symbols
 from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.signals.spike_detector import SpikeDetector
-from app.storage.sqlite_store import init_db, save_quote, save_alert
+# from app.storage.sqlite_store import init_db, save_quote, save_alert
 from app.storage.sqlite_store import save_system_event
 # from app.services.status_service import get_streamer_mode
 from app.services.streamer_runtime_service import get_runtime_state
 from app.signals.typed_rule_engine import evaluate_typed_rules
 from app.services.token_status_service import get_token_status
 from datetime import datetime, UTC, timedelta
+from app.storage.sqlite_store import (
+    init_db,
+    get_connection,
+    save_quote_with_connection,
+    save_alert,
+)
+
 
 # PACIFIC = ZoneInfo("America/Los_Angeles")
 
@@ -89,6 +96,7 @@ save_system_event(
 )
 
 
+
 def stream_quotes():
     global service_running
     global failed_quote_cycles
@@ -96,219 +104,225 @@ def stream_quotes():
 
     last_heartbeat = datetime.now(UTC)
 
-    while service_running:
-        try:
-            runtime = get_runtime_state(POLL_SECONDS)
+    quote_conn = get_connection()
+    log("✅ Long-lived quote DB connection opened")
 
-        except Exception as e:
-            log(
-                f"FAILED TO GET RUNTIME STATE: "
-                f"{type(e).__name__}: {e}"
-            )
+    try:
 
-            runtime = {
-                "mode": "online",
-                "session": "REGULAR",
-                "should_fetch_quotes": True,
-                "should_process_alerts": False,
-                "sleep_seconds": POLL_SECONDS,
-            }
+        while service_running:
 
-        log(f"RUNTIME: {runtime}")
-
-
-
-        now = datetime.now(UTC)
-
-        if (now - last_heartbeat) >= timedelta(minutes=1):
             try:
-                save_system_event(
-                    event_type="STREAMER_HEARTBEAT",
-                    service="quote_streamer",
-                    status="ONLINE",
-                    message="Streamer heartbeat alive",
-                )
+                runtime = get_runtime_state(POLL_SECONDS)
 
             except Exception as e:
                 log(
-                    f"FAILED TO SAVE HEARTBEAT: "
+                    f"FAILED TO GET RUNTIME STATE: "
                     f"{type(e).__name__}: {e}"
                 )
 
+                runtime = {
+                    "mode": "online",
+                    "session": "REGULAR",
+                    "should_fetch_quotes": True,
+                    "should_process_alerts": False,
+                    "sleep_seconds": POLL_SECONDS,
+                }
 
-            last_heartbeat = now
+            log(f"RUNTIME: {runtime}")
 
+            now = datetime.now(UTC)
 
+            if (now - last_heartbeat) >= timedelta(minutes=1):
+                log("⚠️ Heartbeat temporarily disabled during FD leak test")
+                last_heartbeat = now
 
-
-        if not runtime["should_fetch_quotes"]:
-            time.sleep(runtime["sleep_seconds"])
-            continue
-
-        successful_quotes = 0
-
-        for symbol in SYMBOLS:
-            quote = adapter.get_quote(symbol)
-
-            if quote is None:
-                log(f"⚠️ No quote returned for {symbol}; skipping.")
+            if not runtime["should_fetch_quotes"]:
+                time.sleep(runtime["sleep_seconds"])
                 continue
 
-            successful_quotes += 1
+            successful_quotes = 0
 
-            quote["timestamp"] = datetime.now(UTC).isoformat()
+            for symbol in SYMBOLS:
 
-            try:
-                save_quote(quote)
+                quote = adapter.get_quote(symbol)
 
-            except Exception as e:
-                log(
-                    f"FAILED TO SAVE QUOTE: "
-                    f"{type(e).__name__}: {e}"
-                )
+                if quote is None:
+                    log(f"⚠️ No quote returned for {symbol}; skipping.")
+                    continue
 
-            log(f"QUOTE: {quote}")
+                successful_quotes += 1
 
+                quote["timestamp"] = datetime.now(UTC).isoformat()
 
-
-            if runtime["should_process_alerts"]:
-                alerts = []
-
-                # legacy detector
-                alerts.extend(detector.process_quote(quote))
-
-                # typed rule engine
-                # alerts.extend(evaluate_typed_rules(quote))
-                # typed rule engine
                 try:
-                    alerts.extend(evaluate_typed_rules(quote))
+                    save_quote_with_connection(
+                        quote_conn,
+                        quote
+                    )
 
                 except Exception as e:
+
                     log(
-                        f"FAILED TO EVALUATE TYPED RULES: "
+                        f"FAILED TO SAVE QUOTE: "
                         f"{type(e).__name__}: {e}"
                     )
 
+                    try:
+                        quote_conn.close()
 
+                    except Exception:
+                        pass
 
+                    quote_conn = get_connection()
 
-                for alert in alerts:
-                    alert["timestamp"] = quote["timestamp"]
-
-                    log(f"🚨 ALERT: {alert}")
-
-                    save_alert(alert)
-
-        # provider degradation detection
-        if successful_quotes == 0:
-            failed_quote_cycles += 1
-
-            token_status = get_token_status()
-
-            save_system_event(
-                event_type="PROVIDER_DEGRADED",
-                service="quote_streamer",
-                status="WARNING",
-                message="Quote cycle returned zero successful quotes",
-                metadata={
-                    "failed_quote_cycles": failed_quote_cycles,
-                    "symbols": SYMBOLS,
-                    "token_status": token_status,
-                },
-            )
-
-            log(
-                f"⚠️ Provider degraded: "
-                f"failed quote cycle {failed_quote_cycles}"
-            )
-
-            # token-aware recovery
-            if token_status.get("token_status") == "ACCESS_TOKEN_EXPIRED":
-
-                save_system_event(
-                    event_type="ACCESS_TOKEN_REFRESH",
-                    service="quote_streamer",
-                    status="WARNING",
-                    message="Refreshing expired access token",
-                    metadata=token_status,
-                )
-
-                log("🔑 Access token expired. Refreshing token directly...")
-
-                try:
-                    adapter.client.oauth_client.refresh_token_grant_flow("REFRESH_TOKEN")
-                    log("✅ Access token refreshed directly")
-
-                    # adapter = create_adapter()
-                    log("✅ Schwab adapter recreated after access token refresh")
-
-                except Exception as e:
                     log(
-                        f"FAILED TO REFRESH ACCESS TOKEN DIRECTLY: "
-                        f"{type(e).__name__}: {e}"
+                        "✅ Recreated long-lived "
+                        "quote DB connection"
                     )
 
-                failed_quote_cycles = 0
+                log(f"QUOTE: {quote}")
 
-                continue
+                if runtime["should_process_alerts"]:
 
+                    alerts = []
 
+                    log(
+                        "⚠️ Spike detector temporarily "
+                        "disabled during FD leak test"
+                    )
 
+                    log(
+                        "⚠️ Typed rules temporarily "
+                        "disabled during FD leak test"
+                    )
 
-            # generic self-healing recovery
-            if failed_quote_cycles >= FAILED_CYCLE_LIMIT:
+                    for alert in alerts:
+
+                        alert["timestamp"] = quote["timestamp"]
+
+                        log(f"🚨 ALERT: {alert}")
+
+                        save_alert(alert)
+
+            if successful_quotes == 0:
+
+                failed_quote_cycles += 1
+
+                token_status = get_token_status()
 
                 save_system_event(
-                    event_type="PROVIDER_SELF_HEALING_RESTART",
+                    event_type="PROVIDER_DEGRADED",
                     service="quote_streamer",
                     status="WARNING",
-                    message=(
-                        "Recreating Schwab adapter after "
-                        "repeated failed quote cycles"
-                    ),
+                    message="Quote cycle returned zero successful quotes",
                     metadata={
                         "failed_quote_cycles": failed_quote_cycles,
-                    },
-                )
-
-
-                log("🔄 Recreating Schwab adapter...")
-
-                try:
-                    # adapter = create_adapter()
-                    log("✅ Schwab adapter recreated by self-healing")
-
-                except Exception as e:
-                    log(
-                        f"FAILED TO RECREATE SCHWAB ADAPTER: "
-                        f"{type(e).__name__}: {e}"
-                    )
-
-
-                failed_quote_cycles = 0
-
-        else:
-            # recovery detection
-            if failed_quote_cycles > 0:
-
-                save_system_event(
-                    event_type="PROVIDER_RECOVERED",
-                    service="quote_streamer",
-                    status="OK",
-                    message="Quote provider recovered after failed cycles",
-                    metadata={
-                        "successful_quotes": successful_quotes,
+                        "symbols": SYMBOLS,
+                        "token_status": token_status,
                     },
                 )
 
                 log(
-                    f"✅ Provider recovered with "
-                    f"{successful_quotes} successful quotes"
+                    f"⚠️ Provider degraded: "
+                    f"failed quote cycle {failed_quote_cycles}"
                 )
 
-            failed_quote_cycles = 0
+                if token_status.get("token_status") == "ACCESS_TOKEN_EXPIRED":
 
-        time.sleep(runtime["sleep_seconds"])
+                    save_system_event(
+                        event_type="ACCESS_TOKEN_REFRESH",
+                        service="quote_streamer",
+                        status="WARNING",
+                        message="Refreshing expired access token",
+                        metadata=token_status,
+                    )
+
+                    log(
+                        "🔑 Access token expired. "
+                        "Refreshing token directly..."
+                    )
+
+                    try:
+
+                        adapter.client.oauth_client.refresh_token_grant_flow(
+                            "REFRESH_TOKEN"
+                        )
+
+                        log("✅ Access token refreshed directly")
+
+                    except Exception as e:
+
+                        log(
+                            f"FAILED TO REFRESH ACCESS TOKEN DIRECTLY: "
+                            f"{type(e).__name__}: {e}"
+                        )
+
+                    failed_quote_cycles = 0
+
+                    continue
+
+                if failed_quote_cycles >= FAILED_CYCLE_LIMIT:
+
+                    save_system_event(
+                        event_type="PROVIDER_SELF_HEALING_RESTART",
+                        service="quote_streamer",
+                        status="WARNING",
+                        message=(
+                            "Recreating Schwab adapter after "
+                            "repeated failed quote cycles"
+                        ),
+                        metadata={
+                            "failed_quote_cycles": failed_quote_cycles,
+                        },
+                    )
+
+                    log("🔄 Recreating Schwab adapter...")
+
+                    try:
+                        log(
+                            "✅ Schwab adapter recreated "
+                            "by self-healing"
+                        )
+
+                    except Exception as e:
+
+                        log(
+                            f"FAILED TO RECREATE SCHWAB ADAPTER: "
+                            f"{type(e).__name__}: {e}"
+                        )
+
+                    failed_quote_cycles = 0
+
+            else:
+
+                if failed_quote_cycles > 0:
+
+                    save_system_event(
+                        event_type="PROVIDER_RECOVERED",
+                        service="quote_streamer",
+                        status="OK",
+                        message="Quote provider recovered after failed cycles",
+                        metadata={
+                            "successful_quotes": successful_quotes,
+                        },
+                    )
+
+                    log(
+                        f"✅ Provider recovered with "
+                        f"{successful_quotes} successful quotes"
+                    )
+
+                failed_quote_cycles = 0
+
+            time.sleep(runtime["sleep_seconds"])
+
+    finally:
+
+        quote_conn.close()
+
+        log("✅ Long-lived quote DB connection closed")
+
+
 
 
 if __name__ == "__main__":
