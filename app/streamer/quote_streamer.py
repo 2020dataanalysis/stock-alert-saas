@@ -221,6 +221,129 @@ def handle_self_healing(
 
 
 
+
+def get_safe_runtime_state():
+    try:
+        return get_runtime_state(POLL_SECONDS)
+    except Exception as e:
+        log(f"FAILED TO GET RUNTIME STATE: {type(e).__name__}: {e}")
+
+        return {
+            "mode": "online",
+            "session": "REGULAR",
+            "should_fetch_quotes": True,
+            "should_process_alerts": False,
+            "sleep_seconds": POLL_SECONDS,
+        }
+
+
+
+
+def maybe_save_heartbeat(last_heartbeat, runtime):
+    now = datetime.now(UTC)
+
+    if (now - last_heartbeat) < timedelta(minutes=1):
+        return last_heartbeat
+
+    save_system_event(
+        event_type="STREAMER_HEARTBEAT",
+        service="quote_streamer",
+        status="ONLINE",
+        message="Streamer heartbeat",
+        metadata={
+            "mode": runtime["mode"],
+            "session": runtime["session"],
+        },
+    )
+
+    log("💓 Streamer heartbeat saved")
+
+    return now
+
+
+def get_current_watchlist():
+    watchlist = build_watchlist()
+
+    log(f"FAVORITE SYMBOLS: {watchlist['favorites']}")
+    log(f"MOVERS WATCHLIST: {watchlist['movers']}")
+    log(f"FINAL STREAM WATCHLIST: {watchlist['symbols']}")
+
+    return watchlist
+
+
+
+
+def save_quote_safely(quote_conn, quote):
+    try:
+        save_quote_with_connection(quote_conn, quote)
+        return quote_conn
+
+    except Exception as e:
+        log(f"FAILED TO SAVE QUOTE: {type(e).__name__}: {e}")
+
+        try:
+            quote_conn.close()
+        except Exception:
+            pass
+
+        quote_conn = get_connection()
+
+        log("✅ Recreated long-lived quote DB connection")
+
+        return quote_conn
+
+
+
+
+
+def process_symbol(
+    symbol,
+    runtime,
+    quote_conn,
+):
+    quote = adapter.get_quote(symbol)
+
+    if quote is None:
+
+        log(f"⚠️ No quote returned for {symbol}; skipping.")
+
+        return quote_conn, False
+
+    quote["timestamp"] = datetime.now(UTC).isoformat()
+
+    quote_conn = save_quote_safely(
+        quote_conn,
+        quote,
+    )
+
+    log(f"QUOTE: {quote}")
+
+    if runtime["should_process_alerts"]:
+
+        alerts = []
+
+        log(
+            "⚠️ Spike detector temporarily "
+            "disabled during FD leak test"
+        )
+
+        log(
+            "⚠️ Typed rules temporarily "
+            "disabled during FD leak test"
+        )
+
+        for alert in alerts:
+
+            alert["timestamp"] = quote["timestamp"]
+
+            log(f"🚨 ALERT: {alert}")
+
+            save_alert(alert)
+
+    return quote_conn, True
+
+
+
 def stream_quotes():
     global service_running
     global failed_quote_cycles
@@ -229,127 +352,51 @@ def stream_quotes():
     last_heartbeat = datetime.now(UTC)
 
     quote_conn = get_connection()
+
     log("✅ Long-lived quote DB connection opened")
 
     try:
 
         while service_running:
 
-            try:
-                runtime = get_runtime_state(POLL_SECONDS)
-
-            except Exception as e:
-                log(
-                    f"FAILED TO GET RUNTIME STATE: "
-                    f"{type(e).__name__}: {e}"
-                )
-
-                runtime = {
-                    "mode": "online",
-                    "session": "REGULAR",
-                    "should_fetch_quotes": True,
-                    "should_process_alerts": False,
-                    "sleep_seconds": POLL_SECONDS,
-                }
+            runtime = get_safe_runtime_state()
 
             log(f"RUNTIME: {runtime}")
 
-            now = datetime.now(UTC)
-
-            if (now - last_heartbeat) >= timedelta(minutes=1):
-                log("⚠️ Heartbeat temporarily disabled during FD leak test")
-                last_heartbeat = now
+            last_heartbeat = maybe_save_heartbeat(
+                last_heartbeat,
+                runtime,
+            )
 
             if not runtime["should_fetch_quotes"]:
+
                 time.sleep(runtime["sleep_seconds"])
+
                 continue
 
             successful_quotes = 0
 
-
-
             refresh_access_token_by_time()
 
-
-            # for symbol in SYMBOLS:
-            # symbols = build_watchlist()
-            # for symbol in symbols:
-            watchlist = build_watchlist()
-
-            log(f"FAVORITE SYMBOLS: {watchlist['favorites']}")
-            log(f"MOVERS WATCHLIST: {watchlist['movers']}")
-            log(f"FINAL STREAM WATCHLIST: {watchlist['symbols']}")
+            watchlist = get_current_watchlist()
 
             for symbol in watchlist["symbols"]:
 
+                quote_conn, success = process_symbol(
+                    symbol,
+                    runtime,
+                    quote_conn,
+                )
 
-                quote = adapter.get_quote(symbol)
+                if success:
 
-                if quote is None:
-                    log(f"⚠️ No quote returned for {symbol}; skipping.")
-                    continue
-
-                successful_quotes += 1
-
-                quote["timestamp"] = datetime.now(UTC).isoformat()
-
-                try:
-                    save_quote_with_connection(
-                        quote_conn,
-                        quote
-                    )
-
-                except Exception as e:
-
-                    log(
-                        f"FAILED TO SAVE QUOTE: "
-                        f"{type(e).__name__}: {e}"
-                    )
-
-                    try:
-                        quote_conn.close()
-
-                    except Exception:
-                        pass
-
-                    quote_conn = get_connection()
-
-                    log(
-                        "✅ Recreated long-lived "
-                        "quote DB connection"
-                    )
-
-                log(f"QUOTE: {quote}")
-
-                if runtime["should_process_alerts"]:
-
-                    alerts = []
-
-                    log(
-                        "⚠️ Spike detector temporarily "
-                        "disabled during FD leak test"
-                    )
-
-                    log(
-                        "⚠️ Typed rules temporarily "
-                        "disabled during FD leak test"
-                    )
-
-                    for alert in alerts:
-
-                        alert["timestamp"] = quote["timestamp"]
-
-                        log(f"🚨 ALERT: {alert}")
-
-                        save_alert(alert)
-
+                    successful_quotes += 1
 
             # TEMPORARILY DISABLED SELF-HEALING
             # handle_self_healing(
             #     successful_quotes,
             #     runtime,
             # )
-
 
             time.sleep(runtime["sleep_seconds"])
 
