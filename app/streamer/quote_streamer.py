@@ -35,6 +35,18 @@ def create_adapter():
     return SchwabAdapter()
 
 
+def refresh_access_token_by_time():
+    remaining_seconds = adapter.client.oauth_client.refresh_token_timer()
+
+    if remaining_seconds is None:
+        log("⚠️ Access token remaining seconds unknown")
+        return
+
+    log(f"🔑 Access token seconds remaining: {remaining_seconds:.0f}")
+
+
+
+
 adapter = create_adapter()
 log("✅ Schwab adapter initialized")
 
@@ -253,6 +265,11 @@ def stream_quotes():
                 continue
 
             successful_quotes = 0
+
+
+
+            refresh_access_token_by_time()
+
 
             # for symbol in SYMBOLS:
             # symbols = build_watchlist()
