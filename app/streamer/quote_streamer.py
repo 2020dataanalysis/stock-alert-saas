@@ -11,7 +11,7 @@ from app.signals.spike_detector import SpikeDetector
 from app.storage.sqlite_store import save_system_event
 # from app.services.status_service import get_streamer_mode
 from app.services.streamer_runtime_service import get_runtime_state
-# from app.signals.typed_rule_engine import evaluate_typed_rules
+from app.signals.typed_rule_engine import evaluate_typed_rules
 from app.services.token_status_service import get_token_status
 from datetime import datetime, UTC, timedelta
 from app.storage.sqlite_store import (
@@ -320,17 +320,16 @@ def process_symbol(
 
     if runtime["should_process_alerts"]:
 
-        alerts = []
 
-        log(
-            "⚠️ Spike detector temporarily "
-            "disabled during FD leak test"
+        alerts = detector.process_quote(quote)
+
+        alerts.extend(
+            evaluate_typed_rules(quote)
         )
 
-        log(
-            "⚠️ Typed rules temporarily "
-            "disabled during FD leak test"
-        )
+
+
+
 
         for alert in alerts:
 
