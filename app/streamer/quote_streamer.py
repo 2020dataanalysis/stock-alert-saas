@@ -354,7 +354,26 @@ def process_symbol(
     runtime,
     quote_conn,
 ):
-    quote = adapter.get_quote(symbol)
+    # quote = adapter.get_quote(symbol)
+    quote = {
+        "symbol": symbol,
+        "bid": 0,
+        "ask": 0,
+        "last": 0,
+        "last_size": 0,
+        "volume": 0,
+        "is_shortable": False,
+        "hard_to_borrow": False,
+        "htb_rate": 0.0,
+    }
+
+
+
+
+
+
+
+
 
     if quote is None:
 
@@ -364,33 +383,45 @@ def process_symbol(
 
     quote["timestamp"] = datetime.now(UTC).isoformat()
 
-    quote_conn = save_quote_safely(
-        quote_conn,
-        quote,
-    )
+    # quote_conn = save_quote_safely(
+    #     quote_conn,
+    #     quote,
+    # )
 
     log(f"QUOTE: {quote}")
 
+    # if runtime["should_process_alerts"]:
+
+
+    #     alerts = detector.process_quote(quote)
+
+    #     # alerts.extend(
+    #     #     evaluate_typed_rules(quote)
+    #     # )
+
+
+
+
+
+    #     for alert in alerts:
+
+    #         alert["timestamp"] = quote["timestamp"]
+
+    #         log(f"🚨 ALERT: {alert}")
+
+    #         save_alert(alert)
+
     if runtime["should_process_alerts"]:
 
-
-        alerts = detector.process_quote(quote)
-
-        alerts.extend(
-            evaluate_typed_rules(quote)
-        )
+        log("⚠️ Alert processing temporarily disabled during FD leak test")
 
 
 
 
 
-        for alert in alerts:
 
-            alert["timestamp"] = quote["timestamp"]
 
-            log(f"🚨 ALERT: {alert}")
 
-            save_alert(alert)
 
     return quote_conn, True
 
@@ -411,7 +442,17 @@ def stream_quotes():
 
         while service_running:
 
-            runtime = get_safe_runtime_state()
+            # runtime = get_safe_runtime_state()
+
+            runtime = {
+                "mode": "online",
+                "session": "REGULAR",
+                "should_fetch_quotes": True,
+                "should_process_alerts": False,
+                "sleep_seconds": POLL_SECONDS,
+            }
+
+
 
             log(f"RUNTIME: {runtime}")
 
@@ -432,10 +473,10 @@ def stream_quotes():
                 service_running = False
 
 
-            last_heartbeat = maybe_save_heartbeat(
-                last_heartbeat,
-                runtime,
-            )
+            # last_heartbeat = maybe_save_heartbeat(
+            #     last_heartbeat,
+            #     runtime,
+            # )
 
             if not runtime["should_fetch_quotes"]:
 
@@ -445,9 +486,10 @@ def stream_quotes():
 
             successful_quotes = 0
 
-            refresh_access_token_by_time()
+            # refresh_access_token_by_time()
 
-            watchlist = get_current_watchlist()
+            # watchlist = get_current_watchlist()
+            watchlist = startup_watchlist
 
             for symbol in watchlist["symbols"]:
 
