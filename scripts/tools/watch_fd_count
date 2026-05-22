@@ -1,0 +1,7 @@
+PID=$(ps aux | awk '/[q]uote_streamer/ {print $2}')
+
+while true; do
+    echo -n "$(date '+%H:%M:%S') PID=$PID FD_COUNT="
+    lsof -p "$PID" | wc -l
+    sleep 5
+done
