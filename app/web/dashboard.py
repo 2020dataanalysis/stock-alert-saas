@@ -106,6 +106,8 @@ async def settings_page(request: Request):
 async def update_settings(
     favorite_symbols: str = Form(...),
     use_movers: bool = Form(False),
+    auto_generate_mover_alerts: bool = Form(False),
+    clear_existing_mover_alerts_on_startup: bool = Form(False),
     movers_limit: int = Form(...),
     price_spike_pct: float = Form(...),
     volume_spike_pct: float = Form(...),
@@ -119,6 +121,9 @@ async def update_settings(
             if s.strip()
         ],
         "use_movers": use_movers,
+        "auto_generate_mover_alerts": auto_generate_mover_alerts,
+        "clear_existing_mover_alerts_on_startup":
+            clear_existing_mover_alerts_on_startup,
         "movers_limit": movers_limit,
         "price_spike_pct": price_spike_pct,
         "volume_spike_pct": volume_spike_pct,

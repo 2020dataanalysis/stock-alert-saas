@@ -3,11 +3,33 @@
 <head>
     <title>Settings</title>
     <style>
-        body { font-family: Arial; margin: 40px; }
-        input { padding: 6px; margin: 5px 0; width: 300px; }
-        button { padding: 8px 12px; }
-        a { margin-right: 15px; }
+        body {
+            font-family: Arial;
+            margin: 40px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            padding: 6px;
+            margin: 5px 0;
+            width: 300px;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        button {
+            padding: 8px 12px;
+        }
+
+        a {
+            margin-right: 15px;
+        }
     </style>
+
+
 </head>
 <body>
 
@@ -19,19 +41,39 @@
     <a href="/charts">Charts</a>
     <a href="/alerts">Alerts</a>
 </nav>
-
+<br>
 <form method="post" action="/settings">
 
     <label>Favorite Symbols</label><br>
     <input name="favorite_symbols" value="{{ settings['favorite_symbols'] | join(',') }}"><br>
-
+    <br>
     <label>
         <input type="checkbox" name="use_movers" value="true"
         {% if settings['use_movers'] %}checked{% endif %}>
         Use Movers
+
+
+    </label><br>
+
+    <label>
+        <input type="checkbox"
+            name="auto_generate_mover_alerts"
+            value="true"
+            {% if settings.get('auto_generate_mover_alerts') %}checked{% endif %}>
+        Auto-generate mover alerts on startup
+    </label><br>
+
+    <label>
+        <input type="checkbox"
+            name="clear_existing_mover_alerts_on_startup"
+            value="true"
+            {% if settings.get('clear_existing_mover_alerts_on_startup') %}checked{% endif %}>
+        Clear existing mover alert rules on startup
     </label><br><br>
 
     <label>Movers Limit</label><br>
+
+
     <input name="movers_limit" type="number" value="{{ settings['movers_limit'] }}"><br>
 
     <h3>Alerts</h3>

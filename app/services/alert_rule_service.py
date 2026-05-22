@@ -234,6 +234,19 @@ def is_rule_in_cooldown(rule):
     ) < timedelta(seconds=cooldown_seconds)
 
 
+def delete_auto_generated_mover_rules():
+    with get_connection() as conn:
+
+        cursor = conn.execute("""
+            DELETE FROM alert_rules
+            WHERE
+                auto_generated = 1
+                AND source = 'movers'
+        """)
+
+        return cursor.rowcount
+
+
 def mover_rule_exists(symbol, direction):
     rule_type = "whale_spike" if direction == "up" else "whale_drop"
 

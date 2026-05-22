@@ -23,6 +23,11 @@ from app.storage.sqlite_store import (
 from app.services.watchlist_service import build_watchlist
 
 
+from app.services.alert_rule_service import (
+    delete_auto_generated_mover_rules,
+    generate_mover_rules,
+)
+
 # PACIFIC = ZoneInfo("America/Los_Angeles")
 
 settings = load_settings()
@@ -69,6 +74,45 @@ POLL_SECONDS = settings["poll_seconds"]
 
 startup_watchlist = build_watchlist()
 
+
+
+
+def prepare_startup_mover_rules(startup_watchlist):
+
+    if settings.get(
+        "clear_existing_mover_alerts_on_startup"
+    ):
+
+        deleted = delete_auto_generated_mover_rules()
+
+        log(
+            f"🧹 Deleted {deleted} "
+            f"old mover alert rules"
+        )
+
+    if settings.get(
+        "auto_generate_mover_alerts"
+    ):
+
+        created = generate_mover_rules(
+            startup_watchlist["movers"],
+            price_change_pct=settings["price_spike_pct"],
+            volume_change_pct=settings["volume_spike_pct"],
+            window_size=settings["window_size"],
+        )
+
+        log(
+            f"✅ Generated {created} "
+            f"startup mover alert rules"
+        )
+
+
+
+
+
+
+prepare_startup_mover_rules(startup_watchlist)
+
 if not startup_watchlist["symbols"]:
     save_system_event(
         event_type="STREAMER_START_FAILED",
@@ -97,6 +141,15 @@ save_system_event(
         "poll_seconds": POLL_SECONDS,
     }
 )
+
+
+
+
+
+
+
+
+
 
 
 def handle_self_healing(
