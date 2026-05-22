@@ -79,6 +79,25 @@ def get_latest_system_event(cursor):
     }
 
 
+
+def get_latest_streamer_exit(cursor):
+    cursor.execute("""
+        SELECT timestamp
+        FROM system_events
+        WHERE event_type = 'STREAMER_EXITED'
+        ORDER BY timestamp DESC
+        LIMIT 1
+    """)
+    row = cursor.fetchone()
+
+    if not row:
+        return None
+
+    return row[0]
+
+
+
+
 def get_latest_provider_error(cursor):
     cursor.execute("""
         SELECT provider, symbol, error_type, message, timestamp
@@ -151,6 +170,7 @@ def get_status_metrics():
         latest_provider_error = get_latest_provider_error(log_cursor)
 
         last_heartbeat_time = get_latest_heartbeat(log_cursor)
+        last_exit_time = get_latest_streamer_exit(log_cursor)
 
     if last_quote_time:
 
@@ -185,7 +205,26 @@ def get_status_metrics():
 
         heartbeat_age_seconds = None
 
-    if lag_seconds is not None and lag_seconds <= 30:
+
+
+
+    latest_exit_is_after_heartbeat = (
+        last_exit_time is not None
+        and (
+            last_heartbeat_time is None
+            or datetime.fromisoformat(last_exit_time)
+            > datetime.fromisoformat(last_heartbeat_time)
+        )
+    )
+
+
+
+
+    if latest_exit_is_after_heartbeat:
+
+        streamer_status = "EXITED"
+
+    elif lag_seconds is not None and lag_seconds <= 30:
 
         streamer_status = "ONLINE"
 

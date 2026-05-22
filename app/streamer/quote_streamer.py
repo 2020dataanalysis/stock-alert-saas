@@ -415,6 +415,23 @@ def stream_quotes():
 
             log(f"RUNTIME: {runtime}")
 
+
+
+            if runtime["session"] == "CLOSED":
+
+                save_system_event(
+                    event_type="STREAMER_EXITED",
+                    service="quote_streamer",
+                    status="EXITED",
+                    message="Market closed. Streamer exited intentionally.",
+                    metadata=runtime,
+                )
+
+                log("📴 Market closed. Stopping streamer.")
+
+                service_running = False
+
+
             last_heartbeat = maybe_save_heartbeat(
                 last_heartbeat,
                 runtime,
