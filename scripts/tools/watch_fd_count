@@ -1,3 +1,6 @@
+# stock-alert-saas/scripts/tools/watch_fd_count
+
+
 PID=$(ps aux | awk '/[q]uote_streamer/ {print $2}')
 
 while true; do
