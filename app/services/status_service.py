@@ -25,7 +25,6 @@ def get_latest_heartbeat(cursor):
     
 
 def get_streamer_mode():
-    # with get_connection() as conn:
     from contextlib import closing
     with closing(get_connection()) as conn:
         cur = conn.cursor()
@@ -57,7 +56,6 @@ def get_streamer_mode():
         return "offline"
 
     return mode
-
 
 
 def get_latest_system_event(cursor):
