@@ -25,3 +25,17 @@ def build_watchlist():
         "symbols": symbols,
         "count": len(symbols),
     }
+
+
+def get_symbol_source_badge(
+    symbol,
+    favorite_symbols,
+    mover_symbols,
+):
+    if symbol in favorite_symbols:
+        return "★"
+
+    if symbol in mover_symbols:
+        return "M"
+
+    return ""

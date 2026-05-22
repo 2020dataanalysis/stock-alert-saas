@@ -29,6 +29,13 @@ from app.services.alert_rule_service import (
 from app.storage.sqlite_store import get_connection
 # conn = get_connection()
 
+from app.services.watchlist_service import (
+    build_watchlist,
+    get_symbol_source_badge,
+)
+
+
+
 
 from app.config import load_settings
 import sqlite3
@@ -52,6 +59,23 @@ templates = Jinja2Templates(directory="app/web/templates")
 async def overview(request: Request):
     settings = load_settings()
 
+
+
+    favorite_symbols = set(
+        settings["favorite_symbols"]
+    )
+
+    mover_symbols = set()
+
+    if settings["use_movers"]:
+        mover_symbols = set(
+            get_mover_symbols(
+                limit=settings["movers_limit"]
+            )
+        )
+
+
+
     with get_connection() as conn:
         conn.row_factory = sqlite3.Row
 
@@ -63,12 +87,21 @@ async def overview(request: Request):
             "SELECT COUNT(*) FROM alerts"
         ).fetchone()[0]
 
-        quotes = conn.execute("""
-            SELECT symbol, last, volume, timestamp
-            FROM quotes
-            ORDER BY id DESC
-            LIMIT 10
-        """).fetchall()
+        quotes = [
+            dict(row)
+            for row in conn.execute("""
+                SELECT symbol, last, volume, timestamp
+                FROM quotes
+                ORDER BY id DESC
+                LIMIT 10
+            """).fetchall()
+        ]
+
+
+
+
+
+
 
         alerts = conn.execute("""
             SELECT symbol, price_change_pct, volume_change_pct, timestamp
@@ -76,6 +109,19 @@ async def overview(request: Request):
             ORDER BY id DESC
             LIMIT 10
         """).fetchall()
+
+
+
+        for q in quotes:
+            q["source_badge"] = get_symbol_source_badge(
+                q["symbol"],
+                favorite_symbols,
+                mover_symbols,
+            )
+
+
+
+
 
     return templates.TemplateResponse(
         request=request,
