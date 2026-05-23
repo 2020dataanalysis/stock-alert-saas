@@ -396,3 +396,10 @@ async def alerts_page(request: Request):
             "alerts": alerts,
         },
     )
+
+
+from fastapi import Response
+
+@app.api_route("/health", methods=["GET", "HEAD"])
+def health():
+    return {"status": "ok"}
