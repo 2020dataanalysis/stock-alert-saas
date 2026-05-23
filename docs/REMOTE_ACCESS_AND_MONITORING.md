@@ -1,61 +1,26 @@
 # Remote Access and Health Monitoring
 
-## Ngrok Domain
-
-https://moody-habitable-bush.ngrok-free.dev
-
-## Start FastAPI
-
-```bash
-uvicorn app.web.dashboard:app --host 0.0.0.0 --port 8000
-Start ngrok
-
-
-
-
-
-
-
-
-Correct — the explanatory text should also live inside the README so future-you (or another developer) has the full operational context in one place.
-
-Better version:
-
-````bash
-mkdir -p docs
-
-cat > docs/REMOTE_ACCESS_AND_MONITORING.md <<'EOF'
-# Remote Access and Health Monitoring
-
-## Overview
-
-This project supports:
-
-- Remote browser access
-- External uptime monitoring
-- Internet-accessible HTTPS endpoint
-- Machine-readable health checks
-
-Current architecture:
+## Architecture
 
 ```text
 Internet
 → ngrok HTTPS tunnel
 → Mac mini
-→ FastAPI SaaS on localhost:8000
-````
+→ FastAPI SaaS
+→ SQLite + Schwab Streamer
+```
 
 ---
 
-# Ngrok Configuration
-
-## Reserved Domain
+# Reserved ngrok Domain
 
 ```text
 https://moody-habitable-bush.ngrok-free.dev
 ```
 
-## Start FastAPI
+---
+
+# Start FastAPI
 
 Run from the project root:
 
@@ -90,17 +55,15 @@ https://moody-habitable-bush.ngrok-free.dev/*
 
 ---
 
-# Remote URLs
+# Remote Access URLs
 
-## Human Access
-
-Base URL:
+## Base URL
 
 ```text
 https://moody-habitable-bush.ngrok-free.dev
 ```
 
-Examples:
+## Human-Facing Pages
 
 ```text
 /status
@@ -130,7 +93,7 @@ Example:
 https://moody-habitable-bush.ngrok-free.dev/health
 ```
 
-The endpoint should support:
+Supported methods:
 
 ```text
 GET
@@ -145,12 +108,28 @@ Expected response:
 
 ---
 
+# FastAPI Health Route
+
+```python
+@app.api_route("/health", methods=["GET", "HEAD"])
+def health():
+    return {"status": "ok"}
+```
+
+This supports:
+- uptime monitoring
+- automated observability
+- orchestration systems
+- external health checks
+
+---
+
 # UptimeRobot Configuration
 
 ## Monitor Type
 
 ```text
-HTTP / website monitoring
+HTTP / Website Monitoring
 ```
 
 ## Monitor URL
@@ -169,58 +148,9 @@ Email alerts
 
 ---
 
-# Important Notes
-
-## Why /health Exists
-
-Production systems typically expose dedicated health endpoints:
-
-```text
-/health
-/healthz
-/live
-/ready
-```
-
-These endpoints are intended for:
-
-* uptime monitoring
-* orchestration systems
-* automated observability tools
-
-They are separate from human-facing pages like `/status`.
-
----
-
-# UptimeRobot HEAD Requests
-
-UptimeRobot may issue:
-
-```text
-HEAD /health
-```
-
-instead of:
-
-```text
-GET /health
-```
-
-Therefore the FastAPI route must allow both methods.
-
-Example:
-
-```python
-@app.api_route("/health", methods=["GET", "HEAD"])
-def health():
-    return {"status": "ok"}
-```
-
----
-
 # Operational Requirements
 
-Remote access requires BOTH processes running:
+Remote access requires BOTH processes running.
 
 ## FastAPI
 
@@ -235,9 +165,9 @@ ngrok http --domain=moody-habitable-bush.ngrok-free.dev 8000
 ```
 
 If either process stops:
-
-* remote access fails
-* uptime monitoring fails
+- remote access fails
+- uptime monitoring fails
+- external users cannot access the SaaS
 
 ---
 
@@ -251,12 +181,22 @@ UptimeRobot
 ```
 
 This provides:
+- external uptime checks
+- remote outage detection
+- email alerting
+- remote browser access
 
-* external uptime checks
-* remote outage detection
-* email alerting
-* remote browser access
-  EOF
+---
 
-```
-```
+# Future Improvements
+
+Potential future enhancements:
+
+- persistent launchctl services
+- automatic ngrok startup
+- authenticated admin access
+- reverse proxy via Nginx
+- custom domain
+- Prometheus/Grafana metrics
+- heartbeat telemetry dashboard
+- process supervision
