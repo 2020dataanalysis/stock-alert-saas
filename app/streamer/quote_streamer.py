@@ -356,11 +356,6 @@ def process_symbol(
 ):
     quote = adapter.get_quote(symbol)
 
-
-
-
-
-
     if quote is None:
 
         log(f"⚠️ No quote returned for {symbol}; skipping.")
@@ -397,12 +392,6 @@ def process_symbol(
 
             save_alert(alert)
 
-    # if runtime["should_process_alerts"]:
-
-    #     log("⚠️ Alert processing temporarily disabled during FD leak test")
-
-
-
     return quote_conn, True
 
 
@@ -423,16 +412,6 @@ def stream_quotes():
         while service_running:
 
             runtime = get_safe_runtime_state()
-
-            # runtime = {
-            #     "mode": "online",
-            #     "session": "REGULAR",
-            #     "should_fetch_quotes": True,
-            #     "should_process_alerts": False,
-            #     "sleep_seconds": POLL_SECONDS,
-            # }
-
-
 
             log(f"RUNTIME: {runtime}")
 
@@ -468,8 +447,7 @@ def stream_quotes():
 
             refresh_access_token_by_time()
 
-            # watchlist = get_current_watchlist()
-            watchlist = startup_watchlist
+            watchlist = get_current_watchlist()
 
             for symbol in watchlist["symbols"]:
 
