@@ -6,6 +6,7 @@ from app.services.market_hours_service import (
     is_trading_session,
 )
 from app.services.watchlist_service import build_watchlist
+from contextlib import closing
 
 
 def get_latest_heartbeat(cursor):
@@ -125,7 +126,7 @@ def get_status_metrics():
 
     symbols_tracked = watchlist["count"]
 
-    with get_connection() as conn:
+    with closing(get_connection()) as conn:
         cursor = conn.cursor()
 
         cursor.execute("SELECT COUNT(*) FROM quotes")
@@ -161,7 +162,7 @@ def get_status_metrics():
 
         control_mode = mode
 
-    with get_log_connection() as log_conn:
+    with closing(get_log_connection()) as log_conn:
 
         log_cursor = log_conn.cursor()
 

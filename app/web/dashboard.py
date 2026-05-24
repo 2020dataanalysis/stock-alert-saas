@@ -27,7 +27,6 @@ from app.services.alert_rule_service import (
 )
 
 from app.storage.sqlite_store import get_connection
-# conn = get_connection()
 
 from app.services.watchlist_service import (
     build_watchlist,
@@ -38,6 +37,7 @@ from app.services.watchlist_service import (
 
 
 from app.config import load_settings
+from contextlib import closing
 import sqlite3
 
 app = FastAPI()
@@ -76,7 +76,7 @@ async def overview(request: Request):
 
 
 
-    with get_connection() as conn:
+    with closing(get_connection()) as conn:
         conn.row_factory = sqlite3.Row
 
         quote_count = conn.execute(
