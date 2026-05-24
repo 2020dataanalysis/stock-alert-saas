@@ -7,7 +7,7 @@ import sqlite3
 from pathlib import Path
 from threading import Lock
 from contextlib import contextmanager
-from contextlib import closing
+
 
 _DB_INITIALIZED = False
 _DB_INIT_LOCK = Lock()
@@ -18,10 +18,6 @@ MARKET_DB_PATH = BASE_DIR / "data" / "market_data.db"
 LOG_DB_PATH = BASE_DIR / "data" / "logs.db"
 
 DB_PATH = MARKET_DB_PATH  # backwards-compatible default
-
-
-
-
 
 
 
@@ -53,14 +49,7 @@ def save_quote_with_connection(conn, quote):
         quote.get("htb_rate"),
     ))
 
-    conn.commit()
     # commit handled by caller
-
-
-
-
-
-
 
 
 def ensure_db_initialized():
@@ -77,7 +66,6 @@ def ensure_db_initialized():
 
 def get_connection(db_path=MARKET_DB_PATH):
     db_path.parent.mkdir(parents=True, exist_ok=True)
-    # ensure_db_initialized()
 
     conn = sqlite3.connect(
         db_path,
@@ -90,59 +78,18 @@ def get_connection(db_path=MARKET_DB_PATH):
 
     return conn
 
-# @contextmanager
-# def get_connection(db_path=MARKET_DB_PATH):
-#     db_path.parent.mkdir(parents=True, exist_ok=True)
-
-#     conn = sqlite3.connect(
-#         db_path,
-#         timeout=30,
-#     )
-
-#     conn.execute("PRAGMA journal_mode=WAL")
-#     conn.execute("PRAGMA foreign_keys=ON")
-#     conn.execute("PRAGMA busy_timeout=30000")
-
-#     try:
-#         yield conn
-#         conn.commit()
-#     except Exception:
-#         conn.rollback()
-#         raise
-#     finally:
-#         conn.close()
-
 
 
 def get_log_connection():
     return get_connection(LOG_DB_PATH)
 
 
-# def get_row_connection():
-#     conn = get_connection()
-#     conn.row_factory = sqlite3.Row
-#     return conn
-
-
-# @contextmanager
-# def get_row_connection():
-#     # with get_connection() as conn:
-#     with closing(get_connection()) as conn:
-#         conn.row_factory = sqlite3.Row
-#         yield conn
-
-
-# def get_row_connection():
-#     with closing(get_connection()) as conn:
-#         conn.row_factory = sqlite3.Row
-#         yield conn
-
-
 @contextmanager
 def get_row_connection():
-    with closing(get_connection()) as conn:
+    with market_db_connection() as conn:
         conn.row_factory = sqlite3.Row
         yield conn
+
 
 def init_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -317,135 +264,19 @@ def init_log_db():
             )
         """)
 
-# def save_quote(quote):
-#     with get_connection() as conn:
-#         conn.execute("""
-#             INSERT INTO quotes (
-#                 timestamp,
-#                 symbol,
-#                 bid,
-#                 ask,
-#                 last,
-#                 last_size,
-#                 volume,
-#                 is_shortable,
-#                 hard_to_borrow,
-#                 htb_rate
-#             )
-#             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-#         """, (
-#             quote.get("timestamp") or datetime.now(UTC).isoformat(),
-#             quote["symbol"],
-#             quote.get("bid"),
-#             quote.get("ask"),
-#             quote.get("last"),
-#             quote.get("last_size"),
-#             quote.get("volume"),
-#             int(quote.get("is_shortable", False)),
-#             int(quote.get("hard_to_borrow", False)),
-#             quote.get("htb_rate"),
-#         ))
-
-
-
-
-# def save_quote(quote):
-#     conn = get_connection()
-
-#     try:
-#         conn.execute("""
-#             INSERT INTO quotes (
-#                 timestamp,
-#                 symbol,
-#                 bid,
-#                 ask,
-#                 last,
-#                 last_size,
-#                 volume,
-#                 is_shortable,
-#                 hard_to_borrow,
-#                 htb_rate
-#             )
-#             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-#         """, (
-#             quote.get("timestamp") or datetime.now(UTC).isoformat(),
-#             quote["symbol"],
-#             quote.get("bid"),
-#             quote.get("ask"),
-#             quote.get("last"),
-#             quote.get("last_size"),
-#             quote.get("volume"),
-#             int(quote.get("is_shortable", False)),
-#             int(quote.get("hard_to_borrow", False)),
-#             quote.get("htb_rate"),
-#         ))
-
-#         conn.commit()
-
-#     finally:
-#         conn.close()
-
-
-# def save_quote(quote):
-#     with get_connection() as conn:
-#         save_quote_with_connection(conn, quote)
 
 def save_quote(quote):
-    with closing(get_connection()) as conn:
+    with market_db_connection() as conn:
         save_quote_with_connection(conn, quote)
-        conn.commit()
-
-
-# def clear_alerts():
-#     with get_connection() as conn:
-#         conn.execute("DELETE FROM alerts")
 
 
 def clear_alerts():
-    with closing(get_connection()) as conn:
+    with market_db_connection() as conn:
         conn.execute("DELETE FROM alerts")
-        conn.commit()
-
-
-
-# def save_alert(alert):
-#     with get_connection() as conn:
-#         conn.execute("""
-#             INSERT INTO alerts (
-#                 timestamp,
-#                 symbol,
-#                 type,
-#                 price_change_pct,
-#                 volume_change_pct,
-#                 oldest_price,
-#                 newest_price,
-#                 oldest_volume,
-#                 newest_volume
-#             )
-#             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-#         """, (
-#             alert.get("timestamp"),
-#             alert.get("symbol"),
-#             alert.get("type"),
-#             alert.get("price_change_pct"),
-#             alert.get("volume_change_pct"),
-#             alert.get("oldest_price"),
-#             alert.get("newest_price"),
-#             alert.get("oldest_volume"),
-#             alert.get("newest_volume"),
-#         ))
-
-
-
-
-# def save_alert(alert):
-#     with closing(get_connection()) as conn:
-#         conn.execute(...)
-#         conn.commit()
 
 
 def save_alert(alert):
-    with closing(get_connection()) as conn:
+    with market_db_connection() as conn:
         conn.execute("""
             INSERT INTO alerts (
                 timestamp,
@@ -470,35 +301,10 @@ def save_alert(alert):
             alert.get("oldest_volume"),
             alert.get("newest_volume"),
         ))
-        conn.commit()
 
-
-
-# def get_top_movers(limit=5):
-#     with get_connection() as conn:
-#         cursor = conn.execute("""
-#             SELECT
-#                 symbol,
-#                 type,
-#                 price_change_pct,
-#                 volume_change_pct,
-#                 timestamp
-#             FROM alerts
-#             WHERE price_change_pct IS NOT NULL
-#             ORDER BY ABS(price_change_pct) DESC
-#             LIMIT ?
-#         """, (limit,))
-
-#         return cursor.fetchall()
-
-
-# def get_top_movers(limit=5):
-#     with closing(get_connection()) as conn:
-#         cursor = conn.execute(...)
-#         return cursor.fetchall()
 
 def get_top_movers(limit=5):
-    with closing(get_connection()) as conn:
+    with market_db_connection() as conn:
         cursor = conn.execute("""
             SELECT
                 symbol,
@@ -515,8 +321,6 @@ def get_top_movers(limit=5):
         return cursor.fetchall()
 
 
-
-
 def save_provider_error(
     provider,
     symbol=None,
@@ -529,8 +333,7 @@ def save_provider_error(
         if raw_response is not None and not isinstance(raw_response, str):
             raw_response = json.dumps(raw_response, default=str)
 
-        # with get_log_connection() as conn:
-        with closing(get_log_connection()) as conn:
+        with log_db_connection() as conn:
             conn.execute("""
                 INSERT INTO provider_errors (
                     timestamp,
@@ -551,7 +354,7 @@ def save_provider_error(
                 message,
                 raw_response,
             ))
-            conn.commit()
+            # conn.commit()
 
     except Exception as e:
         print(f"FAILED TO SAVE PROVIDER ERROR: {type(e).__name__}: {e}")
@@ -569,8 +372,7 @@ def save_system_event(
         if metadata is not None:
             metadata_json = json.dumps(metadata, default=str)
 
-        # with get_log_connection() as conn:
-        with closing(get_log_connection()) as conn:
+        with log_db_connection() as conn:
             conn.execute("""
                 INSERT INTO system_events (
                     timestamp,
@@ -590,7 +392,37 @@ def save_system_event(
                 metadata_json,
             ))
 
-            conn.commit()
-
     except Exception as e:
         print(f"FAILED TO SAVE SYSTEM EVENT: {type(e).__name__}: {e}")
+
+
+@contextmanager
+def market_db_connection():
+    conn = get_connection()
+
+    try:
+        yield conn
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
+
+@contextmanager
+def log_db_connection():
+    conn = get_log_connection()
+
+    try:
+        yield conn
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()

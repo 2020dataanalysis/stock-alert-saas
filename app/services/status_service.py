@@ -6,7 +6,12 @@ from app.services.market_hours_service import (
     is_trading_session,
 )
 from app.services.watchlist_service import build_watchlist
-from contextlib import closing
+
+from app.storage.sqlite_store import (
+    market_db_connection,
+    log_db_connection,
+)
+
 
 
 def get_latest_heartbeat(cursor):
@@ -27,7 +32,7 @@ def get_latest_heartbeat(cursor):
 
 def get_streamer_mode():
     from contextlib import closing
-    with closing(get_connection()) as conn:
+    with market_db_connection() as conn:
         cur = conn.cursor()
 
         cur.execute("SELECT mode, until_timestamp FROM streamer_control WHERE id = 1")
@@ -126,7 +131,7 @@ def get_status_metrics():
 
     symbols_tracked = watchlist["count"]
 
-    with closing(get_connection()) as conn:
+    with market_db_connection() as conn:
         cursor = conn.cursor()
 
         cursor.execute("SELECT COUNT(*) FROM quotes")
@@ -162,7 +167,7 @@ def get_status_metrics():
 
         control_mode = mode
 
-    with closing(get_log_connection()) as log_conn:
+    with log_db_connection() as log_conn:
 
         log_cursor = log_conn.cursor()
 
