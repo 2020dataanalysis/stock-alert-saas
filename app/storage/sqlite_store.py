@@ -19,51 +19,9 @@ LOG_DB_PATH = BASE_DIR / "data" / "logs.db"
 
 DB_PATH = MARKET_DB_PATH  # backwards-compatible default
 
-
-
-def save_quote_with_connection(conn, quote):
-    conn.execute("""
-        INSERT INTO quotes (
-            timestamp,
-            symbol,
-            bid,
-            ask,
-            last,
-            last_size,
-            volume,
-            is_shortable,
-            hard_to_borrow,
-            htb_rate
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, (
-        quote.get("timestamp") or datetime.now(UTC).isoformat(),
-        quote["symbol"],
-        quote.get("bid"),
-        quote.get("ask"),
-        quote.get("last"),
-        quote.get("last_size"),
-        quote.get("volume"),
-        int(quote.get("is_shortable", False)),
-        int(quote.get("hard_to_borrow", False)),
-        quote.get("htb_rate"),
-    ))
-
-    # commit handled by caller
-
-
-def ensure_db_initialized():
-    global _DB_INITIALIZED
-
-    if _DB_INITIALIZED:
-        return
-
-    with _DB_INIT_LOCK:
-        if not _DB_INITIALIZED:
-            init_db()
-            _DB_INITIALIZED = True
-
-
+# -------------------------------------------------------------------
+# Connection Factories
+# -------------------------------------------------------------------
 def get_connection(db_path=MARKET_DB_PATH):
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -84,13 +42,10 @@ def get_log_connection():
     return get_connection(LOG_DB_PATH)
 
 
-@contextmanager
-def get_row_connection():
-    with market_db_connection() as conn:
-        conn.row_factory = sqlite3.Row
-        yield conn
 
-
+# -------------------------------------------------------------------
+# Connection Context Managers
+# -------------------------------------------------------------------
 @contextmanager
 def market_db_connection():
     conn = get_connection()
@@ -108,6 +63,13 @@ def market_db_connection():
 
 
 @contextmanager
+def get_row_connection():
+    with market_db_connection() as conn:
+        conn.row_factory = sqlite3.Row
+        yield conn
+
+
+@contextmanager
 def log_db_connection():
     conn = get_log_connection()
 
@@ -121,6 +83,22 @@ def log_db_connection():
 
     finally:
         conn.close()
+
+
+
+# -------------------------------------------------------------------
+# Database Initialization
+# -------------------------------------------------------------------
+def ensure_db_initialized():
+    global _DB_INITIALIZED
+
+    if _DB_INITIALIZED:
+        return
+
+    with _DB_INIT_LOCK:
+        if not _DB_INITIALIZED:
+            init_db()
+            _DB_INITIALIZED = True
 
 
 def init_db():
@@ -227,11 +205,7 @@ def init_db():
         except sqlite3.OperationalError:
             pass
 
-
-
     init_streamer_control_table()
-
-
     init_log_db()
 
 
@@ -294,11 +268,50 @@ def init_log_db():
         """)
 
 
+
+# -------------------------------------------------------------------
+# Quote Persistence
+# -------------------------------------------------------------------
+def save_quote_with_connection(conn, quote):
+    conn.execute("""
+        INSERT INTO quotes (
+            timestamp,
+            symbol,
+            bid,
+            ask,
+            last,
+            last_size,
+            volume,
+            is_shortable,
+            hard_to_borrow,
+            htb_rate
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        quote.get("timestamp") or datetime.now(UTC).isoformat(),
+        quote["symbol"],
+        quote.get("bid"),
+        quote.get("ask"),
+        quote.get("last"),
+        quote.get("last_size"),
+        quote.get("volume"),
+        int(quote.get("is_shortable", False)),
+        int(quote.get("hard_to_borrow", False)),
+        quote.get("htb_rate"),
+    ))
+
+    # commit handled by caller
+
+
 def save_quote(quote):
     with market_db_connection() as conn:
         save_quote_with_connection(conn, quote)
 
 
+
+# -------------------------------------------------------------------
+# Alert Persistence and Queries
+# -------------------------------------------------------------------
 def clear_alerts():
     with market_db_connection() as conn:
         conn.execute("DELETE FROM alerts")
@@ -350,6 +363,10 @@ def get_top_movers(limit=5):
         return cursor.fetchall()
 
 
+
+# -------------------------------------------------------------------
+# Provider and System Event Logging
+# -------------------------------------------------------------------
 def save_provider_error(
     provider,
     symbol=None,

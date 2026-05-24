@@ -1,7 +1,6 @@
 from datetime import datetime, UTC
 from datetime import timedelta
 from app.storage.sqlite_store import (
-    get_connection,
     get_row_connection,
     market_db_connection,
 )
