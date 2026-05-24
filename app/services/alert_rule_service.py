@@ -3,8 +3,8 @@ from datetime import timedelta
 from app.storage.sqlite_store import (
     get_connection,
     get_row_connection,
+    market_db_connection,
 )
-
 
 def get_alert_rules():
     with get_row_connection() as conn:
@@ -46,7 +46,7 @@ def create_threshold_rule(
 ):
     now = datetime.now(UTC).isoformat()
 
-    with get_connection() as conn:
+    with market_db_connection() as conn:
         conn.execute("""
             INSERT INTO alert_rules (
                 symbol,
@@ -89,7 +89,7 @@ def create_whale_rule(
 
     rule_type = "whale_spike" if direction == "up" else "whale_drop"
 
-    with get_connection() as conn:
+    with market_db_connection() as conn:
         conn.execute("""
             INSERT INTO alert_rules (
                 symbol,
@@ -160,7 +160,7 @@ def get_active_alert_rules():
 def set_alert_rule_active(rule_id, is_active):
     now = datetime.now(UTC).isoformat()
 
-    with get_connection() as conn:
+    with market_db_connection() as conn:
         conn.execute("""
             UPDATE alert_rules
             SET is_active = ?, updated_at = ?
@@ -173,7 +173,7 @@ def set_alert_rule_active(rule_id, is_active):
 
 
 def delete_alert_rule(rule_id):
-    with get_connection() as conn:
+    with market_db_connection() as conn:
         conn.execute("""
             DELETE FROM alert_rules
             WHERE id = ?
@@ -183,7 +183,7 @@ def delete_alert_rule(rule_id):
 def mark_rule_triggered(rule_id, quote):
     now = datetime.now(UTC).isoformat()
 
-    with get_connection() as conn:
+    with market_db_connection() as conn:
         conn.execute("""
             UPDATE alert_rules
             SET
@@ -205,7 +205,7 @@ def mark_rule_triggered(rule_id, quote):
 def disable_rule(rule_id):
     now = datetime.now(UTC).isoformat()
 
-    with get_connection() as conn:
+    with market_db_connection() as conn:
         conn.execute("""
             UPDATE alert_rules
             SET
@@ -235,7 +235,7 @@ def is_rule_in_cooldown(rule):
 
 
 def delete_auto_generated_mover_rules():
-    with get_connection() as conn:
+    with market_db_connection() as conn:
 
         cursor = conn.execute("""
             DELETE FROM alert_rules
@@ -250,7 +250,7 @@ def delete_auto_generated_mover_rules():
 def mover_rule_exists(symbol, direction):
     rule_type = "whale_spike" if direction == "up" else "whale_drop"
 
-    with get_connection() as conn:
+    with market_db_connection() as conn:
         cursor = conn.execute("""
             SELECT 1
             FROM alert_rules

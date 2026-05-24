@@ -91,6 +91,38 @@ def get_row_connection():
         yield conn
 
 
+@contextmanager
+def market_db_connection():
+    conn = get_connection()
+
+    try:
+        yield conn
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
+
+@contextmanager
+def log_db_connection():
+    conn = get_log_connection()
+
+    try:
+        yield conn
+        conn.commit()
+
+    except Exception:
+        conn.rollback()
+        raise
+
+    finally:
+        conn.close()
+
+
 def init_db():
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
@@ -180,7 +212,6 @@ def init_db():
             pass
 
 
-
         try:
             conn.execute("ALTER TABLE alert_rules ADD COLUMN cooldown_seconds INTEGER DEFAULT 0")
         except sqlite3.OperationalError:
@@ -226,8 +257,6 @@ def init_streamer_control_table():
 
     conn.commit()
     conn.close()
-
-
 
 
 
@@ -354,7 +383,6 @@ def save_provider_error(
                 message,
                 raw_response,
             ))
-            # conn.commit()
 
     except Exception as e:
         print(f"FAILED TO SAVE PROVIDER ERROR: {type(e).__name__}: {e}")
@@ -394,35 +422,3 @@ def save_system_event(
 
     except Exception as e:
         print(f"FAILED TO SAVE SYSTEM EVENT: {type(e).__name__}: {e}")
-
-
-@contextmanager
-def market_db_connection():
-    conn = get_connection()
-
-    try:
-        yield conn
-        conn.commit()
-
-    except Exception:
-        conn.rollback()
-        raise
-
-    finally:
-        conn.close()
-
-
-@contextmanager
-def log_db_connection():
-    conn = get_log_connection()
-
-    try:
-        yield conn
-        conn.commit()
-
-    except Exception:
-        conn.rollback()
-        raise
-
-    finally:
-        conn.close()
