@@ -26,18 +26,10 @@ from app.services.alert_rule_service import (
     delete_alert_rule,
 )
 
-from app.storage.sqlite_store import get_connection
-
-from app.services.watchlist_service import (
-    build_watchlist,
-    get_symbol_source_badge,
-)
-
-
-
-
+from app.services.watchlist_service import get_symbol_source_badge
+from app.storage.sqlite_store import market_db_connection
 from app.config import load_settings
-from contextlib import closing
+
 import sqlite3
 
 app = FastAPI()
@@ -76,7 +68,7 @@ async def overview(request: Request):
 
 
 
-    with closing(get_connection()) as conn:
+    with market_db_connection() as conn:
         conn.row_factory = sqlite3.Row
 
         quote_count = conn.execute(
@@ -97,12 +89,6 @@ async def overview(request: Request):
             """).fetchall()
         ]
 
-
-
-
-
-
-
         alerts = conn.execute("""
             SELECT symbol, price_change_pct, volume_change_pct, timestamp
             FROM alerts
@@ -110,18 +96,12 @@ async def overview(request: Request):
             LIMIT 10
         """).fetchall()
 
-
-
         for q in quotes:
             q["source_badge"] = get_symbol_source_badge(
                 q["symbol"],
                 favorite_symbols,
                 mover_symbols,
             )
-
-
-
-
 
     return templates.TemplateResponse(
         request=request,
@@ -344,6 +324,7 @@ async def create_alert_rule_route(
 
     return RedirectResponse("/alert-rules", status_code=303)
 
+
 @app.post("/alert-rules/{rule_id}/enable")
 async def enable_alert_rule(rule_id: int):
     set_alert_rule_active(rule_id, True)
@@ -360,7 +341,6 @@ async def disable_alert_rule(rule_id: int):
 async def delete_alert_rule_route(rule_id: int):
     delete_alert_rule(rule_id)
     return RedirectResponse("/alert-rules", status_code=303)
-
 
 
 @app.post("/alert-rules/generate-movers")
@@ -383,6 +363,7 @@ async def generate_mover_alert_rules():
         status_code=303,
     )    
 
+
 @app.get("/alerts", response_class=HTMLResponse)
 async def alerts_page(request: Request):
     settings = load_settings()
@@ -397,8 +378,6 @@ async def alerts_page(request: Request):
         },
     )
 
-
-from fastapi import Response
 
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health():
