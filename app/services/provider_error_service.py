@@ -1,9 +1,10 @@
-from app.storage.sqlite_store import get_row_connection
+from app.storage.sqlite_store import log_db_connection
+import sqlite3
 
 
 def get_recent_provider_errors(limit=50):
-
-    with get_row_connection() as conn:
+    with log_db_connection() as conn:
+        conn.row_factory = sqlite3.Row
 
         cursor = conn.execute("""
             SELECT
