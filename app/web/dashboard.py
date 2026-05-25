@@ -30,6 +30,8 @@ from app.services.watchlist_service import get_symbol_source_badge
 from app.storage.sqlite_store import market_db_connection
 from app.config import load_settings
 
+from app.market_state.web.routes import router as market_state_router
+
 import sqlite3
 
 app = FastAPI()
@@ -42,6 +44,7 @@ app.mount(
 
 
 app.include_router(api_router)
+app.include_router(market_state_router)
 
 templates = Jinja2Templates(directory="app/web/templates")
 

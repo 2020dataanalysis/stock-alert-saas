@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>Market State Replay</title>
+
+    <style>
+
+        body {
+            font-family: Arial;
+            background: #111;
+            color: #eee;
+            padding: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background: #222;
+        }
+
+        .BUY_SHOCK {
+            background: rgba(0,255,0,0.20);
+        }
+
+        .SELL_SHOCK {
+            background: rgba(255,0,0,0.20);
+        }
+
+        .UP_TREND {
+            background: rgba(0,128,255,0.20);
+        }
+
+        .DOWN_TREND {
+            background: rgba(255,128,0,0.20);
+        }
+
+        .CHOPPY {
+            background: rgba(255,255,0,0.20);
+        }
+
+        .NORMAL {
+            background: rgba(255,255,255,0.02);
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<h1>Market State Replay</h1>
+
+<table>
+
+    <thead>
+
+        <tr>
+            <th>Timestamp</th>
+            <th>Price</th>
+            <th>Shock</th>
+            <th>Trend</th>
+            <th>Noise</th>
+            <th>State</th>
+            <th>Permission</th>
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% for row in results %}
+
+        <tr class="{{ row['state'] }}">
+
+            <td>
+                {{ row["timestamp"] }}
+            </td>
+
+            <td>
+                {{ "%.2f"|format(row["price"]) }}
+            </td>
+
+            <td>
+                {{ "%.2f"|format(
+                    row["features"]["shock_score"]
+                ) }}
+            </td>
+
+            <td>
+                {{ "%.2f"|format(
+                    row["features"]["trend_score"]
+                ) }}
+            </td>
+
+            <td>
+                {{ "%.2f"|format(
+                    row["features"]["noise_score"]
+                ) }}
+            </td>
+
+            <td>
+                {{ row["state"] }}
+            </td>
+
+            <td>
+                {{ row["trade_permission"] }}
+            </td>
+
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+</body>
+</html>
