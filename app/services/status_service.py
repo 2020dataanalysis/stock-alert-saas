@@ -4,6 +4,7 @@ from app.storage.sqlite_store import get_connection, get_log_connection
 from app.services.token_status_service import get_token_status
 from app.services.market_hours_service import (
     is_trading_session,
+    get_market_status,
 )
 from app.services.watchlist_service import build_watchlist
 
@@ -265,6 +266,7 @@ def get_status_metrics():
         )
 
     token_status = get_token_status()
+    market_status_data = get_market_status()
 
     return {
         "latest_system_event": latest_system_event,
@@ -281,4 +283,10 @@ def get_status_metrics():
         "favorite_symbols": watchlist["favorites"],
         "mover_symbols": watchlist["movers"],
         "active_symbols": watchlist["symbols"],
+
+        "market_session": market_status_data["market_session"],
+        "market_status": market_status_data["market_status"],
+        "is_open": market_status_data["is_open"],
+        "market_hours": market_status_data["market_hours"],
+        "message": market_status_data["message"],
     }

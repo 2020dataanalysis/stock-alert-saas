@@ -103,6 +103,16 @@
         </div>
 
         <div class="small-text">
+            Schwab isOpen:
+            {% if is_open %}
+                True
+            {% else %}
+                False
+            {% endif %}
+        </div>
+
+
+        <div class="small-text">
             {{ message }}
         </div>
     </div>

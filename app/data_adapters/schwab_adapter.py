@@ -138,3 +138,19 @@ class SchwabAdapter:
         # print("DEBUG RAW RESPONSE:", response)
 
         return response
+
+
+
+
+
+    def get_market_hours(self, market_id="equity"):
+        base_url = "https://api.schwabapi.com/marketdata/v1"
+        endpoint = f"/markets/{market_id}"
+
+        response = self.client.get_request_endpoint(
+            base_url,
+            endpoint,
+            params=None,
+        )
+
+        return response
