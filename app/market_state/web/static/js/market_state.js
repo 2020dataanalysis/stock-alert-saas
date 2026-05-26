@@ -1,5 +1,6 @@
 let currentIndex = 0;
 let playbackTimer = null;
+let playbackIntervalMs = 500;
 
 function getRows() {
     return Array.from(
@@ -41,6 +42,28 @@ function updateHudFromRow(row) {
         (Number(row.dataset.noise) * 20) + "%";
 }
 
+function updateReplayStatus() {
+    const rows = getRows();
+
+    const indexDisplay = document.getElementById(
+        "replay-index"
+    );
+
+    const speedDisplay = document.getElementById(
+        "replay-speed"
+    );
+
+    if (indexDisplay) {
+        indexDisplay.textContent =
+            (currentIndex + 1) + " / " + rows.length;
+    }
+
+    if (speedDisplay) {
+        speedDisplay.textContent =
+            playbackIntervalMs + "ms";
+    }
+}
+
 function showCurrentRow() {
     const rows = getRows();
 
@@ -63,9 +86,7 @@ function showCurrentRow() {
     row.classList.add("active-row");
 
     updateHudFromRow(row);
-
-    // Auto-scroll intentionally disabled.
-    // User must be able to inspect HUD/charts while playback runs.
+    updateReplayStatus();
 }
 
 function stepForward() {
@@ -84,11 +105,7 @@ function stepBackward() {
     }
 }
 
-function playReplay() {
-    if (playbackTimer !== null) {
-        return;
-    }
-
+function startPlaybackTimer() {
     playbackTimer = setInterval(function() {
         const rows = getRows();
 
@@ -98,13 +115,35 @@ function playReplay() {
         }
 
         stepForward();
-    }, 500);
+    }, playbackIntervalMs);
+}
+
+function playReplay() {
+    if (playbackTimer !== null) {
+        return;
+    }
+
+    startPlaybackTimer();
 }
 
 function pauseReplay() {
     if (playbackTimer !== null) {
         clearInterval(playbackTimer);
         playbackTimer = null;
+    }
+}
+
+function setPlaybackSpeed(intervalMs) {
+    playbackIntervalMs = intervalMs;
+
+    const wasPlaying = playbackTimer !== null;
+
+    pauseReplay();
+
+    updateReplayStatus();
+
+    if (wasPlaying) {
+        startPlaybackTimer();
     }
 }
 
@@ -129,5 +168,33 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("step-backward-button").addEventListener(
         "click",
         stepBackward
+    );
+
+    document.getElementById("speed-1x-button").addEventListener(
+        "click",
+        function() {
+            setPlaybackSpeed(1000);
+        }
+    );
+
+    document.getElementById("speed-5x-button").addEventListener(
+        "click",
+        function() {
+            setPlaybackSpeed(500);
+        }
+    );
+
+    document.getElementById("speed-20x-button").addEventListener(
+        "click",
+        function() {
+            setPlaybackSpeed(100);
+        }
+    );
+
+    document.getElementById("speed-100x-button").addEventListener(
+        "click",
+        function() {
+            setPlaybackSpeed(25);
+        }
     );
 });
