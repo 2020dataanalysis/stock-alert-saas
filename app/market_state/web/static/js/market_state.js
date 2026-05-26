@@ -237,6 +237,18 @@ function updateChartCursor() {
     }
 }
 
+function setModeLabel(mode) {
+    const modeElement = document.getElementById(
+        "market-state-mode"
+    );
+
+    if (!modeElement) {
+        return;
+    }
+
+    modeElement.textContent = mode;
+}
+
 function showCurrentRow() {
     const rows = getRows();
 
@@ -264,6 +276,7 @@ function showCurrentRow() {
 }
 
 function stepForward() {
+    setModeLabel("REPLAY");
     const rows = getRows();
 
     if (currentIndex < rows.length - 1) {
@@ -273,6 +286,7 @@ function stepForward() {
 }
 
 function stepBackward() {
+    setModeLabel("REPLAY");
     if (currentIndex > 0) {
         currentIndex -= 1;
         showCurrentRow();
@@ -373,6 +387,7 @@ function fetchLatestMarketState() {
 
 function startLiveMode() {
     pauseReplay();
+    setModeLabel("LIVE");
 
     if (liveTimer !== null) {
         return;
@@ -386,6 +401,8 @@ function startLiveMode() {
 }
 
 function stopLiveMode() {
+    setModeLabel("REPLAY");
+
     if (liveTimer !== null) {
         clearInterval(liveTimer);
         liveTimer = null;
