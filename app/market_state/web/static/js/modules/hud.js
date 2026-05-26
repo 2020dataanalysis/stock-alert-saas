@@ -2,7 +2,7 @@
 |--------------------------------------------------------------------------
 | File: hud.js
 |--------------------------------------------------------------------------
-| HUD value updates and market-state mode display.
+| HUD value updates, market-state mode display, and freshness telemetry.
 |--------------------------------------------------------------------------
 */
 
@@ -29,6 +29,50 @@ function setHudValues(state, permission, shock, trend, noise) {
         (Number(noise) * 20) + "%";
 }
 
+function updateHudFreshness(timestamp) {
+    const lastUpdateElement = document.getElementById(
+        "hud-last-update"
+    );
+
+    const ageElement = document.getElementById(
+        "hud-update-age"
+    );
+
+    const freshnessElement = document.getElementById(
+        "hud-freshness"
+    );
+
+    if (!timestamp) {
+        lastUpdateElement.textContent = "-";
+        ageElement.textContent = "-";
+        freshnessElement.textContent = "UNKNOWN";
+        return;
+    }
+
+    const quoteTime = new Date(timestamp);
+    const now = new Date();
+
+    const ageSeconds = Math.max(
+        0,
+        Math.floor((now - quoteTime) / 1000)
+    );
+
+    lastUpdateElement.textContent = timestamp;
+    ageElement.textContent = ageSeconds + "s";
+
+    if (ageSeconds <= 10) {
+        freshnessElement.textContent = "LIVE";
+        return;
+    }
+
+    if (ageSeconds <= 60) {
+        freshnessElement.textContent = "LAGGING";
+        return;
+    }
+
+    freshnessElement.textContent = "STALE";
+}
+
 function updateHudFromRow(row) {
     setHudValues(
         row.dataset.state,
@@ -37,6 +81,8 @@ function updateHudFromRow(row) {
         row.dataset.trend,
         row.dataset.noise
     );
+
+    updateHudFreshness(null);
 }
 
 function updateHudFromLiveResult(result) {
@@ -50,6 +96,10 @@ function updateHudFromLiveResult(result) {
         result.features.shock_score,
         result.features.trend_score,
         result.features.noise_score
+    );
+
+    updateHudFreshness(
+        result.timestamp
     );
 }
 
