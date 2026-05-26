@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi.requests import Request
 from fastapi.templating import Jinja2Templates
 
+from app.market_state.latest_service import get_latest_market_state
 from app.market_state.replay_service import replay_quotes
 
 
@@ -143,3 +144,13 @@ def replay_market_state(
         "count": len(results),
         "results": results[-200:]
     }
+
+
+@router.get("/api/market-state/latest")
+def latest_market_state(
+    symbol: str = "TSLA"
+):
+
+    return get_latest_market_state(
+        symbol=symbol
+    )
