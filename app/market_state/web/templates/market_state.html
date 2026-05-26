@@ -15,6 +15,23 @@
             margin-bottom: 30px;
         }
 
+        .control-panel {
+            margin-bottom: 25px;
+            padding: 16px;
+            border: 1px solid #333;
+            background: #181818;
+        }
+
+        .control-panel input,
+        .control-panel select,
+        .control-panel button {
+            padding: 8px;
+            margin-right: 10px;
+            background: #222;
+            color: #eee;
+            border: 1px solid #444;
+        }
+
         .filter-bar {
             margin-bottom: 25px;
         }
@@ -98,31 +115,63 @@
 
 <h1>Market State Replay</h1>
 
+<div class="control-panel">
+    <form method="get" action="/market-state">
+        <label>
+            Symbol:
+            <input
+                type="text"
+                name="symbol"
+                value="{{ symbol }}"
+            >
+        </label>
+
+        <label>
+            Date:
+            <input
+                type="date"
+                name="date"
+                value="{{ date }}"
+            >
+        </label>
+
+        <input
+            type="hidden"
+            name="filter_mode"
+            value="{{ filter_mode }}"
+        >
+
+        <button type="submit">
+            Load Replay
+        </button>
+    </form>
+</div>
+
 <div class="filter-bar">
     <a
         class="filter-link {% if filter_mode == 'all' %}filter-active{% endif %}"
-        href="/market-state?filter_mode=all"
+        href="/market-state?symbol={{ symbol }}&date={{ date }}&filter_mode=all"
     >
         Show All
     </a>
 
     <a
         class="filter-link {% if filter_mode == 'hide_normal' %}filter-active{% endif %}"
-        href="/market-state?filter_mode=hide_normal"
+        href="/market-state?symbol={{ symbol }}&date={{ date }}&filter_mode=hide_normal"
     >
         Hide NORMAL
     </a>
 
     <a
         class="filter-link {% if filter_mode == 'block_only' %}filter-active{% endif %}"
-        href="/market-state?filter_mode=block_only"
+        href="/market-state?symbol={{ symbol }}&date={{ date }}&filter_mode=block_only"
     >
         BLOCK Only
     </a>
 
     <a
         class="filter-link {% if filter_mode == 'shock_only' %}filter-active{% endif %}"
-        href="/market-state?filter_mode=shock_only"
+        href="/market-state?symbol={{ symbol }}&date={{ date }}&filter_mode=shock_only"
     >
         SHOCK Only
     </a>

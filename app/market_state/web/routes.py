@@ -118,6 +118,8 @@ def market_state_page(
             "results": visible_results,
             "hud": hud,
             "filter_mode": filter_mode,
+            "symbol": symbol,
+            "date": date,
         }
     )
 
