@@ -42,6 +42,11 @@ app.mount(
     name="static",
 )
 
+app.mount(
+    "/market-state-static",
+    StaticFiles(directory="app/market_state/web/static"),
+    name="market_state_static",
+)
 
 app.include_router(api_router)
 app.include_router(market_state_router)
