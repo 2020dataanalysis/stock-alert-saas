@@ -89,6 +89,19 @@
     </span>
 </div>
 
+<div class="chart-panel">
+    <div class="chart-title">
+        Price Replay Chart
+    </div>
+
+    <svg
+        id="price-chart"
+        class="price-chart"
+        viewBox="0 0 1000 300"
+        preserveAspectRatio="none"
+    ></svg>
+</div>
+
 <div class="filter-bar">
     <a
         class="filter-link {% if filter_mode == 'all' %}filter-active{% endif %}"
@@ -209,6 +222,7 @@
             data-replay-row
             data-state="{{ row['state'] }}"
             data-permission="{{ row['trade_permission'] }}"
+            data-price="{{ row['price'] }}"
             data-shock="{{ row['features']['shock_score'] }}"
             data-trend="{{ row['features']['trend_score'] }}"
             data-noise="{{ row['features']['noise_score'] }}"

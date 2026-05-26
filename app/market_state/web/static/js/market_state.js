@@ -8,10 +8,22 @@ function getRows() {
     );
 }
 
-function clearActiveRows() {
-    const rows = getRows();
+function getReplayData() {
+    return getRows().map(function(row, index) {
+        return {
+            index: index,
+            price: Number(row.dataset.price),
+            shock: Number(row.dataset.shock),
+            trend: Number(row.dataset.trend),
+            noise: Number(row.dataset.noise),
+            state: row.dataset.state,
+            permission: row.dataset.permission
+        };
+    });
+}
 
-    rows.forEach(function(row) {
+function clearActiveRows() {
+    getRows().forEach(function(row) {
         row.classList.remove("active-row");
     });
 }
@@ -45,22 +57,150 @@ function updateHudFromRow(row) {
 function updateReplayStatus() {
     const rows = getRows();
 
-    const indexDisplay = document.getElementById(
-        "replay-index"
-    );
+    document.getElementById("replay-index").textContent =
+        (currentIndex + 1) + " / " + rows.length;
 
-    const speedDisplay = document.getElementById(
-        "replay-speed"
-    );
+    document.getElementById("replay-speed").textContent =
+        playbackIntervalMs + "ms";
+}
 
-    if (indexDisplay) {
-        indexDisplay.textContent =
-            (currentIndex + 1) + " / " + rows.length;
+function drawPriceChart() {
+    const svg = document.getElementById("price-chart");
+    const data = getReplayData();
+
+    if (!svg || data.length === 0) {
+        return;
     }
 
-    if (speedDisplay) {
-        speedDisplay.textContent =
-            playbackIntervalMs + "ms";
+    svg.innerHTML = "";
+
+    const width = 1000;
+    const height = 300;
+    const padding = 20;
+
+    const prices = data.map(function(point) {
+        return point.price;
+    });
+
+    const minPrice = Math.min.apply(null, prices);
+    const maxPrice = Math.max.apply(null, prices);
+    const priceRange = maxPrice - minPrice || 1;
+
+    function xScale(index) {
+        if (data.length === 1) {
+            return padding;
+        }
+
+        return padding +
+            (index / (data.length - 1)) *
+            (width - padding * 2);
+    }
+
+    function yScale(price) {
+        return height - padding -
+            ((price - minPrice) / priceRange) *
+            (height - padding * 2);
+    }
+
+    const points = data.map(function(point) {
+        return (
+            xScale(point.index) + "," +
+            yScale(point.price)
+        );
+    }).join(" ");
+
+    const polyline = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "polyline"
+    );
+
+    polyline.setAttribute("points", points);
+    polyline.setAttribute("class", "price-line");
+
+    svg.appendChild(polyline);
+
+    const cursorLine = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "line"
+    );
+
+    cursorLine.setAttribute("id", "price-cursor-line");
+    cursorLine.setAttribute("class", "price-cursor");
+    cursorLine.setAttribute("y1", padding);
+    cursorLine.setAttribute("y2", height - padding);
+
+    svg.appendChild(cursorLine);
+
+    const cursorDot = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "circle"
+    );
+
+    cursorDot.setAttribute("id", "price-cursor-dot");
+    cursorDot.setAttribute("class", "price-dot");
+    cursorDot.setAttribute("r", 5);
+
+    svg.appendChild(cursorDot);
+
+    updateChartCursor();
+}
+
+function updateChartCursor() {
+    const data = getReplayData();
+
+    if (data.length === 0) {
+        return;
+    }
+
+    const width = 1000;
+    const height = 300;
+    const padding = 20;
+
+    const prices = data.map(function(point) {
+        return point.price;
+    });
+
+    const minPrice = Math.min.apply(null, prices);
+    const maxPrice = Math.max.apply(null, prices);
+    const priceRange = maxPrice - minPrice || 1;
+
+    const point = data[currentIndex];
+
+    function xScale(index) {
+        if (data.length === 1) {
+            return padding;
+        }
+
+        return padding +
+            (index / (data.length - 1)) *
+            (width - padding * 2);
+    }
+
+    function yScale(price) {
+        return height - padding -
+            ((price - minPrice) / priceRange) *
+            (height - padding * 2);
+    }
+
+    const x = xScale(point.index);
+    const y = yScale(point.price);
+
+    const cursorLine = document.getElementById(
+        "price-cursor-line"
+    );
+
+    const cursorDot = document.getElementById(
+        "price-cursor-dot"
+    );
+
+    if (cursorLine) {
+        cursorLine.setAttribute("x1", x);
+        cursorLine.setAttribute("x2", x);
+    }
+
+    if (cursorDot) {
+        cursorDot.setAttribute("cx", x);
+        cursorDot.setAttribute("cy", y);
     }
 }
 
@@ -87,6 +227,7 @@ function showCurrentRow() {
 
     updateHudFromRow(row);
     updateReplayStatus();
+    updateChartCursor();
 }
 
 function stepForward() {
@@ -148,6 +289,7 @@ function setPlaybackSpeed(intervalMs) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+    drawPriceChart();
     showCurrentRow();
 
     document.getElementById("play-button").addEventListener(
