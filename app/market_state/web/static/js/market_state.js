@@ -64,16 +64,7 @@ function updateReplayStatus() {
         playbackIntervalMs + "ms";
 }
 
-function drawPriceChart() {
-    const svg = document.getElementById("price-chart");
-    const data = getReplayData();
-
-    if (!svg || data.length === 0) {
-        return;
-    }
-
-    svg.innerHTML = "";
-
+function buildChartScales(data) {
     const width = 1000;
     const height = 300;
     const padding = 20;
@@ -102,10 +93,71 @@ function drawPriceChart() {
             (height - padding * 2);
     }
 
+    return {
+        width: width,
+        height: height,
+        padding: padding,
+        xScale: xScale,
+        yScale: yScale
+    };
+}
+
+function drawShockMarkers(svg, data, scales) {
+    data.forEach(function(point) {
+        if (point.shock < 1.0) {
+            return;
+        }
+
+        const marker = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "circle"
+        );
+
+        marker.setAttribute(
+            "cx",
+            scales.xScale(point.index)
+        );
+
+        marker.setAttribute(
+            "cy",
+            scales.yScale(point.price)
+        );
+
+        marker.setAttribute(
+            "r",
+            Math.min(3 + point.shock, 12)
+        );
+
+        marker.setAttribute(
+            "class",
+            "shock-marker"
+        );
+
+        marker.setAttribute(
+            "data-shock",
+            point.shock.toFixed(2)
+        );
+
+        svg.appendChild(marker);
+    });
+}
+
+function drawPriceChart() {
+    const svg = document.getElementById("price-chart");
+    const data = getReplayData();
+
+    if (!svg || data.length === 0) {
+        return;
+    }
+
+    svg.innerHTML = "";
+
+    const scales = buildChartScales(data);
+
     const points = data.map(function(point) {
         return (
-            xScale(point.index) + "," +
-            yScale(point.price)
+            scales.xScale(point.index) + "," +
+            scales.yScale(point.price)
         );
     }).join(" ");
 
@@ -119,6 +171,8 @@ function drawPriceChart() {
 
     svg.appendChild(polyline);
 
+    drawShockMarkers(svg, data, scales);
+
     const cursorLine = document.createElementNS(
         "http://www.w3.org/2000/svg",
         "line"
@@ -126,8 +180,8 @@ function drawPriceChart() {
 
     cursorLine.setAttribute("id", "price-cursor-line");
     cursorLine.setAttribute("class", "price-cursor");
-    cursorLine.setAttribute("y1", padding);
-    cursorLine.setAttribute("y2", height - padding);
+    cursorLine.setAttribute("y1", scales.padding);
+    cursorLine.setAttribute("y2", scales.height - scales.padding);
 
     svg.appendChild(cursorLine);
 
@@ -152,38 +206,11 @@ function updateChartCursor() {
         return;
     }
 
-    const width = 1000;
-    const height = 300;
-    const padding = 20;
-
-    const prices = data.map(function(point) {
-        return point.price;
-    });
-
-    const minPrice = Math.min.apply(null, prices);
-    const maxPrice = Math.max.apply(null, prices);
-    const priceRange = maxPrice - minPrice || 1;
-
+    const scales = buildChartScales(data);
     const point = data[currentIndex];
 
-    function xScale(index) {
-        if (data.length === 1) {
-            return padding;
-        }
-
-        return padding +
-            (index / (data.length - 1)) *
-            (width - padding * 2);
-    }
-
-    function yScale(price) {
-        return height - padding -
-            ((price - minPrice) / priceRange) *
-            (height - padding * 2);
-    }
-
-    const x = xScale(point.index);
-    const y = yScale(point.price);
+    const x = scales.xScale(point.index);
+    const y = scales.yScale(point.price);
 
     const cursorLine = document.getElementById(
         "price-cursor-line"

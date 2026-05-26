@@ -80,6 +80,13 @@ h1 {
     fill: #eee;
 }
 
+.shock-marker {
+    fill: none;
+    stroke: #eee;
+    stroke-width: 2;
+    opacity: 0.75;
+}
+
 .filter-bar {
     margin-bottom: 25px;
 }
