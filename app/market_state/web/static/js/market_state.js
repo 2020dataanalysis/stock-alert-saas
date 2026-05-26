@@ -2,6 +2,7 @@ let currentIndex = 0;
 let playbackTimer = null;
 let playbackIntervalMs = 500;
 let showShockMarkers = true;
+let liveTimer = null;
 
 function getRows() {
     return Array.from(
@@ -320,6 +321,77 @@ function setPlaybackSpeed(intervalMs) {
     }
 }
 
+function updateHudFromLiveResult(result) {
+    document.getElementById("hud-state").textContent =
+        result.state;
+
+    document.getElementById("hud-permission").textContent =
+        result.trade_permission;
+
+    document.getElementById("hud-shock").textContent =
+        Number(result.features.shock_score).toFixed(2);
+
+    document.getElementById("hud-trend").textContent =
+        Number(result.features.trend_score).toFixed(2);
+
+    document.getElementById("hud-noise").textContent =
+        Number(result.features.noise_score).toFixed(2);
+
+    document.getElementById("hud-shock-bar").style.width =
+        (Number(result.features.shock_score) * 20) + "%";
+
+    document.getElementById("hud-trend-bar").style.width =
+        (Number(result.features.trend_score) * 20) + "%";
+
+    document.getElementById("hud-noise-bar").style.width =
+        (Number(result.features.noise_score) * 20) + "%";
+}
+
+function getCurrentSymbol() {
+    const symbolInput = document.querySelector(
+        "input[name='symbol']"
+    );
+
+    if (!symbolInput) {
+        return "TSLA";
+    }
+
+    return symbolInput.value || "TSLA";
+}
+
+function fetchLatestMarketState() {
+    const symbol = getCurrentSymbol();
+
+    fetch("/api/market-state/latest?symbol=" + symbol)
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(result) {
+            updateHudFromLiveResult(result);
+        });
+}
+
+function startLiveMode() {
+    pauseReplay();
+
+    if (liveTimer !== null) {
+        return;
+    }
+
+    fetchLatestMarketState();
+
+    liveTimer = setInterval(function() {
+        fetchLatestMarketState();
+    }, 2000);
+}
+
+function stopLiveMode() {
+    if (liveTimer !== null) {
+        clearInterval(liveTimer);
+        liveTimer = null;
+    }
+}
+
 function bindOverlayControls() {
     const shockToggle = document.getElementById(
         "toggle-shock-markers"
@@ -362,6 +434,16 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById("step-backward-button").addEventListener(
         "click",
         stepBackward
+    );
+
+    document.getElementById("live-mode-button").addEventListener(
+        "click",
+        startLiveMode
+    );
+
+    document.getElementById("stop-live-button").addEventListener(
+        "click",
+        stopLiveMode
     );
 
     document.getElementById("speed-1x-button").addEventListener(
