@@ -2,7 +2,8 @@
 <html>
 <head>
     <title>Market State Replay</title>
-<link
+
+    <link
         rel="stylesheet"
         href="/market-state-static/css/market_state.css"
     >
@@ -44,6 +45,24 @@
     </form>
 </div>
 
+<div class="playback-panel">
+    <button id="step-backward-button" type="button">
+        Step Back
+    </button>
+
+    <button id="play-button" type="button">
+        Play
+    </button>
+
+    <button id="pause-button" type="button">
+        Pause
+    </button>
+
+    <button id="step-forward-button" type="button">
+        Step Forward
+    </button>
+</div>
+
 <div class="filter-bar">
     <a
         class="filter-link {% if filter_mode == 'all' %}filter-active{% endif %}"
@@ -76,27 +95,34 @@
 
 <div class="hud-container">
     <div class="hud-title">
-        Recent Window Max Readings
+        Replay Frame
     </div>
 
     <div class="hud-state">
-        Latest State:
-        {{ hud["state"] }}
+        State:
+        <span id="hud-state">
+            {{ hud["state"] }}
+        </span>
     </div>
 
     <div class="hud-permission">
-        Latest Permission:
-        {{ hud["trade_permission"] }}
+        Permission:
+        <span id="hud-permission">
+            {{ hud["trade_permission"] }}
+        </span>
     </div>
 
     <div class="meter-row">
         <div class="meter-label">
-            Max Shock:
-            {{ "%.2f"|format(hud["shock_score"]) }}
+            Shock:
+            <span id="hud-shock">
+                {{ "%.2f"|format(hud["shock_score"]) }}
+            </span>
         </div>
 
         <div class="meter-bar-bg">
             <div
+                id="hud-shock-bar"
                 class="meter-bar-fill"
                 style="width: {{ hud['shock_score'] * 20 }}%;"
             ></div>
@@ -105,12 +131,15 @@
 
     <div class="meter-row">
         <div class="meter-label">
-            Max Trend:
-            {{ "%.2f"|format(hud["trend_score"]) }}
+            Trend:
+            <span id="hud-trend">
+                {{ "%.2f"|format(hud["trend_score"]) }}
+            </span>
         </div>
 
         <div class="meter-bar-bg">
             <div
+                id="hud-trend-bar"
                 class="meter-bar-fill"
                 style="width: {{ hud['trend_score'] * 20 }}%;"
             ></div>
@@ -119,12 +148,15 @@
 
     <div class="meter-row">
         <div class="meter-label">
-            Max Noise:
-            {{ "%.2f"|format(hud["noise_score"]) }}
+            Noise:
+            <span id="hud-noise">
+                {{ "%.2f"|format(hud["noise_score"]) }}
+            </span>
         </div>
 
         <div class="meter-bar-bg">
             <div
+                id="hud-noise-bar"
                 class="meter-bar-fill"
                 style="width: {{ hud['noise_score'] * 20 }}%;"
             ></div>
@@ -147,7 +179,14 @@
 
     <tbody>
     {% for row in results %}
-        <tr>
+        <tr
+            data-replay-row
+            data-state="{{ row['state'] }}"
+            data-permission="{{ row['trade_permission'] }}"
+            data-shock="{{ row['features']['shock_score'] }}"
+            data-trend="{{ row['features']['trend_score'] }}"
+            data-noise="{{ row['features']['noise_score'] }}"
+        >
             <td>{{ row["timestamp"] }}</td>
             <td>{{ "%.2f"|format(row["price"]) }}</td>
             <td>{{ "%.2f"|format(row["features"]["shock_score"]) }}</td>
@@ -159,6 +198,8 @@
     {% endfor %}
     </tbody>
 </table>
+
+<script src="/market-state-static/js/market_state.js"></script>
 
 </body>
 </html>
