@@ -329,6 +329,7 @@ def get_current_watchlist():
 def save_quote_safely(quote_conn, quote):
     try:
         save_quote_with_connection(quote_conn, quote)
+        quote_conn.commit()
         return quote_conn
 
     except Exception as e:
