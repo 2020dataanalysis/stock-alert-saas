@@ -13,19 +13,6 @@
 
 <h1>Market State Replay</h1>
 
-
-<nav>
-    <a href="/">Overview</a>
-    <a href="/status">Status</a>
-    <a href="/settings">Settings</a>
-    <a href="/market-state">Market State</a>
-    <a href="/charts">Charts</a>
-    <a href="/alert-rules">Alert Rules</a>
-    <a href="/alerts">Alerts</a>
-    <a href="/logs">Logs</a>
-</nav>
-
-
 <div class="control-panel">
     <form method="get" action="/market-state">
         <label>
@@ -100,6 +87,37 @@
         Speed:
         <strong id="replay-speed">500ms</strong>
     </span>
+</div>
+
+<div class="overlay-panel">
+    <strong>Chart Overlays:</strong>
+
+    <label>
+        <input
+            id="toggle-shock-markers"
+            type="checkbox"
+            checked
+        >
+        Shock Markers
+    </label>
+
+    <label>
+        <input
+            id="toggle-state-markers"
+            type="checkbox"
+            disabled
+        >
+        State Markers
+    </label>
+
+    <label>
+        <input
+            id="toggle-whale-markers"
+            type="checkbox"
+            disabled
+        >
+        Whale Markers
+    </label>
 </div>
 
 <div class="chart-panel">

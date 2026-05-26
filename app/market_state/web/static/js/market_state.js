@@ -1,6 +1,7 @@
 let currentIndex = 0;
 let playbackTimer = null;
 let playbackIntervalMs = 500;
+let showShockMarkers = true;
 
 function getRows() {
     return Array.from(
@@ -103,6 +104,10 @@ function buildChartScales(data) {
 }
 
 function drawShockMarkers(svg, data, scales) {
+    if (!showShockMarkers) {
+        return;
+    }
+
     data.forEach(function(point) {
         if (point.shock < 1.0) {
             return;
@@ -315,9 +320,29 @@ function setPlaybackSpeed(intervalMs) {
     }
 }
 
+function bindOverlayControls() {
+    const shockToggle = document.getElementById(
+        "toggle-shock-markers"
+    );
+
+    if (!shockToggle) {
+        return;
+    }
+
+    shockToggle.addEventListener(
+        "change",
+        function() {
+            showShockMarkers = shockToggle.checked;
+            drawPriceChart();
+            showCurrentRow();
+        }
+    );
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     drawPriceChart();
     showCurrentRow();
+    bindOverlayControls();
 
     document.getElementById("play-button").addEventListener(
         "click",

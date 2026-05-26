@@ -46,6 +46,22 @@ h1 {
     background: #333;
 }
 
+.overlay-panel {
+    margin-bottom: 25px;
+    padding: 16px;
+    border: 1px solid #333;
+    background: #181818;
+}
+
+.overlay-panel label {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+.overlay-panel input[type="checkbox"] {
+    margin-right: 6px;
+}
+
 .chart-panel {
     margin-bottom: 25px;
     padding: 16px;
