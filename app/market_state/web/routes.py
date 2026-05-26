@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi.requests import Request
 from fastapi.templating import Jinja2Templates
 
+from app.market_state.event_log_service import get_recent_market_events
 from app.market_state.latest_service import get_latest_market_state
 from app.market_state.replay_service import replay_quotes
 
@@ -154,3 +155,16 @@ def latest_market_state(
     return get_latest_market_state(
         symbol=symbol
     )
+
+
+@router.get("/api/market-state/events")
+def market_state_events(
+    limit: int = 100
+):
+
+    return {
+        "count": limit,
+        "events": get_recent_market_events(
+            limit=limit
+        )
+    }

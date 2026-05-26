@@ -12,4 +12,5 @@ document.addEventListener("DOMContentLoaded", function() {
     bindOverlayControls();
     bindReplayControls();
     bindLiveModeControls();
+    bindEventLogPolling();
 });

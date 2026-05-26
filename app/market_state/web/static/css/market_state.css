@@ -185,3 +185,25 @@ th {
     outline: 2px solid #eee;
     background: #333;
 }
+
+.event-log-panel {
+    margin-bottom: 40px;
+    padding: 20px;
+    border: 1px solid #333;
+    background: #181818;
+}
+
+.event-log-title {
+    font-size: 22px;
+    margin-bottom: 15px;
+}
+
+.event-log-item {
+    padding: 8px;
+    border-bottom: 1px solid #333;
+    font-family: monospace;
+}
+
+.event-log-empty {
+    opacity: 0.7;
+}
