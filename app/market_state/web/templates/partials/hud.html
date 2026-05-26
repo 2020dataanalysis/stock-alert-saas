@@ -1,0 +1,77 @@
+<div class="hud-container">
+    <div class="hud-title">
+        Market State HUD
+    </div>
+
+    <div class="mode-row">
+        Mode:
+        <span id="market-state-mode" class="mode-badge">
+            REPLAY
+        </span>
+    </div>
+
+    <div class="hud-state">
+        State:
+        <span id="hud-state">
+            {{ hud["state"] }}
+        </span>
+    </div>
+
+    <div class="hud-permission">
+        Permission:
+        <span id="hud-permission">
+            {{ hud["trade_permission"] }}
+        </span>
+    </div>
+
+    <div class="meter-row">
+        <div class="meter-label">
+            Shock:
+            <span id="hud-shock">
+                {{ "%.2f"|format(hud["shock_score"]) }}
+            </span>
+        </div>
+
+        <div class="meter-bar-bg">
+            <div
+                id="hud-shock-bar"
+                class="meter-bar-fill"
+                style="width: {{ hud['shock_score'] * 20 }}%;"
+            ></div>
+        </div>
+    </div>
+
+    <div class="meter-row">
+        <div class="meter-label">
+            Trend:
+            <span id="hud-trend">
+                {{ "%.2f"|format(hud["trend_score"]) }}
+            </span>
+        </div>
+
+        <div class="meter-bar-bg">
+            <div
+                id="hud-trend-bar"
+                class="meter-bar-fill"
+                style="width: {{ hud['trend_score'] * 20 }}%;"
+            ></div>
+        </div>
+    </div>
+
+    <div class="meter-row">
+        <div class="meter-label">
+            Noise:
+            <span id="hud-noise">
+                {{ "%.2f"|format(hud["noise_score"]) }}
+            </span>
+        </div>
+
+        <div class="meter-bar-bg">
+            <div
+                id="hud-noise-bar"
+                class="meter-bar-fill"
+                style="width: {{ hud['noise_score'] * 20 }}%;"
+            ></div>
+        </div>
+    </div>
+</div>

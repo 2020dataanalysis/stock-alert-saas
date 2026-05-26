@@ -1,0 +1,31 @@
+<div class="control-panel">
+    <form method="get" action="/market-state">
+        <label>
+            Symbol:
+            <input
+                type="text"
+                name="symbol"
+                value="{{ symbol }}"
+            >
+        </label>
+
+        <label>
+            Date:
+            <input
+                type="date"
+                name="date"
+                value="{{ date }}"
+            >
+        </label>
+
+        <input
+            type="hidden"
+            name="filter_mode"
+            value="{{ filter_mode }}"
+        >
+
+        <button type="submit">
+            Load Replay
+        </button>
+    </form>
+</div>

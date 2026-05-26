@@ -1,0 +1,29 @@
+<div class="filter-bar">
+    <a
+        class="filter-link {% if filter_mode == 'all' %}filter-active{% endif %}"
+        href="/market-state?symbol={{ symbol }}&date={{ date }}&filter_mode=all"
+    >
+        Show All
+    </a>
+
+    <a
+        class="filter-link {% if filter_mode == 'hide_normal' %}filter-active{% endif %}"
+        href="/market-state?symbol={{ symbol }}&date={{ date }}&filter_mode=hide_normal"
+    >
+        Hide NORMAL
+    </a>
+
+    <a
+        class="filter-link {% if filter_mode == 'block_only' %}filter-active{% endif %}"
+        href="/market-state?symbol={{ symbol }}&date={{ date }}&filter_mode=block_only"
+    >
+        BLOCK Only
+    </a>
+
+    <a
+        class="filter-link {% if filter_mode == 'shock_only' %}filter-active{% endif %}"
+        href="/market-state?symbol={{ symbol }}&date={{ date }}&filter_mode=shock_only"
+    >
+        SHOCK Only
+    </a>
+</div>

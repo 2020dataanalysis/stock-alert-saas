@@ -1,0 +1,35 @@
+<table>
+    <thead>
+        <tr>
+            <th>Timestamp</th>
+            <th>Price</th>
+            <th>Shock</th>
+            <th>Trend</th>
+            <th>Noise</th>
+            <th>State</th>
+            <th>Permission</th>
+        </tr>
+    </thead>
+
+    <tbody>
+    {% for row in results %}
+        <tr
+            data-replay-row
+            data-state="{{ row['state'] }}"
+            data-permission="{{ row['trade_permission'] }}"
+            data-price="{{ row['price'] }}"
+            data-shock="{{ row['features']['shock_score'] }}"
+            data-trend="{{ row['features']['trend_score'] }}"
+            data-noise="{{ row['features']['noise_score'] }}"
+        >
+            <td>{{ row["timestamp"] }}</td>
+            <td>{{ "%.2f"|format(row["price"]) }}</td>
+            <td>{{ "%.2f"|format(row["features"]["shock_score"]) }}</td>
+            <td>{{ "%.2f"|format(row["features"]["trend_score"]) }}</td>
+            <td>{{ "%.2f"|format(row["features"]["noise_score"]) }}</td>
+            <td>{{ row["state"] }}</td>
+            <td>{{ row["trade_permission"] }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
