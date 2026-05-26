@@ -59,11 +59,38 @@ def build_hud_summary(results):
     }
 
 
+def filter_results(results, filter_mode):
+
+    if filter_mode == "hide_normal":
+
+        return [
+            row for row in results
+            if row["state"] != "NORMAL"
+        ]
+
+    if filter_mode == "block_only":
+
+        return [
+            row for row in results
+            if row["trade_permission"] == "BLOCK"
+        ]
+
+    if filter_mode == "shock_only":
+
+        return [
+            row for row in results
+            if "SHOCK" in row["state"]
+        ]
+
+    return results
+
+
 @router.get("/market-state")
 def market_state_page(
     request: Request,
     symbol: str = "TSLA",
-    date: str = "2026-05-22"
+    date: str = "2026-05-22",
+    filter_mode: str = "all"
 ):
 
     results = replay_quotes(
@@ -75,6 +102,11 @@ def market_state_page(
 
     visible_results = results[-200:]
 
+    visible_results = filter_results(
+        visible_results,
+        filter_mode
+    )
+
     hud = build_hud_summary(
         visible_results
     )
@@ -85,6 +117,7 @@ def market_state_page(
         context={
             "results": visible_results,
             "hud": hud,
+            "filter_mode": filter_mode,
         }
     )
 

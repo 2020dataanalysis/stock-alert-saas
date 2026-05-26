@@ -15,6 +15,25 @@
             margin-bottom: 30px;
         }
 
+        .filter-bar {
+            margin-bottom: 25px;
+        }
+
+        .filter-link {
+            display: inline-block;
+            padding: 8px 14px;
+            margin-right: 8px;
+            border: 1px solid #444;
+            color: #eee;
+            text-decoration: none;
+            background: #181818;
+        }
+
+        .filter-active {
+            background: #aaa;
+            color: #111;
+        }
+
         .hud-container {
             margin-bottom: 40px;
             padding: 20px;
@@ -72,30 +91,6 @@
         th {
             background: #222;
         }
-
-        .BUY_SHOCK {
-            background: rgba(255,255,255,0.05);
-        }
-
-        .SELL_SHOCK {
-            background: rgba(255,255,255,0.08);
-        }
-
-        .UP_TREND {
-            background: rgba(255,255,255,0.03);
-        }
-
-        .DOWN_TREND {
-            background: rgba(255,255,255,0.04);
-        }
-
-        .CHOPPY {
-            background: rgba(255,255,255,0.06);
-        }
-
-        .NORMAL {
-            background: rgba(255,255,255,0.01);
-        }
     </style>
 </head>
 
@@ -103,8 +98,37 @@
 
 <h1>Market State Replay</h1>
 
-<div class="hud-container">
+<div class="filter-bar">
+    <a
+        class="filter-link {% if filter_mode == 'all' %}filter-active{% endif %}"
+        href="/market-state?filter_mode=all"
+    >
+        Show All
+    </a>
 
+    <a
+        class="filter-link {% if filter_mode == 'hide_normal' %}filter-active{% endif %}"
+        href="/market-state?filter_mode=hide_normal"
+    >
+        Hide NORMAL
+    </a>
+
+    <a
+        class="filter-link {% if filter_mode == 'block_only' %}filter-active{% endif %}"
+        href="/market-state?filter_mode=block_only"
+    >
+        BLOCK Only
+    </a>
+
+    <a
+        class="filter-link {% if filter_mode == 'shock_only' %}filter-active{% endif %}"
+        href="/market-state?filter_mode=shock_only"
+    >
+        SHOCK Only
+    </a>
+</div>
+
+<div class="hud-container">
     <div class="hud-title">
         Recent Window Max Readings
     </div>
@@ -160,7 +184,6 @@
             ></div>
         </div>
     </div>
-
 </div>
 
 <table>
@@ -178,7 +201,7 @@
 
     <tbody>
     {% for row in results %}
-        <tr class="{{ row['state'] }}">
+        <tr>
             <td>{{ row["timestamp"] }}</td>
             <td>{{ "%.2f"|format(row["price"]) }}</td>
             <td>{{ "%.2f"|format(row["features"]["shock_score"]) }}</td>
