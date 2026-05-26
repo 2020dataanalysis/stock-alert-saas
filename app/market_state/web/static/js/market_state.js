@@ -3,6 +3,7 @@ let playbackTimer = null;
 let playbackIntervalMs = 500;
 let showShockMarkers = true;
 let liveTimer = null;
+let liveDataBuffer = [];
 
 function getRows() {
     return Array.from(
@@ -24,40 +25,87 @@ function getReplayData() {
     });
 }
 
+function getChartData() {
+    if (liveDataBuffer.length > 0) {
+        return liveDataBuffer.map(function(point, index) {
+            return {
+                index: index,
+                price: point.price,
+                shock: point.shock,
+                trend: point.trend,
+                noise: point.noise,
+                state: point.state,
+                permission: point.permission
+            };
+        });
+    }
+
+    return getReplayData();
+}
+
 function clearActiveRows() {
     getRows().forEach(function(row) {
         row.classList.remove("active-row");
     });
 }
 
-function updateHudFromRow(row) {
-    document.getElementById("hud-state").textContent =
-        row.dataset.state;
-
-    document.getElementById("hud-permission").textContent =
-        row.dataset.permission;
+function setHudValues(state, permission, shock, trend, noise) {
+    document.getElementById("hud-state").textContent = state;
+    document.getElementById("hud-permission").textContent = permission;
 
     document.getElementById("hud-shock").textContent =
-        Number(row.dataset.shock).toFixed(2);
+        Number(shock).toFixed(2);
 
     document.getElementById("hud-trend").textContent =
-        Number(row.dataset.trend).toFixed(2);
+        Number(trend).toFixed(2);
 
     document.getElementById("hud-noise").textContent =
-        Number(row.dataset.noise).toFixed(2);
+        Number(noise).toFixed(2);
 
     document.getElementById("hud-shock-bar").style.width =
-        (Number(row.dataset.shock) * 20) + "%";
+        (Number(shock) * 20) + "%";
 
     document.getElementById("hud-trend-bar").style.width =
-        (Number(row.dataset.trend) * 20) + "%";
+        (Number(trend) * 20) + "%";
 
     document.getElementById("hud-noise-bar").style.width =
-        (Number(row.dataset.noise) * 20) + "%";
+        (Number(noise) * 20) + "%";
+}
+
+function updateHudFromRow(row) {
+    setHudValues(
+        row.dataset.state,
+        row.dataset.permission,
+        row.dataset.shock,
+        row.dataset.trend,
+        row.dataset.noise
+    );
+}
+
+function setModeLabel(mode) {
+    const modeElement = document.getElementById(
+        "market-state-mode"
+    );
+
+    if (!modeElement) {
+        return;
+    }
+
+    modeElement.textContent = mode;
 }
 
 function updateReplayStatus() {
     const rows = getRows();
+
+    if (liveDataBuffer.length > 0) {
+        document.getElementById("replay-index").textContent =
+            liveDataBuffer.length + " live";
+
+        document.getElementById("replay-speed").textContent =
+            "LIVE";
+
+        return;
+    }
 
     document.getElementById("replay-index").textContent =
         (currentIndex + 1) + " / " + rows.length;
@@ -119,30 +167,11 @@ function drawShockMarkers(svg, data, scales) {
             "circle"
         );
 
-        marker.setAttribute(
-            "cx",
-            scales.xScale(point.index)
-        );
-
-        marker.setAttribute(
-            "cy",
-            scales.yScale(point.price)
-        );
-
-        marker.setAttribute(
-            "r",
-            Math.min(3 + point.shock, 12)
-        );
-
-        marker.setAttribute(
-            "class",
-            "shock-marker"
-        );
-
-        marker.setAttribute(
-            "data-shock",
-            point.shock.toFixed(2)
-        );
+        marker.setAttribute("cx", scales.xScale(point.index));
+        marker.setAttribute("cy", scales.yScale(point.price));
+        marker.setAttribute("r", Math.min(3 + point.shock, 12));
+        marker.setAttribute("class", "shock-marker");
+        marker.setAttribute("data-shock", point.shock.toFixed(2));
 
         svg.appendChild(marker);
     });
@@ -150,7 +179,7 @@ function drawShockMarkers(svg, data, scales) {
 
 function drawPriceChart() {
     const svg = document.getElementById("price-chart");
-    const data = getReplayData();
+    const data = getChartData();
 
     if (!svg || data.length === 0) {
         return;
@@ -206,14 +235,19 @@ function drawPriceChart() {
 }
 
 function updateChartCursor() {
-    const data = getReplayData();
+    const data = getChartData();
 
     if (data.length === 0) {
         return;
     }
 
     const scales = buildChartScales(data);
-    const point = data[currentIndex];
+
+    const index = liveDataBuffer.length > 0
+        ? data.length - 1
+        : currentIndex;
+
+    const point = data[index];
 
     const x = scales.xScale(point.index);
     const y = scales.yScale(point.price);
@@ -237,24 +271,14 @@ function updateChartCursor() {
     }
 }
 
-function setModeLabel(mode) {
-    const modeElement = document.getElementById(
-        "market-state-mode"
-    );
-
-    if (!modeElement) {
-        return;
-    }
-
-    modeElement.textContent = mode;
-}
-
 function showCurrentRow() {
     const rows = getRows();
 
     if (rows.length === 0) {
         return;
     }
+
+    liveDataBuffer = [];
 
     if (currentIndex >= rows.length) {
         currentIndex = rows.length - 1;
@@ -272,11 +296,12 @@ function showCurrentRow() {
 
     updateHudFromRow(row);
     updateReplayStatus();
-    updateChartCursor();
+    drawPriceChart();
 }
 
 function stepForward() {
     setModeLabel("REPLAY");
+
     const rows = getRows();
 
     if (currentIndex < rows.length - 1) {
@@ -287,6 +312,7 @@ function stepForward() {
 
 function stepBackward() {
     setModeLabel("REPLAY");
+
     if (currentIndex > 0) {
         currentIndex -= 1;
         showCurrentRow();
@@ -307,6 +333,9 @@ function startPlaybackTimer() {
 }
 
 function playReplay() {
+    stopLiveMode();
+    setModeLabel("REPLAY");
+
     if (playbackTimer !== null) {
         return;
     }
@@ -327,38 +356,11 @@ function setPlaybackSpeed(intervalMs) {
     const wasPlaying = playbackTimer !== null;
 
     pauseReplay();
-
     updateReplayStatus();
 
     if (wasPlaying) {
         startPlaybackTimer();
     }
-}
-
-function updateHudFromLiveResult(result) {
-    document.getElementById("hud-state").textContent =
-        result.state;
-
-    document.getElementById("hud-permission").textContent =
-        result.trade_permission;
-
-    document.getElementById("hud-shock").textContent =
-        Number(result.features.shock_score).toFixed(2);
-
-    document.getElementById("hud-trend").textContent =
-        Number(result.features.trend_score).toFixed(2);
-
-    document.getElementById("hud-noise").textContent =
-        Number(result.features.noise_score).toFixed(2);
-
-    document.getElementById("hud-shock-bar").style.width =
-        (Number(result.features.shock_score) * 20) + "%";
-
-    document.getElementById("hud-trend-bar").style.width =
-        (Number(result.features.trend_score) * 20) + "%";
-
-    document.getElementById("hud-noise-bar").style.width =
-        (Number(result.features.noise_score) * 20) + "%";
 }
 
 function getCurrentSymbol() {
@@ -373,6 +375,39 @@ function getCurrentSymbol() {
     return symbolInput.value || "TSLA";
 }
 
+function appendLivePoint(result) {
+    if (!result.features) {
+        return;
+    }
+
+    liveDataBuffer.push({
+        price: Number(result.price),
+        shock: Number(result.features.shock_score),
+        trend: Number(result.features.trend_score),
+        noise: Number(result.features.noise_score),
+        state: result.state,
+        permission: result.trade_permission
+    });
+
+    if (liveDataBuffer.length > 200) {
+        liveDataBuffer.shift();
+    }
+}
+
+function updateHudFromLiveResult(result) {
+    if (!result.features) {
+        return;
+    }
+
+    setHudValues(
+        result.state,
+        result.trade_permission,
+        result.features.shock_score,
+        result.features.trend_score,
+        result.features.noise_score
+    );
+}
+
 function fetchLatestMarketState() {
     const symbol = getCurrentSymbol();
 
@@ -381,7 +416,13 @@ function fetchLatestMarketState() {
             return response.json();
         })
         .then(function(result) {
+            appendLivePoint(result);
             updateHudFromLiveResult(result);
+            drawPriceChart();
+            updateReplayStatus();
+        })
+        .catch(function(error) {
+            console.error("Live market-state fetch failed:", error);
         });
 }
 
@@ -392,6 +433,8 @@ function startLiveMode() {
     if (liveTimer !== null) {
         return;
     }
+
+    liveDataBuffer = [];
 
     fetchLatestMarketState();
 
@@ -423,16 +466,12 @@ function bindOverlayControls() {
         function() {
             showShockMarkers = shockToggle.checked;
             drawPriceChart();
-            showCurrentRow();
+            updateChartCursor();
         }
     );
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    drawPriceChart();
-    showCurrentRow();
-    bindOverlayControls();
-
+function bindPlaybackControls() {
     document.getElementById("play-button").addEventListener(
         "click",
         playReplay
@@ -490,4 +529,11 @@ document.addEventListener("DOMContentLoaded", function() {
             setPlaybackSpeed(25);
         }
     );
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    drawPriceChart();
+    showCurrentRow();
+    bindOverlayControls();
+    bindPlaybackControls();
 });
