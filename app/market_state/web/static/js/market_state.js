@@ -64,10 +64,8 @@ function showCurrentRow() {
 
     updateHudFromRow(row);
 
-    row.scrollIntoView({
-        behavior: "smooth",
-        block: "center"
-    });
+    // Auto-scroll intentionally disabled.
+    // User must be able to inspect HUD/charts while playback runs.
 }
 
 function stepForward() {
