@@ -1,16 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-
     <title>Market State Replay</title>
 
     <style>
-
         body {
             font-family: Arial;
             background: #111;
             color: #eee;
             padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 30px;
+        }
+
+        .hud-container {
+            margin-bottom: 40px;
+            padding: 20px;
+            border: 1px solid #333;
+            background: #181818;
+        }
+
+        .hud-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .hud-state {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .hud-permission {
+            font-size: 18px;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .meter-row {
+            margin-bottom: 20px;
+        }
+
+        .meter-label {
+            margin-bottom: 6px;
+        }
+
+        .meter-bar-bg {
+            width: 500px;
+            height: 24px;
+            background: #222;
+            border: 1px solid #444;
+        }
+
+        .meter-bar-fill {
+            height: 100%;
+            background: #aaa;
         }
 
         table {
@@ -29,41 +74,97 @@
         }
 
         .BUY_SHOCK {
-            background: rgba(0,255,0,0.20);
+            background: rgba(255,255,255,0.05);
         }
 
         .SELL_SHOCK {
-            background: rgba(255,0,0,0.20);
+            background: rgba(255,255,255,0.08);
         }
 
         .UP_TREND {
-            background: rgba(0,128,255,0.20);
+            background: rgba(255,255,255,0.03);
         }
 
         .DOWN_TREND {
-            background: rgba(255,128,0,0.20);
+            background: rgba(255,255,255,0.04);
         }
 
         .CHOPPY {
-            background: rgba(255,255,0,0.20);
+            background: rgba(255,255,255,0.06);
         }
 
         .NORMAL {
-            background: rgba(255,255,255,0.02);
+            background: rgba(255,255,255,0.01);
         }
-
     </style>
-
 </head>
 
 <body>
 
 <h1>Market State Replay</h1>
 
+<div class="hud-container">
+
+    <div class="hud-title">
+        Recent Window Max Readings
+    </div>
+
+    <div class="hud-state">
+        Latest State:
+        {{ hud["state"] }}
+    </div>
+
+    <div class="hud-permission">
+        Latest Permission:
+        {{ hud["trade_permission"] }}
+    </div>
+
+    <div class="meter-row">
+        <div class="meter-label">
+            Max Shock:
+            {{ "%.2f"|format(hud["shock_score"]) }}
+        </div>
+
+        <div class="meter-bar-bg">
+            <div
+                class="meter-bar-fill"
+                style="width: {{ hud['shock_score'] * 20 }}%;"
+            ></div>
+        </div>
+    </div>
+
+    <div class="meter-row">
+        <div class="meter-label">
+            Max Trend:
+            {{ "%.2f"|format(hud["trend_score"]) }}
+        </div>
+
+        <div class="meter-bar-bg">
+            <div
+                class="meter-bar-fill"
+                style="width: {{ hud['trend_score'] * 20 }}%;"
+            ></div>
+        </div>
+    </div>
+
+    <div class="meter-row">
+        <div class="meter-label">
+            Max Noise:
+            {{ "%.2f"|format(hud["noise_score"]) }}
+        </div>
+
+        <div class="meter-bar-bg">
+            <div
+                class="meter-bar-fill"
+                style="width: {{ hud['noise_score'] * 20 }}%;"
+            ></div>
+        </div>
+    </div>
+
+</div>
+
 <table>
-
     <thead>
-
         <tr>
             <th>Timestamp</th>
             <th>Price</th>
@@ -73,55 +174,21 @@
             <th>State</th>
             <th>Permission</th>
         </tr>
-
     </thead>
 
     <tbody>
-
     {% for row in results %}
-
         <tr class="{{ row['state'] }}">
-
-            <td>
-                {{ row["timestamp"] }}
-            </td>
-
-            <td>
-                {{ "%.2f"|format(row["price"]) }}
-            </td>
-
-            <td>
-                {{ "%.2f"|format(
-                    row["features"]["shock_score"]
-                ) }}
-            </td>
-
-            <td>
-                {{ "%.2f"|format(
-                    row["features"]["trend_score"]
-                ) }}
-            </td>
-
-            <td>
-                {{ "%.2f"|format(
-                    row["features"]["noise_score"]
-                ) }}
-            </td>
-
-            <td>
-                {{ row["state"] }}
-            </td>
-
-            <td>
-                {{ row["trade_permission"] }}
-            </td>
-
+            <td>{{ row["timestamp"] }}</td>
+            <td>{{ "%.2f"|format(row["price"]) }}</td>
+            <td>{{ "%.2f"|format(row["features"]["shock_score"]) }}</td>
+            <td>{{ "%.2f"|format(row["features"]["trend_score"]) }}</td>
+            <td>{{ "%.2f"|format(row["features"]["noise_score"]) }}</td>
+            <td>{{ row["state"] }}</td>
+            <td>{{ row["trade_permission"] }}</td>
         </tr>
-
     {% endfor %}
-
     </tbody>
-
 </table>
 
 </body>
