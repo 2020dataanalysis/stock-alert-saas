@@ -4,8 +4,10 @@ from fastapi import APIRouter
 from fastapi.requests import Request
 from fastapi.templating import Jinja2Templates
 
-from app.scalp_state.service import get_scalp_state_rows
-
+from app.scalp_state.service import (
+    get_recent_state_transitions,
+    get_scalp_state_rows,
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -30,6 +32,7 @@ def scalp_state_page(request: Request):
         context={
             "title": "Scalp State Tool",
             "rows": get_scalp_state_rows(),
+            "transitions": get_recent_state_transitions(),
         }
     )
 
@@ -39,4 +42,12 @@ def scalp_state_api():
 
     return {
         "rows": get_scalp_state_rows()
+    }
+
+
+@router.get("/api/scalp-state/transitions")
+def scalp_state_transitions_api():
+
+    return {
+        "transitions": get_recent_state_transitions()
     }

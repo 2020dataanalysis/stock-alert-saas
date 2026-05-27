@@ -157,6 +157,63 @@
 
     </table>
 
+<h2 style="margin-top: 48px;">
+    Recent State Transitions
+</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>Symbol</th>
+            <th>Previous</th>
+            <th>Current</th>
+            <th>Duration</th>
+            <th>Score</th>
+            <th>Range %</th>
+        </tr>
+    </thead>
+
+    <tbody id="transition-body">
+
+        {% for transition in transitions %}
+        <tr>
+
+            <td>
+                {{ transition.timestamp }}
+            </td>
+
+            <td>
+                {{ transition.symbol }}
+            </td>
+
+            <td>
+                {{ transition.previous_state | default("-", true) }}
+            </td>
+
+            <td class="{{ transition.current_state }}">
+                {{ transition.current_state }}
+            </td>
+
+            <td>
+                {{ transition.duration_seconds }}s
+            </td>
+
+            <td>
+                {{ transition.score }}
+            </td>
+
+            <td>
+                {{ transition.range_pct | default("-", true) }}
+            </td>
+
+        </tr>
+        {% endfor %}
+
+    </tbody>
+</table>
+
+
 
 <script>
 

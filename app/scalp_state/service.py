@@ -157,3 +157,29 @@ def get_scalp_state_rows(symbols=None):
         rows.append(classification)
 
     return rows
+
+
+def get_recent_state_transitions(limit=25):
+
+    init_scalp_state_db()
+
+    with scalp_state_db_connection() as conn:
+
+        rows = conn.execute("""
+            SELECT
+                timestamp,
+                symbol,
+                previous_state,
+                current_state,
+                duration_seconds,
+                score,
+                range_pct
+            FROM scalp_state_transitions
+            ORDER BY id DESC
+            LIMIT ?
+        """, (limit,)).fetchall()
+
+    return [
+        dict(row)
+        for row in rows
+    ]
