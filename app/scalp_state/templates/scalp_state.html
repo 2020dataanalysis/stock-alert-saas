@@ -1,25 +1,137 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Scalp State Tool</title>
+    <title>{{ title }}</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111827;
+            color: #f3f4f6;
+            margin: 0;
+            padding: 24px;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+
+        .subtitle {
+            color: #9ca3af;
+            margin-bottom: 24px;
+            max-width: 900px;
+            line-height: 1.5;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1f2937;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background: #374151;
+            color: white;
+            text-align: left;
+            padding: 14px;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 14px;
+            border-top: 1px solid #374151;
+        }
+
+        tr:hover {
+            background: #273244;
+        }
+
+        .score {
+            font-weight: bold;
+        }
+
+        .ACTIVE_EXPANSION,
+        .WATCH_FOR_SCALP {
+            color: #22c55e;
+            font-weight: bold;
+        }
+
+        .BUILDING_COMPRESSION,
+        .WAIT {
+            color: #facc15;
+            font-weight: bold;
+        }
+
+        .AVOID_CHOP,
+        .DO_NOT_TRADE,
+        .NO_DATA {
+            color: #ef4444;
+            font-weight: bold;
+        }
+    </style>
 </head>
+
 <body>
+
     <h1>Scalp State Tool</h1>
 
-    <p>
-        This tool will classify whether a stock is currently worth scalping
-        or whether it is consolidating/choppy and should be avoided.
-    </p>
+    <div class="subtitle">
+        Real-time trade eligibility engine for tight-stop scalp trading.
+        Classifies whether each symbol is in chop, compression, or active expansion.
+    </div>
 
-    <h2>Market State</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>State</th>
+                <th>Score</th>
+                <th>Action</th>
+                <th>Range %</th>
+                <th>Latest</th>
+                <th>Samples</th>
+                <th>Reason</th>
+            </tr>
+        </thead>
 
-    <ul>
-        <li>AVOID_CHOP</li>
-        <li>BUILDING_COMPRESSION</li>
-        <li>BREAKOUT_WATCH</li>
-        <li>ACTIVE_EXPANSION</li>
-        <li>FAILED_BREAKOUT</li>
-        <li>TREND_CONTINUATION</li>
-    </ul>
+        <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row.symbol }}</td>
+
+                <td class="{{ row.state }}">
+                    {{ row.state }}
+                </td>
+
+                <td class="score">
+                    {{ row.score }}
+                </td>
+
+                <td class="{{ row.action }}">
+                    {{ row.action }}
+                </td>
+
+                <td>
+                    {{ row.range_pct | default("-", true) }}
+                </td>
+
+                <td>
+                    {{ row.latest | default("-", true) }}
+                </td>
+
+                <td>
+                    {{ row.volume_samples | default("-", true) }}
+                </td>
+
+                <td>
+                    {{ row.reason }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
 </body>
 </html>
