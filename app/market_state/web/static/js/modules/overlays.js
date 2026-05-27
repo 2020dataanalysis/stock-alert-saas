@@ -11,16 +11,44 @@ function bindOverlayControls() {
         "toggle-shock-markers"
     );
 
-    if (!shockToggle) {
-        return;
+    const stateToggle = document.getElementById(
+        "toggle-state-markers"
+    );
+
+    const permissionToggle = document.getElementById(
+        "toggle-permission-markers"
+    );
+
+    if (shockToggle) {
+        shockToggle.addEventListener(
+            "change",
+            function() {
+                showShockMarkers = shockToggle.checked;
+                drawPriceChart();
+                updateChartCursor();
+            }
+        );
     }
 
-    shockToggle.addEventListener(
-        "change",
-        function() {
-            showShockMarkers = shockToggle.checked;
-            drawPriceChart();
-            updateChartCursor();
-        }
-    );
+    if (stateToggle) {
+        stateToggle.addEventListener(
+            "change",
+            function() {
+                showStateMarkers = stateToggle.checked;
+                drawPriceChart();
+                updateChartCursor();
+            }
+        );
+    }
+
+    if (permissionToggle) {
+        permissionToggle.addEventListener(
+            "change",
+            function() {
+                showPermissionMarkers = permissionToggle.checked;
+                drawPriceChart();
+                updateChartCursor();
+            }
+        );
+    }
 }

@@ -9,6 +9,10 @@
 let currentIndex = 0;
 let playbackTimer = null;
 let playbackIntervalMs = 500;
+
 let showShockMarkers = true;
+let showStateMarkers = true;
+let showPermissionMarkers = true;
+
 let liveTimer = null;
 let liveDataBuffer = [];

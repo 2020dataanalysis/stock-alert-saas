@@ -2,7 +2,7 @@
 |--------------------------------------------------------------------------
 | File: chart.js
 |--------------------------------------------------------------------------
-| SVG price chart rendering, cursor movement, and shock markers.
+| SVG price chart rendering, cursor movement, and alert markers.
 |--------------------------------------------------------------------------
 */
 
@@ -69,6 +69,75 @@ function drawShockMarkers(svg, data, scales) {
     });
 }
 
+function drawStateChangeMarkers(svg, data, scales) {
+    if (!showStateMarkers) {
+        return;
+    }
+
+    for (let i = 1; i < data.length; i += 1) {
+        const previous = data[i - 1];
+        const current = data[i];
+
+        if (previous.state === current.state) {
+            continue;
+        }
+
+        const x = scales.xScale(current.index);
+        const y = scales.yScale(current.price);
+
+        const marker = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "rect"
+        );
+
+        marker.setAttribute("x", x - 5);
+        marker.setAttribute("y", y - 5);
+        marker.setAttribute("width", 10);
+        marker.setAttribute("height", 10);
+        marker.setAttribute("class", "state-marker");
+        marker.setAttribute(
+            "data-state-change",
+            previous.state + " -> " + current.state
+        );
+
+        svg.appendChild(marker);
+    }
+}
+
+function drawPermissionMarkers(svg, data, scales) {
+    if (!showPermissionMarkers) {
+        return;
+    }
+
+    for (let i = 1; i < data.length; i += 1) {
+        const previous = data[i - 1];
+        const current = data[i];
+
+        if (previous.permission === current.permission) {
+            continue;
+        }
+
+        const x = scales.xScale(current.index);
+
+        const marker = document.createElementNS(
+            "http://www.w3.org/2000/svg",
+            "line"
+        );
+
+        marker.setAttribute("x1", x);
+        marker.setAttribute("x2", x);
+        marker.setAttribute("y1", scales.padding);
+        marker.setAttribute("y2", scales.height - scales.padding);
+        marker.setAttribute("class", "permission-marker");
+        marker.setAttribute(
+            "data-permission-change",
+            previous.permission + " -> " + current.permission
+        );
+
+        svg.appendChild(marker);
+    }
+}
+
 function drawPriceChart() {
     const svg = document.getElementById("price-chart");
     const data = getChartData();
@@ -99,6 +168,8 @@ function drawPriceChart() {
     svg.appendChild(polyline);
 
     drawShockMarkers(svg, data, scales);
+    drawStateChangeMarkers(svg, data, scales);
+    drawPermissionMarkers(svg, data, scales);
 
     const cursorLine = document.createElementNS(
         "http://www.w3.org/2000/svg",
