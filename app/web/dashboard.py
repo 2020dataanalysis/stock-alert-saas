@@ -32,6 +32,8 @@ from app.config import load_settings
 
 from app.market_state.web.routes import router as market_state_router
 
+from app.scalp_state.routes import router as scalp_state_router
+
 import sqlite3
 
 app = FastAPI()
@@ -50,6 +52,7 @@ app.mount(
 
 app.include_router(api_router)
 app.include_router(market_state_router)
+app.include_router(scalp_state_router)
 
 templates = Jinja2Templates(directory="app/web/templates")
 
