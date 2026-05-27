@@ -87,6 +87,9 @@
             <tr>
                 <th>Symbol</th>
                 <th>State</th>
+                <th>Previous</th>
+                <th>Duration</th>
+                <th>Changed</th>
                 <th>Score</th>
                 <th>Action</th>
                 <th>Range %</th>
@@ -105,6 +108,23 @@
                 <td class="{{ row.state }}">
                     {{ row.state }}
                 </td>
+
+                <td>
+                    {{ row.previous_state | default("-", true) }}
+                </td>
+
+                <td>
+                    {{ row.duration_seconds }}s
+                </td>
+
+                <td>
+                    {% if row.state_changed %}
+                        🔥
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+
 
                 <td class="score">
                     {{ row.score }}
@@ -165,6 +185,18 @@ async function loadScalpState() {
 
                 <td class="${row.state}">
                     ${row.state}
+                </td>
+
+                <td>
+                    ${row.previous_state ?? "-"}
+                </td>
+
+                <td>
+                    ${row.duration_seconds}s
+                </td>
+
+                <td>
+                    ${row.state_changed ? "🔥" : "-"}
                 </td>
 
                 <td class="score">
