@@ -71,3 +71,19 @@ tr:hover {
     color: #ef4444;
     font-weight: bold;
 }
+
+
+#enable-audio-button {
+    margin-bottom: 24px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    background: #22c55e;
+    color: #111827;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#enable-audio-button:hover {
+    background: #4ade80;
+}

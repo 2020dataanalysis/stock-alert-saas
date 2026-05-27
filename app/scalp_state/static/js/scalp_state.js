@@ -1,3 +1,104 @@
+let audioAlertsEnabled = false;
+let seenTransitionKeys = new Set();
+
+
+function enableAudioAlerts() {
+    audioAlertsEnabled = true;
+
+    const button = document.getElementById("enable-audio-button");
+
+    if (button) {
+        button.textContent = "Audio Alerts Enabled";
+        button.disabled = true;
+    }
+
+    playTone(660, 120);
+}
+
+
+function playTone(frequency, durationMs) {
+    if (!audioAlertsEnabled) {
+        return;
+    }
+
+    const audioContext = new (
+        window.AudioContext ||
+        window.webkitAudioContext
+    )();
+
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+
+    oscillator.frequency.value = frequency;
+    oscillator.type = "sine";
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    gainNode.gain.setValueAtTime(
+        0.2,
+        audioContext.currentTime
+    );
+
+    oscillator.start();
+
+    oscillator.stop(
+        audioContext.currentTime + durationMs / 1000
+    );
+}
+
+
+function playTransitionAlert(transition) {
+    if (!audioAlertsEnabled) {
+        return;
+    }
+
+    if (
+        transition.current_state === "ACTIVE_EXPANSION"
+    ) {
+        playTone(880, 180);
+        setTimeout(
+            () => playTone(1175, 180),
+            220
+        );
+
+        return;
+    }
+
+    if (
+        transition.transition_type === "RANGE_FORMING"
+    ) {
+        playTone(660, 120);
+    }
+}
+
+
+function getTransitionKey(transition) {
+    return [
+        transition.timestamp,
+        transition.symbol,
+        transition.previous_state,
+        transition.current_state,
+        transition.transition_type
+    ].join("|");
+}
+
+
+function handleNewTransitions(transitions) {
+    for (const transition of transitions) {
+        const key = getTransitionKey(transition);
+
+        if (seenTransitionKeys.has(key)) {
+            continue;
+        }
+
+        seenTransitionKeys.add(key);
+
+        playTransitionAlert(transition);
+    }
+}
+
+
 async function loadScalpState() {
     try {
         const response = await fetch("/api/scalp-state");
@@ -62,14 +163,28 @@ async function loadStateTransitions() {
 
             tbody.appendChild(tr);
         }
+
+        handleNewTransitions(data.transitions);
+
     } catch (err) {
         console.error("Failed loading state transitions:", err);
     }
 }
 
 
-loadScalpState();
-loadStateTransitions();
+document.addEventListener("DOMContentLoaded", () => {
+    const button = document.getElementById("enable-audio-button");
 
-setInterval(loadScalpState, 5000);
-setInterval(loadStateTransitions, 5000);
+    if (button) {
+        button.addEventListener(
+            "click",
+            enableAudioAlerts
+        );
+    }
+
+    loadScalpState();
+    loadStateTransitions();
+
+    setInterval(loadScalpState, 5000);
+    setInterval(loadStateTransitions, 5000);
+});
