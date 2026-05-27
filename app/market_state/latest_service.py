@@ -9,7 +9,12 @@
 import sqlite3
 from pathlib import Path
 
-from app.market_state.event_log_service import append_market_event
+from app.market_state.event_log_service import (
+    append_high_noise_event,
+    append_market_event,
+    append_permission_blocked_event,
+    append_shock_threshold_event,
+)
 from app.market_state.feature_engine import FeatureEngine
 from app.market_state.state_engine import classify_market_state
 
@@ -21,6 +26,8 @@ MARKET_DATA_DB_PATH = (
 )
 
 LAST_STATE_BY_SYMBOL = {}
+LAST_PERMISSION_BY_SYMBOL = {}
+LAST_THRESHOLD_FLAGS_BY_SYMBOL = {}
 
 
 def get_latest_market_state(
@@ -102,6 +109,14 @@ def get_latest_market_state(
         latest_result
     )
 
+    record_permission_transition(
+        latest_result
+    )
+
+    record_threshold_events(
+        latest_result
+    )
+
     return latest_result
 
 
@@ -142,3 +157,77 @@ def record_state_transition(result):
         ),
         metadata=result
     )
+
+
+def record_permission_transition(result):
+
+    symbol = result["symbol"]
+    current_permission = result["trade_permission"]
+
+    previous_permission = (
+        LAST_PERMISSION_BY_SYMBOL.get(symbol)
+    )
+
+    if previous_permission is None:
+
+        LAST_PERMISSION_BY_SYMBOL[symbol] = (
+            current_permission
+        )
+
+        return
+
+    if previous_permission == current_permission:
+        return
+
+    LAST_PERMISSION_BY_SYMBOL[symbol] = (
+        current_permission
+    )
+
+    append_market_event(
+        event_type="PERMISSION_TRANSITION",
+        message=(
+            f"{symbol} {previous_permission} "
+            f"-> {current_permission}"
+        ),
+        metadata=result
+    )
+
+    if current_permission == "BLOCK":
+
+        append_permission_blocked_event(
+            result
+        )
+
+
+def record_threshold_events(result):
+
+    symbol = result["symbol"]
+
+    flags = LAST_THRESHOLD_FLAGS_BY_SYMBOL.setdefault(
+        symbol,
+        {
+            "shock_threshold": False,
+            "high_noise": False,
+        }
+    )
+
+    shock_score = result["features"]["shock_score"]
+    noise_score = result["features"]["noise_score"]
+
+    shock_triggered = shock_score >= 1.5
+    high_noise_triggered = noise_score >= 2.0
+
+    if shock_triggered and not flags["shock_threshold"]:
+
+        append_shock_threshold_event(
+            result
+        )
+
+    if high_noise_triggered and not flags["high_noise"]:
+
+        append_high_noise_event(
+            result
+        )
+
+    flags["shock_threshold"] = shock_triggered
+    flags["high_noise"] = high_noise_triggered
