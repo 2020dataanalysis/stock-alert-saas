@@ -95,10 +95,11 @@
                 <th>Reason</th>
             </tr>
         </thead>
+        <tbody id="scalp-state-body">
 
-        <tbody>
             {% for row in rows %}
             <tr>
+
                 <td>{{ row.symbol }}</td>
 
                 <td class="{{ row.state }}">
@@ -128,10 +129,89 @@
                 <td>
                     {{ row.reason }}
                 </td>
+
             </tr>
             {% endfor %}
+
         </tbody>
+
     </table>
+
+
+<script>
+
+async function loadScalpState() {
+
+    try {
+
+        const response = await fetch(
+            "/api/scalp-state"
+        );
+
+        const data = await response.json();
+
+        const tbody = document.getElementById(
+            "scalp-state-body"
+        );
+
+        tbody.innerHTML = "";
+
+        for (const row of data.rows) {
+
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${row.symbol}</td>
+
+                <td class="${row.state}">
+                    ${row.state}
+                </td>
+
+                <td class="score">
+                    ${row.score}
+                </td>
+
+                <td class="${row.action}">
+                    ${row.action}
+                </td>
+
+                <td>
+                    ${row.range_pct ?? "-"}
+                </td>
+
+                <td>
+                    ${row.latest ?? "-"}
+                </td>
+
+                <td>
+                    ${row.volume_samples ?? "-"}
+                </td>
+
+                <td>
+                    ${row.reason}
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+        }
+
+    } catch (err) {
+
+        console.error(
+            "Failed loading scalp state:",
+            err
+        );
+    }
+}
+
+loadScalpState();
+
+setInterval(
+    loadScalpState,
+    5000
+);
+
+</script>
 
 </body>
 </html>
