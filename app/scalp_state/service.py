@@ -47,7 +47,35 @@ def get_recent_quotes_for_symbol(symbol, limit=50):
     return quotes
 
 
+def classify_transition_type(previous_state, current_state):
+
+    if (
+        previous_state == "BUILDING_COMPRESSION"
+        and current_state == "ACTIVE_EXPANSION"
+    ):
+        return "COMPRESSION_BREAKOUT", "HIGH"
+
+    if (
+        previous_state == "ACTIVE_EXPANSION"
+        and current_state == "AVOID_CHOP"
+    ):
+        return "MOMENTUM_FAILURE", "MEDIUM"
+
+    if (
+        previous_state == "AVOID_CHOP"
+        and current_state == "BUILDING_COMPRESSION"
+    ):
+        return "RANGE_FORMING", "LOW"
+
+    return "STATE_CHANGE", "LOW"
+
+
 def record_state_transition(classification):
+
+    transition_type, priority = classify_transition_type(
+        classification.get("previous_state"),
+        classification["state"],
+    )
 
     with scalp_state_db_connection() as conn:
 
@@ -59,9 +87,11 @@ def record_state_transition(classification):
                 current_state,
                 duration_seconds,
                 score,
-                range_pct
+                range_pct,
+                transition_type,
+                priority
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             datetime.now(timezone.utc).isoformat(),
             classification["symbol"],
@@ -70,6 +100,8 @@ def record_state_transition(classification):
             classification.get("duration_seconds"),
             classification.get("score"),
             classification.get("range_pct"),
+            transition_type,
+            priority,
         ))
 
 
@@ -173,7 +205,9 @@ def get_recent_state_transitions(limit=25):
                 current_state,
                 duration_seconds,
                 score,
-                range_pct
+                range_pct,
+                transition_type,
+                priority
             FROM scalp_state_transitions
             ORDER BY id DESC
             LIMIT ?

@@ -36,6 +36,8 @@ def init_scalp_state_db():
                 current_state TEXT NOT NULL,
                 duration_seconds INTEGER,
                 score INTEGER,
-                range_pct REAL
+                range_pct REAL,
+                transition_type TEXT,
+                priority TEXT
             )
         """)

@@ -2,75 +2,7 @@
 <html>
 <head>
     <title>{{ title }}</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #111827;
-            color: #f3f4f6;
-            margin: 0;
-            padding: 24px;
-        }
-
-        h1 {
-            margin-top: 0;
-        }
-
-        .subtitle {
-            color: #9ca3af;
-            margin-bottom: 24px;
-            max-width: 900px;
-            line-height: 1.5;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: #1f2937;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        th {
-            background: #374151;
-            color: white;
-            text-align: left;
-            padding: 14px;
-            font-size: 14px;
-        }
-
-        td {
-            padding: 14px;
-            border-top: 1px solid #374151;
-        }
-
-        tr:hover {
-            background: #273244;
-        }
-
-        .score {
-            font-weight: bold;
-        }
-
-        .ACTIVE_EXPANSION,
-        .WATCH_FOR_SCALP {
-            color: #22c55e;
-            font-weight: bold;
-        }
-
-        .BUILDING_COMPRESSION,
-        .WAIT {
-            color: #facc15;
-            font-weight: bold;
-        }
-
-        .AVOID_CHOP,
-        .DO_NOT_TRADE,
-        .NO_DATA {
-            color: #ef4444;
-            font-weight: bold;
-        }
-    </style>
+    <link rel="stylesheet" href="/scalp-state-static/css/scalp_state.css">
 </head>
 
 <body>
@@ -98,209 +30,29 @@
                 <th>Reason</th>
             </tr>
         </thead>
-        <tbody id="scalp-state-body">
-
-            {% for row in rows %}
-            <tr>
-
-                <td>{{ row.symbol }}</td>
-
-                <td class="{{ row.state }}">
-                    {{ row.state }}
-                </td>
-
-                <td>
-                    {{ row.previous_state | default("-", true) }}
-                </td>
-
-                <td>
-                    {{ row.duration_seconds }}s
-                </td>
-
-                <td>
-                    {% if row.state_changed %}
-                        🔥
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-
-
-                <td class="score">
-                    {{ row.score }}
-                </td>
-
-                <td class="{{ row.action }}">
-                    {{ row.action }}
-                </td>
-
-                <td>
-                    {{ row.range_pct | default("-", true) }}
-                </td>
-
-                <td>
-                    {{ row.latest | default("-", true) }}
-                </td>
-
-                <td>
-                    {{ row.volume_samples | default("-", true) }}
-                </td>
-
-                <td>
-                    {{ row.reason }}
-                </td>
-
-            </tr>
-            {% endfor %}
-
-        </tbody>
-
+        <tbody id="scalp-state-body"></tbody>
     </table>
 
-<h2 style="margin-top: 48px;">
-    Recent State Transitions
-</h2>
+    <h2>Recent State Transitions</h2>
 
-<table>
-    <thead>
-        <tr>
-            <th>Time</th>
-            <th>Symbol</th>
-            <th>Previous</th>
-            <th>Current</th>
-            <th>Duration</th>
-            <th>Score</th>
-            <th>Range %</th>
-        </tr>
-    </thead>
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Symbol</th>
+                <th>Previous</th>
+                <th>Current</th>
+                <th>Transition</th>
+                <th>Priority</th>
+                <th>Duration</th>
+                <th>Score</th>
+                <th>Range %</th>
+            </tr>
+        </thead>
+        <tbody id="transition-body"></tbody>
+    </table>
 
-    <tbody id="transition-body">
-
-        {% for transition in transitions %}
-        <tr>
-
-            <td>
-                {{ transition.timestamp }}
-            </td>
-
-            <td>
-                {{ transition.symbol }}
-            </td>
-
-            <td>
-                {{ transition.previous_state | default("-", true) }}
-            </td>
-
-            <td class="{{ transition.current_state }}">
-                {{ transition.current_state }}
-            </td>
-
-            <td>
-                {{ transition.duration_seconds }}s
-            </td>
-
-            <td>
-                {{ transition.score }}
-            </td>
-
-            <td>
-                {{ transition.range_pct | default("-", true) }}
-            </td>
-
-        </tr>
-        {% endfor %}
-
-    </tbody>
-</table>
-
-
-
-<script>
-
-async function loadScalpState() {
-
-    try {
-
-        const response = await fetch(
-            "/api/scalp-state"
-        );
-
-        const data = await response.json();
-
-        const tbody = document.getElementById(
-            "scalp-state-body"
-        );
-
-        tbody.innerHTML = "";
-
-        for (const row of data.rows) {
-
-            const tr = document.createElement("tr");
-
-            tr.innerHTML = `
-                <td>${row.symbol}</td>
-
-                <td class="${row.state}">
-                    ${row.state}
-                </td>
-
-                <td>
-                    ${row.previous_state ?? "-"}
-                </td>
-
-                <td>
-                    ${row.duration_seconds}s
-                </td>
-
-                <td>
-                    ${row.state_changed ? "🔥" : "-"}
-                </td>
-
-                <td class="score">
-                    ${row.score}
-                </td>
-
-                <td class="${row.action}">
-                    ${row.action}
-                </td>
-
-                <td>
-                    ${row.range_pct ?? "-"}
-                </td>
-
-                <td>
-                    ${row.latest ?? "-"}
-                </td>
-
-                <td>
-                    ${row.volume_samples ?? "-"}
-                </td>
-
-                <td>
-                    ${row.reason}
-                </td>
-            `;
-
-            tbody.appendChild(tr);
-        }
-
-    } catch (err) {
-
-        console.error(
-            "Failed loading scalp state:",
-            err
-        );
-    }
-}
-
-loadScalpState();
-
-setInterval(
-    loadScalpState,
-    5000
-);
-
-</script>
+    <script src="/scalp-state-static/js/scalp_state.js"></script>
 
 </body>
 </html>
