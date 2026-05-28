@@ -150,6 +150,20 @@ async function loadScalpState() {
                     ${row.range_pct ?? "-"}
                 </td>
 
+
+                <td>
+                    ${row.range_velocity ?? "-"}
+                </td>
+
+                <td>
+                    ${row.older_range_pct ?? "-"}
+                </td>
+
+                <td>
+                    ${row.recent_range_pct ?? "-"}
+                </td>
+
+
                 <td>
                     ${row.latest ?? "-"}
                 </td>
