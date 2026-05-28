@@ -173,6 +173,15 @@ async function loadScalpState() {
                 </td>
 
                 <td>
+                    ${row.compression_maturity_score ?? "-"}
+                </td>
+
+                <td>
+                    ${row.compression_label ?? "-"}
+                </td>
+
+
+                <td>
                     ${row.volume_samples ?? "-"}
                 </td>
 

@@ -20,6 +20,8 @@ def build_result(
     older_range_pct=None,
     recent_range_pct=None,
     directional_efficiency=None,
+    compression_maturity_score=None,
+    compression_label=None,
     volume_samples=0,
 ):
     return {
@@ -54,6 +56,8 @@ def build_result(
             if directional_efficiency is not None
             else None
         ),
+        "compression_maturity_score": compression_maturity_score,
+        "compression_label": compression_label,
         "volume_samples": volume_samples,
     }
 
@@ -94,7 +98,38 @@ def calculate_directional_efficiency(prices):
     return net_move / total_move
 
 
+def calculate_compression_maturity(features):
+    range_pct = features["range_pct"]
+    range_velocity = features["range_velocity"]
+    directional_efficiency = features["directional_efficiency"]
+
+    score = 0
+
+    if range_pct < 0.35:
+        score += 40
+
+    if range_velocity < 1.2:
+        score += 30
+
+    if directional_efficiency < 0.3:
+        score += 30
+
+    if score >= 80:
+        label = "READY_FOR_EXPANSION"
+    elif score >= 50:
+        label = "MATURING_COMPRESSION"
+    elif score > 0:
+        label = "EARLY_COMPRESSION"
+    else:
+        label = "NOT_COMPRESSING"
+
+    return {
+        "compression_maturity_score": score,
+        "compression_label": label,
+    }
+
 def calculate_range_features(prices):
+
     midpoint = len(prices) // 2
 
     older_prices = prices[:midpoint]
@@ -126,14 +161,23 @@ def calculate_range_features(prices):
         )
     )
 
-    return {
+    features = {
         "latest": latest,
         "range_pct": recent_range_pct,
         "older_range_pct": older_range_pct,
         "recent_range_pct": recent_range_pct,
         "range_velocity": range_velocity,
-        "directional_efficiency": directional_efficiency,
+        "directional_efficiency":
+            directional_efficiency,
     }
+
+    features.update(
+        calculate_compression_maturity(
+            features
+        )
+    )
+
+    return features
 
 
 def decide_scalp_state(features):
@@ -222,5 +266,7 @@ def classify_scalp_state(symbol, recent_quotes):
         older_range_pct=features["older_range_pct"],
         recent_range_pct=features["recent_range_pct"],
         directional_efficiency=features["directional_efficiency"],
+        compression_maturity_score=features["compression_maturity_score"],
+        compression_label=features["compression_label"],
         **decision,
     )
