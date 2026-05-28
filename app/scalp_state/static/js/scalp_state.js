@@ -203,6 +203,15 @@ async function loadScalpState() {
                 <td>
                     ${row.volume_efficiency ?? "-"}
                 </td>
+
+                <td>
+                    ${row.relative_volume_ratio ?? "-"}
+                </td>
+
+                <td>
+                    ${row.relative_volume_label ?? "-"}
+                </td>
+
                 <td>
                     ${row.reason}
                 </td>

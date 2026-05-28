@@ -28,6 +28,8 @@ def build_result(
     volume_delta=None,
     volume_delta_per_sample=None,
     volume_efficiency=None,
+    relative_volume_ratio=None,
+    relative_volume_label=None,
 ):
     return {
         "symbol": symbol,
@@ -69,6 +71,8 @@ def build_result(
         "volume_delta": volume_delta,
         "volume_delta_per_sample": volume_delta_per_sample,
         "volume_efficiency": volume_efficiency,
+        "relative_volume_ratio": relative_volume_ratio,
+        "relative_volume_label": relative_volume_label,
     }
 
 def extract_prices(recent_quotes):
@@ -390,6 +394,13 @@ def classify_scalp_state(symbol, recent_quotes):
         )
     )
 
+    features.update(
+        calculate_local_relative_volume(
+            volumes
+        )
+    )
+
+
     decision = decide_scalp_state(
         features
     )
@@ -400,6 +411,8 @@ def classify_scalp_state(symbol, recent_quotes):
         volume_delta=features["volume_delta"],
         volume_delta_per_sample=features["volume_delta_per_sample"],
         volume_efficiency=features["volume_efficiency"],
+        relative_volume_ratio=features["relative_volume_ratio"],
+        relative_volume_label=features["relative_volume_label"],
         latest=features["latest"],
         range_pct=features["range_pct"],
         range_velocity=features["range_velocity"],
@@ -412,3 +425,51 @@ def classify_scalp_state(symbol, recent_quotes):
         expansion_exhaustion_label=features["expansion_exhaustion_label"],
         **decision,
     )
+
+
+def calculate_local_relative_volume(volumes):
+    if len(volumes) < 4:
+        return {
+            "relative_volume_ratio": 0,
+            "relative_volume_label": "NO_DATA",
+        }
+
+    midpoint = len(volumes) // 2
+
+    older_volumes = volumes[:midpoint]
+    recent_volumes = volumes[midpoint:]
+
+    older_delta = (
+        older_volumes[-1] - older_volumes[0]
+    )
+
+    recent_delta = (
+        recent_volumes[-1] - recent_volumes[0]
+    )
+
+    if older_delta <= 0:
+        relative_volume_ratio = 0
+    else:
+        relative_volume_ratio = (
+            recent_delta /
+            older_delta
+        )
+
+    if relative_volume_ratio >= 3:
+        label = "EXTREME_RVOL"
+    elif relative_volume_ratio >= 2:
+        label = "HIGH_RVOL"
+    elif relative_volume_ratio >= 1.2:
+        label = "ELEVATED_RVOL"
+    elif relative_volume_ratio > 0:
+        label = "NORMAL_RVOL"
+    else:
+        label = "NO_RVOL"
+
+    return {
+        "relative_volume_ratio": round(
+            relative_volume_ratio,
+            2
+        ),
+        "relative_volume_label": label,
+    }
