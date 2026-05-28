@@ -25,6 +25,9 @@ def build_result(
     expansion_exhaustion_score=None,
     expansion_exhaustion_label=None,
     volume_samples=0,
+    volume_delta=None,
+    volume_delta_per_sample=None,
+    volume_efficiency=None,
 ):
     return {
         "symbol": symbol,
@@ -63,6 +66,9 @@ def build_result(
         "expansion_exhaustion_score": expansion_exhaustion_score,
         "expansion_exhaustion_label": expansion_exhaustion_label,
         "volume_samples": volume_samples,
+        "volume_delta": volume_delta,
+        "volume_delta_per_sample": volume_delta_per_sample,
+        "volume_efficiency": volume_efficiency,
     }
 
 def extract_prices(recent_quotes):
@@ -71,6 +77,74 @@ def extract_prices(recent_quotes):
         for quote in recent_quotes
         if quote.get("last") is not None
     ]
+
+def extract_volumes(recent_quotes):
+    return [
+        quote["volume"]
+        for quote in recent_quotes
+        if quote.get("volume") is not None
+    ]
+
+
+# def calculate_volume_features(volumes):
+#     if len(volumes) < 2:
+#         return {
+#             "volume_delta": 0,
+#             "volume_samples": len(volumes),
+#         }
+
+#     volume_delta = (
+#         volumes[-1] - volumes[0]
+#     )
+
+#     return {
+#         "volume_delta": volume_delta,
+#         "volume_samples": len(volumes),
+#     }
+
+
+def calculate_volume_features(prices, volumes):
+    if len(volumes) < 2 or len(prices) < 2:
+        return {
+            "volume_delta": 0,
+            "volume_delta_per_sample": 0,
+            "volume_efficiency": 0,
+            "volume_samples": len(volumes),
+        }
+
+    volume_delta = (
+        volumes[-1] - volumes[0]
+    )
+
+    volume_delta_per_sample = (
+        volume_delta /
+        max(len(volumes) - 1, 1)
+    )
+
+    price_move_pct = abs(
+        ((prices[-1] - prices[0]) / prices[0]) * 100
+    )
+
+    if volume_delta <= 0:
+        volume_efficiency = 0
+    else:
+        volume_efficiency = (
+            price_move_pct /
+            (volume_delta / 1000)
+        )
+
+    return {
+        "volume_delta": volume_delta,
+        "volume_delta_per_sample": round(
+            volume_delta_per_sample,
+            2
+        ),
+        "volume_efficiency": round(
+            volume_efficiency,
+            6
+        ),
+        "volume_samples": len(volumes),
+    }
 
 
 def calculate_range_pct(prices, latest):
@@ -293,6 +367,10 @@ def classify_scalp_state(symbol, recent_quotes):
         recent_quotes
     )
 
+    volumes = extract_volumes(
+        recent_quotes
+    )
+
     if len(prices) < 3:
         return build_result(
             symbol=symbol,
@@ -305,13 +383,23 @@ def classify_scalp_state(symbol, recent_quotes):
         prices
     )
 
+    features.update(
+        calculate_volume_features(
+            prices,
+            volumes,
+        )
+    )
+
     decision = decide_scalp_state(
         features
     )
 
     return build_result(
         symbol=symbol,
-        volume_samples=len(prices),
+        volume_samples=features["volume_samples"],
+        volume_delta=features["volume_delta"],
+        volume_delta_per_sample=features["volume_delta_per_sample"],
+        volume_efficiency=features["volume_efficiency"],
         latest=features["latest"],
         range_pct=features["range_pct"],
         range_velocity=features["range_velocity"],
@@ -324,5 +412,3 @@ def classify_scalp_state(symbol, recent_quotes):
         expansion_exhaustion_label=features["expansion_exhaustion_label"],
         **decision,
     )
-
-

@@ -193,6 +193,17 @@ async function loadScalpState() {
                 </td>
 
                 <td>
+                    ${row.volume_delta ?? "-"}
+                </td>
+
+                <td>
+                    ${row.volume_delta_per_sample ?? "-"}
+                </td>
+
+                <td>
+                    ${row.volume_efficiency ?? "-"}
+                </td>
+                <td>
                     ${row.reason}
                 </td>
             `;
