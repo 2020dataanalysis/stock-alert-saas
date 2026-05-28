@@ -22,6 +22,8 @@ def build_result(
     directional_efficiency=None,
     compression_maturity_score=None,
     compression_label=None,
+    expansion_exhaustion_score=None,
+    expansion_exhaustion_label=None,
     volume_samples=0,
 ):
     return {
@@ -58,9 +60,10 @@ def build_result(
         ),
         "compression_maturity_score": compression_maturity_score,
         "compression_label": compression_label,
+        "expansion_exhaustion_score": expansion_exhaustion_score,
+        "expansion_exhaustion_label": expansion_exhaustion_label,
         "volume_samples": volume_samples,
     }
-
 
 def extract_prices(recent_quotes):
     return [
@@ -128,6 +131,36 @@ def calculate_compression_maturity(features):
         "compression_label": label,
     }
 
+def calculate_expansion_exhaustion(features):
+    range_pct = features["range_pct"]
+    range_velocity = features["range_velocity"]
+    directional_efficiency = features["directional_efficiency"]
+
+    score = 0
+
+    if range_pct > 0.35:
+        score += 30
+
+    if range_velocity > 2.0:
+        score += 30
+
+    if directional_efficiency < 0.25:
+        score += 40
+
+    if score >= 80:
+        label = "POSSIBLE_EXHAUSTION"
+    elif score >= 50:
+        label = "EXTENDED_EXPANSION"
+    elif score > 0:
+        label = "EARLY_EXPANSION"
+    else:
+        label = "NOT_EXPANDING"
+
+    return {
+        "expansion_exhaustion_score": score,
+        "expansion_exhaustion_label": label,
+    }
+
 def calculate_range_features(prices):
 
     midpoint = len(prices) // 2
@@ -177,6 +210,13 @@ def calculate_range_features(prices):
         )
     )
 
+    features.update(
+        calculate_expansion_exhaustion(
+            features
+        )
+    )
+
+
     return features
 
 
@@ -192,6 +232,18 @@ def decide_scalp_state(features):
             "action": "DO_NOT_TRADE",
             "reason": "Range too tight; likely chop.",
         }
+
+    if (
+        range_velocity > 1.8
+        and directional_efficiency < 0.25
+    ):
+        return {
+            "state": "NOISY_EXPANSION",
+            "score": 45,
+            "action": "WAIT",
+            "reason": "Expansion is noisy; directional efficiency is weak.",
+        }
+
 
     if (
         range_velocity > 1.8
@@ -268,5 +320,9 @@ def classify_scalp_state(symbol, recent_quotes):
         directional_efficiency=features["directional_efficiency"],
         compression_maturity_score=features["compression_maturity_score"],
         compression_label=features["compression_label"],
+        expansion_exhaustion_score=features["expansion_exhaustion_score"],
+        expansion_exhaustion_label=features["expansion_exhaustion_label"],
         **decision,
     )
+
+

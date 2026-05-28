@@ -180,6 +180,13 @@ async function loadScalpState() {
                     ${row.compression_label ?? "-"}
                 </td>
 
+                <td>
+                    ${row.expansion_exhaustion_score ?? "-"}
+                </td>
+
+                <td>
+                    ${row.expansion_exhaustion_label ?? "-"}
+                </td>
 
                 <td>
                     ${row.volume_samples ?? "-"}
