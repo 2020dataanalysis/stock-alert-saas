@@ -52,7 +52,6 @@ function playTone(frequency, durationMs) {
 
 
 function playTransitionAlert(transition) {
-
     if (!audioAlertsEnabled) {
         return;
     }
@@ -72,7 +71,6 @@ function playTransitionAlert(transition) {
 
 
 function getTransitionKey(transition) {
-
     return [
         transition.timestamp,
         transition.symbol,
@@ -84,7 +82,6 @@ function getTransitionKey(transition) {
 
 
 function isActionableTransition(transition) {
-
     return (
         transition.priority === "HIGH" &&
         transition.current_state === "ACTIVE_EXPANSION"
@@ -93,57 +90,34 @@ function isActionableTransition(transition) {
 
 
 function handleNewTransitions(transitions) {
-
     for (const transition of transitions) {
+        const key = getTransitionKey(transition);
 
-        const key = getTransitionKey(
-            transition
-        );
-
-        if (
-            seenTransitionKeys.has(key)
-        ) {
+        if (seenTransitionKeys.has(key)) {
             continue;
         }
 
         seenTransitionKeys.add(key);
 
-        if (
-            !isActionableTransition(
-                transition
-            )
-        ) {
+        if (!isActionableTransition(transition)) {
             continue;
         }
 
-        playTransitionAlert(
-            transition
-        );
+        playTransitionAlert(transition);
     }
 }
 
 
 async function loadScalpState() {
-
     try {
-
-        const response = await fetch(
-            "/api/scalp-state"
-        );
-
+        const response = await fetch("/api/scalp-state");
         const data = await response.json();
 
-        const tbody = document.getElementById(
-            "scalp-state-body"
-        );
-
+        const tbody = document.getElementById("scalp-state-body");
         tbody.innerHTML = "";
 
         for (const row of data.rows) {
-
-            const tr = document.createElement(
-                "tr"
-            );
+            const tr = document.createElement("tr");
 
             tr.innerHTML = `
                 <td>${row.symbol}</td>
@@ -157,7 +131,7 @@ async function loadScalpState() {
                 </td>
 
                 <td>
-                    ${row.duration_seconds}s
+                    ${row.duration_seconds ?? "-"}s
                 </td>
 
                 <td>
@@ -193,45 +167,24 @@ async function loadScalpState() {
         }
 
     } catch (err) {
-
-        console.error(
-            "Failed loading scalp state:",
-            err
-        );
+        console.error("Failed loading scalp state:", err);
     }
 }
 
 
 async function loadStateTransitions() {
-
     try {
-
-        const response = await fetch(
-            "/api/scalp-state/transitions"
-        );
-
+        const response = await fetch("/api/scalp-state/transitions");
         const data = await response.json();
 
-        const tbody = document.getElementById(
-            "transition-body"
-        );
-
+        const tbody = document.getElementById("transition-body");
         tbody.innerHTML = "";
 
         for (const transition of data.transitions) {
+            const tr = document.createElement("tr");
 
-            const tr = document.createElement(
-                "tr"
-            );
-
-            if (
-                isActionableTransition(
-                    transition
-                )
-            ) {
-                tr.classList.add(
-                    "flash-row"
-                );
+            if (isActionableTransition(transition)) {
+                tr.classList.add("flash-row");
             }
 
             tr.innerHTML = `
@@ -258,7 +211,7 @@ async function loadStateTransitions() {
                 </td>
 
                 <td>
-                    ${transition.duration_seconds}s
+                    ${transition.duration_seconds ?? "-"}s
                 </td>
 
                 <td>
@@ -273,47 +226,24 @@ async function loadStateTransitions() {
             tbody.appendChild(tr);
         }
 
-        handleNewTransitions(
-            data.transitions
-        );
+        handleNewTransitions(data.transitions);
 
     } catch (err) {
-
-        console.error(
-            "Failed loading state transitions:",
-            err
-        );
+        console.error("Failed loading state transitions:", err);
     }
 }
 
 
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
+document.addEventListener("DOMContentLoaded", () => {
+    const button = document.getElementById("enable-audio-button");
 
-        const button = document.getElementById(
-            "enable-audio-button"
-        );
-
-        if (button) {
-
-            button.addEventListener(
-                "click",
-                enableAudioAlerts
-            );
-        }
-
-        loadScalpState();
-        loadStateTransitions();
-
-        setInterval(
-            loadScalpState,
-            5000
-        );
-
-        setInterval(
-            loadStateTransitions,
-            5000
-        );
+    if (button) {
+        button.addEventListener("click", enableAudioAlerts);
     }
-);
+
+    loadScalpState();
+    loadStateTransitions();
+
+    setInterval(loadScalpState, 5000);
+    setInterval(loadStateTransitions, 5000);
+});

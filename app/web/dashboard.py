@@ -56,6 +56,12 @@ app.mount(
     name="scalp_state_static",
 )
 
+app.mount(
+    "/scalp-state-static",
+    StaticFiles(directory="app/scalp_state/static"),
+    name="scalp_state_static",
+)
+
 app.include_router(api_router)
 app.include_router(market_state_router)
 app.include_router(scalp_state_router)

@@ -2,7 +2,11 @@
 <html>
 <head>
     <title>{{ title }}</title>
-    <link rel="stylesheet" href="/scalp-state-static/css/scalp_state.css">
+
+    <link
+        rel="stylesheet"
+        href="/scalp-state-static/css/scalp_state.css"
+    >
 </head>
 
 <body>
@@ -11,13 +15,13 @@
 
     <div class="subtitle">
         Real-time trade eligibility engine for tight-stop scalp trading.
-        Classifies whether each symbol is in chop, compression, or active expansion.
+        Classifies whether each symbol is in chop, compression,
+        or active expansion.
     </div>
 
     <button id="enable-audio-button">
         Enable Audio Alerts
     </button>
-
 
     <table>
         <thead>
@@ -35,6 +39,7 @@
                 <th>Reason</th>
             </tr>
         </thead>
+
         <tbody id="scalp-state-body"></tbody>
     </table>
 
@@ -54,6 +59,7 @@
                 <th>Range %</th>
             </tr>
         </thead>
+
         <tbody id="transition-body"></tbody>
     </table>
 
