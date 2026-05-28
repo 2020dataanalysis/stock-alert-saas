@@ -169,6 +169,10 @@ async function loadScalpState() {
                 </td>
 
                 <td>
+                    ${row.directional_efficiency ?? "-"}
+                </td>
+
+                <td>
                     ${row.volume_samples ?? "-"}
                 </td>
 
