@@ -1,14 +1,5 @@
 from fastapi import APIRouter
 
-# from app.historical_data.service import (
-#     initialize_historical_data_module,
-#     list_recent_opening_scenarios,
-#     save_minute_outcome,
-#     save_opening_scenario,
-#     list_minute_outcomes,
-# )
-
-
 from app.historical_data.service import (
     initialize_historical_data_module,
     list_historical_bars,
@@ -18,6 +9,11 @@ from app.historical_data.service import (
     save_minute_outcome,
     save_opening_scenario,
 )
+
+from app.historical_data.import_service import (
+    import_schwab_price_history_response,
+)
+
 
 router = APIRouter()
 
@@ -125,4 +121,17 @@ def historical_bars_api(
         start_timestamp=start_timestamp,
         end_timestamp=end_timestamp,
         limit=limit,
+    )
+
+
+@router.post("/api/historical-data/import/schwab-price-history")
+def import_schwab_price_history_api(
+    payload: dict,
+    frequency_type: str = "minute",
+    frequency: int = 1,
+):
+    return import_schwab_price_history_response(
+        response_data=payload,
+        frequency_type=frequency_type,
+        frequency=frequency,
     )
