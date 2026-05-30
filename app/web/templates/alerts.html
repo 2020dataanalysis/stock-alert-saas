@@ -1,49 +1,8 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Alerts</title>
+{% extends "base.html" %}
 
-    <style>
-        body {
-            font-family: Arial;
-            margin: 40px;
-        }
-
-        nav a {
-            margin-right: 15px;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f4f4f4;
-        }
-
-        tr:nth-child(even) {
-            background-color: #fafafa;
-        }
-    </style>
-</head>
-<body>
+{% block content %}
 
 <h1>Alerts</h1>
-
-<nav>
-    <a href="/">Overview</a>
-    <a href="/settings">Settings</a>
-    <a href="/charts">Charts</a>
-    <a href="/alerts">Alerts</a>
-</nav>
 
 <form method="post" action="/alerts/clear" style="margin-top: 20px;">
     <button type="submit">Clear Alerts</button>
@@ -73,5 +32,4 @@
     {% endfor %}
 </table>
 
-</body>
-</html>
+{% endblock %}
