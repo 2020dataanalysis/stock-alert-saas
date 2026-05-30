@@ -41,6 +41,9 @@ from app.historical_data.statistics_service import (
     calculate_daily_opening_summary,
 )
 
+from app.historical_data.watchlist_gap_service import (
+    calculate_watchlist_gap_statistics,
+)
 
 router = APIRouter()
 
@@ -330,4 +333,16 @@ def backfill_watchlist_daily_api(
 ):
     return backfill_default_watchlist_daily(
         period=period,
+    )
+
+@router.get("/api/historical-data/watchlist/gaps/statistics")
+def watchlist_gap_statistics_api(
+    bucket_lower: float,
+    bucket_upper: float,
+    limit: int = 500,
+):
+    return calculate_watchlist_gap_statistics(
+        bucket_lower=bucket_lower,
+        bucket_upper=bucket_upper,
+        limit=limit,
     )
