@@ -15,6 +15,8 @@ from app.historical_data.import_service import (
     import_schwab_price_history_response,
 )
 
+from fastapi.responses import HTMLResponse
+
 router = APIRouter()
 
 
@@ -157,3 +159,59 @@ def import_live_schwab_price_history_api(
         need_extended_hours_data=need_extended_hours_data,
         need_previous_close=need_previous_close,
     )
+
+
+@router.get("/historical-data/import", response_class=HTMLResponse)
+def historical_data_import_page():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Historical Data Import</title>
+    </head>
+    <body>
+        <h1>Historical Data Import</h1>
+
+        <form method="post" action="/api/historical-data/import/live-schwab-price-history">
+            <label>Symbol</label>
+            <input name="symbol" value="TSLA">
+
+            <label>Period Type</label>
+            <input name="period_type" value="day">
+
+            <label>Period</label>
+            <input name="period" value="1">
+
+            <label>Frequency Type</label>
+            <input name="frequency_type" value="minute">
+
+            <label>Frequency</label>
+            <input name="frequency" value="1">
+
+            <button type="submit">
+                Import
+            </button>
+        </form>
+    </body>
+    </html>
+    """
+
+@router.get("/historical-data/import", response_class=HTMLResponse)
+def historical_data_import_page():
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Historical Data Import</title>
+    </head>
+    <body>
+        <h1>Historical Data Import</h1>
+
+        <p>Use this endpoint:</p>
+
+        <pre>
+curl -X POST "http://127.0.0.1:8000/api/historical-data/import/live-schwab-price-history?symbol=TSLA&period_type=day&period=1&frequency_type=minute&frequency=1" | jq
+        </pre>
+    </body>
+    </html>
+    """
