@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Historical Data</title>
+</head>
+
+<body>
+    <h1>Historical Data Dashboard</h1>
+
+    <nav>
+        <a href="/">Overview</a>
+        <a href="/status">Status</a>
+        <a href="/settings">Settings</a>
+        <a href="/market-state">Market State</a>
+        <a href="/scalp-state">Scalp State</a>
+        <a href="/charts">Charts</a>
+        <a href="/alerts">Alerts</a>
+        <a href="/logs">Logs</a>
+    </nav>
+
+    <h2>Dataset Health</h2>
+    <pre id="health-output">Loading...</pre>
+
+    <h2>Watchlist Gap Statistics</h2>
+    <pre id="gap-output">Loading...</pre>
+
+    <h2>Watchlist Gap Opening Summary</h2>
+    <pre id="opening-output">Loading...</pre>
+
+    <script>
+        async function loadJson(url, elementId) {
+            const response = await fetch(url);
+            const data = await response.json();
+
+            document.getElementById(elementId).textContent =
+                JSON.stringify(data, null, 2);
+        }
+
+        loadJson("/api/historical-data/health", "health-output");
+
+        loadJson(
+            "/api/historical-data/watchlist/gaps/statistics?bucket_lower=-1.0&bucket_upper=-0.5&limit=500",
+            "gap-output"
+        );
+
+        loadJson(
+            "/api/historical-data/watchlist/gaps/opening-summary?bucket_lower=-1.0&bucket_upper=-0.5&opening_minutes=30&limit=500",
+            "opening-output"
+        );
+    </script>
+</body>
+</html>

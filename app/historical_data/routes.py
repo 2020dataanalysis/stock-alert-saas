@@ -49,7 +49,21 @@ from app.historical_data.watchlist_gap_opening_service import (
     calculate_watchlist_gap_opening_summary,
 )
 
+
+from fastapi import Request
+from fastapi.templating import Jinja2Templates
+from pathlib import Path
+
+
 router = APIRouter()
+
+
+BASE_DIR = Path(__file__).resolve().parent
+
+templates = Jinja2Templates(
+    directory=str(BASE_DIR / "templates")
+)
+
 
 
 @router.get("/api/historical-data/init")
@@ -99,11 +113,16 @@ def recent_opening_scenarios_api(
 
 
 @router.get("/historical-data")
-def historical_data_page():
-    return {
-        "module": "historical_data",
-        "status": "available",
-    }
+def historical_data_page(
+    request: Request,
+):
+    return templates.TemplateResponse(
+        request,
+        "historical_data.html",
+        {
+            "request": request,
+        },
+    )
 
 
 @router.get(
