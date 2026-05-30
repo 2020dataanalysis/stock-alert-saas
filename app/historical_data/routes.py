@@ -23,7 +23,9 @@ from app.historical_data.backfill_service import (
     backfill_intraday_history,
 )
 
+
 from app.historical_data.gap_analysis_service import (
+    calculate_gap_bucket_statistics,
     calculate_gap_days,
 )
 
@@ -266,5 +268,20 @@ def gap_days_api(
 ):
     return calculate_gap_days(
         symbol=symbol,
+        limit=limit,
+    )
+
+
+@router.get("/api/historical-data/gaps/statistics")
+def gap_bucket_statistics_api(
+    symbol: str,
+    bucket_lower: float,
+    bucket_upper: float,
+    limit: int = 500,
+):
+    return calculate_gap_bucket_statistics(
+        symbol=symbol,
+        bucket_lower=bucket_lower,
+        bucket_upper=bucket_upper,
         limit=limit,
     )

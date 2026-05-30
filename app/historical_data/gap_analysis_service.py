@@ -95,3 +95,98 @@ def calculate_gap_days(
         "day_count": len(results),
         "days": results,
     }
+
+
+
+def calculate_gap_bucket_statistics(
+    symbol,
+    bucket_lower,
+    bucket_upper,
+    limit=500,
+):
+    gap_days = calculate_gap_days(
+        symbol=symbol,
+        limit=limit,
+    )["days"]
+
+    matching_days = [
+        day
+        for day in gap_days
+        if day["gap_pct"] >= bucket_lower
+        and day["gap_pct"] < bucket_upper
+    ]
+
+    if not matching_days:
+        return {
+            "symbol": symbol.upper(),
+            "bucket_lower": bucket_lower,
+            "bucket_upper": bucket_upper,
+            "match_count": 0,
+            "message": "No matching historical gap days found.",
+        }
+
+    day_returns = [
+        (
+            (day["day_close"] - day["open_price"]) /
+            day["open_price"]
+        ) * 100
+        for day in matching_days
+    ]
+
+    max_downs = [
+        (
+            (day["day_low"] - day["open_price"]) /
+            day["open_price"]
+        ) * 100
+        for day in matching_days
+    ]
+
+    max_ups = [
+        (
+            (day["day_high"] - day["open_price"]) /
+            day["open_price"]
+        ) * 100
+        for day in matching_days
+    ]
+
+    red_day_count = sum(
+        1
+        for value in day_returns
+        if value < 0
+    )
+
+    green_day_count = sum(
+        1
+        for value in day_returns
+        if value > 0
+    )
+
+    return {
+        "symbol": symbol.upper(),
+        "bucket_lower": bucket_lower,
+        "bucket_upper": bucket_upper,
+        "match_count": len(matching_days),
+        "average_day_return_pct": round(
+            sum(day_returns) / len(day_returns),
+            3,
+        ),
+        "average_max_down_from_open_pct": round(
+            sum(max_downs) / len(max_downs),
+            3,
+        ),
+        "average_max_up_from_open_pct": round(
+            sum(max_ups) / len(max_ups),
+            3,
+        ),
+        "green_day_count": green_day_count,
+        "red_day_count": red_day_count,
+        "green_day_pct": round(
+            (green_day_count / len(matching_days)) * 100,
+            1,
+        ),
+        "red_day_pct": round(
+            (red_day_count / len(matching_days)) * 100,
+            1,
+        ),
+        "matching_days": matching_days,
+    }
