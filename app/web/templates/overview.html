@@ -1,9 +1,97 @@
-cat > app/web/templates/overview.html <<'EOF'
 {% extends "base.html" %}
 
 {% block content %}
 
-<h1>Overview</h1>
+<h1>Stock Alert Engine</h1>
+
+<h2>Streamer Control</h2>
+
+<button onclick="setMode('auto')">Auto</button>
+<button onclick="setMode('online')">Force Online</button>
+<button onclick="setMode('offline')">Force Offline</button>
+<button onclick="onlineFor(15)">Online 15m</button>
+<button onclick="onlineFor(60)">Online 60m</button>
+
+<p id="streamer-status"></p>
+
+<hr>
+
+<h2>System Status</h2>
+
+<p><b>Total Quotes:</b> {{ quote_count }}</p>
+<p><b>Total Alerts:</b> {{ alert_count }}</p>
+
+<hr>
+
+<h2>Current Settings</h2>
+
+<p><b>Favorites:</b> {{ settings['favorite_symbols'] | join(', ') }}</p>
+<p><b>Use Movers:</b> {{ settings['use_movers'] }}</p>
+
+<hr>
+
+<h2>Recent Quotes</h2>
+
+<table>
+<tr>
+    <th>Type</th>
+    <th>Symbol</th>
+    <th>Price</th>
+    <th>Volume</th>
+    <th>Time</th>
+</tr>
+
+{% for q in quotes %}
+<tr>
+    <td>{{ q.source_badge }}</td>
+    <td>{{ q.symbol }}</td>
+    <td>{{ q.last }}</td>
+    <td>{{ q.volume }}</td>
+    <td>{{ q.timestamp }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<hr>
+
+<h2>Recent Alerts</h2>
+
+<table>
+<tr>
+    <th>Symbol</th>
+    <th>Price Δ%</th>
+    <th>Volume Δ%</th>
+    <th>Time</th>
+</tr>
+
+{% for a in alerts %}
+<tr>
+    <td>{{ a.symbol }}</td>
+    <td>{{ a.price_change_pct }}</td>
+    <td>{{ a.volume_change_pct }}</td>
+    <td>{{ a.timestamp }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<script>
+function setMode(mode) {
+    fetch(`/api/streamer/mode/${mode}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("streamer-status").innerText =
+                "Mode set to: " + data.mode;
+        });
+}
+
+function onlineFor(minutes) {
+    fetch(`/api/streamer/online-for/${minutes}`, { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById("streamer-status").innerText =
+                "Online until: " + data.until;
+        });
+}
+</script>
 
 {% endblock %}
-EOF

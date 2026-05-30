@@ -1,23 +1,53 @@
 <nav class="main-nav">
 
-    <a href="/">Overview</a>
+    <a href="/"
+       class="{% if request.url.path == '/' %}active{% endif %}">
+       Overview
+    </a>
 
-    <a href="/status">Status</a>
+    <a href="/status"
+       class="{% if request.url.path == '/status' %}active{% endif %}">
+       Status
+    </a>
 
-    <a href="/alerts">Alerts</a>
+    <a href="/alerts"
+       class="{% if request.url.path == '/alerts' %}active{% endif %}">
+       Alerts
+    </a>
 
-    <a href="/alert-rules">Rules</a>
+    <a href="/alert-rules"
+       class="{% if request.url.path == '/alert-rules' %}active{% endif %}">
+       Rules
+    </a>
 
-    <a href="/charts">Charts</a>
+    <a href="/charts"
+       class="{% if request.url.path == '/charts' %}active{% endif %}">
+       Charts
+    </a>
 
-    <a href="/historical-data">Historical Data</a>
+    <a href="/historical-data"
+       class="{% if request.url.path.startswith('/historical-data') %}active{% endif %}">
+       Historical Data
+    </a>
 
-    <a href="/market-state">Market State</a>
+    <a href="/market-state"
+       class="{% if request.url.path.startswith('/market-state') %}active{% endif %}">
+       Market State
+    </a>
 
-    <a href="/scalp-state">Scalp State</a>
+    <a href="/scalp-state"
+       class="{% if request.url.path.startswith('/scalp-state') %}active{% endif %}">
+       Scalp State
+    </a>
 
-    <a href="/settings">Settings</a>
+    <a href="/settings"
+       class="{% if request.url.path == '/settings' %}active{% endif %}">
+       Settings
+    </a>
 
-    <a href="/logs">Logs</a>
+    <a href="/logs"
+       class="{% if request.url.path == '/logs' %}active{% endif %}">
+       Logs
+    </a>
 
 </nav>
