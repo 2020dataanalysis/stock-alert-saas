@@ -94,7 +94,21 @@
     </table>
 
     <h2>Watchlist Gap Opening Summary</h2>
-    <pre id="opening-output">Loading...</pre>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Samples</th>
+                <th>Avg Opening Return %</th>
+                <th>Avg Opening High %</th>
+                <th>Avg Opening Low %</th>
+                <th>Positive Opening %</th>
+                <th>Negative Opening %</th>
+            </tr>
+        </thead>
+        <tbody id="opening-body"></tbody>
+    </table>
 
     <script>
         function formatDate(value) {
@@ -187,13 +201,44 @@
                 JSON.stringify(data, null, 2);
         }
 
+
+        async function loadOpeningSummaryTable() {
+            const response = await fetch(
+                "/api/historical-data/watchlist/gaps/opening-summary?bucket_lower=-1.0&bucket_upper=-0.5&opening_minutes=30&limit=500"
+            );
+
+            const data = await response.json();
+            const body = document.getElementById("opening-body");
+            body.innerHTML = "";
+
+            for (const row of data.results) {
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td>${row.symbol}</td>
+                    <td>${row.match_count}</td>
+                    <td class="${percentClass(row.average_opening_return_pct)}">
+                        ${formatNumber(row.average_opening_return_pct)}
+                    </td>
+                    <td class="positive">
+                        ${formatNumber(row.average_opening_high_pct)}
+                    </td>
+                    <td class="negative">
+                        ${formatNumber(row.average_opening_low_pct)}
+                    </td>
+                    <td>${row.positive_opening_pct ?? "-"}</td>
+                    <td>${row.negative_opening_pct ?? "-"}</td>
+                `;
+
+                body.appendChild(tr);
+            }
+        }
+
         loadHealthTable();
         loadGapStatisticsTable();
+        loadOpeningSummaryTable();
 
-        loadJson(
-            "/api/historical-data/watchlist/gaps/opening-summary?bucket_lower=-1.0&bucket_upper=-0.5&opening_minutes=30&limit=500",
-            "opening-output"
-        );
+
     </script>
 </body>
 </html>
