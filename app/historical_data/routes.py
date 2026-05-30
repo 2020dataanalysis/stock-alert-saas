@@ -15,6 +15,10 @@ from app.historical_data.import_service import (
     import_schwab_price_history_response,
 )
 
+from app.historical_data.statistics_service import (
+    calculate_daily_opening_summary,
+)
+
 from fastapi.responses import HTMLResponse
 
 router = APIRouter()
@@ -215,3 +219,14 @@ curl -X POST "http://127.0.0.1:8000/api/historical-data/import/live-schwab-price
     </body>
     </html>
     """
+
+
+@router.get("/api/historical-data/statistics/opening-summary")
+def opening_summary_api(
+    symbol: str,
+    lookback_limit: int = 5000,
+):
+    return calculate_daily_opening_summary(
+        symbol=symbol,
+        lookback_limit=lookback_limit,
+    )
