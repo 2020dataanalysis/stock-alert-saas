@@ -1,124 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Alert Rules</title>
+{% extends "base.html" %}
 
-    <div style="margin-bottom: 20px;">
-        <form method="post" action="/alert-rules/generate-movers">
-            <button type="submit">
-                Generate Rules From Movers
-            </button>
-        </form>
-    </div>
-
-    <style>
-        body {
-            font-family: Arial;
-            margin: 40px;
-        }
-
-        nav a {
-            margin-right: 15px;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin-top: 25px;
-        }
-
-        th, td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: left;
-        }
-
-        th {
-            background: #f4f4f4;
-        }
-
-        form.inline {
-            display: inline;
-        }
-
-        .form-box {
-            margin-top: 25px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            max-width: 700px;
-        }
-
-        input, select, button {
-            margin: 5px;
-            padding: 6px;
-        }
-
-
-
-        .flash-message {
-            padding: 12px;
-            margin-bottom: 20px;
-            border-radius: 8px;
-            font-weight: bold;
-        }
-
-        .flash-message.success {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .flash-message.warning {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .flash-message.error {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-
-
-.badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.badge-threshold {
-    background: #dbeafe;
-    color: #1e40af;
-}
-
-.badge-spike {
-    background: #dcfce7;
-    color: #166534;
-}
-
-.badge-drop {
-    background: #fee2e2;
-    color: #991b1b;
-}
-
-.badge-auto {
-    background: #e5e7eb;
-    color: #374151;
-}
-
-.badge-manual {
-    background: #ede9fe;
-    color: #5b21b6;
-}
-
-
-
-    </style>
-</head>
-<body>
+{% block content %}
 
 <h1>Alert Rules</h1>
+
+<div style="margin-bottom: 20px;">
+    <form method="post" action="/alert-rules/generate-movers">
+        <button type="submit">
+            Generate Rules From Movers
+        </button>
+    </form>
+</div>
 
 {% if message %}
 <div class="flash-message {{ message_type }}">
@@ -126,20 +18,9 @@
 </div>
 {% endif %}
 
-
-<nav>
-    <a href="/">Overview</a>
-    <a href="/status">Status</a>
-    <a href="/settings">Settings</a>
-    <a href="/charts">Charts</a>
-    <a href="/alerts">Alerts</a>
-    <a href="/alert-rules">Alert Rules</a>
-    <a href="/logs">Logs</a>
-</nav>
-
 <div class="form-box">
 
-        <h2>Create Threshold Rule</h2>
+    <h2>Create Threshold Rule</h2>
 
     <form method="post" action="/alert-rules/create">
         <input type="hidden" name="rule_type" value="threshold">
@@ -218,10 +99,8 @@
     <tr>
         <th>ID</th>
         <th>Rule</th>
-
         <th>Type</th>
         <th>Source</th>
-
         <th>Active</th>
         <th>Auto Disable</th>
         <th>Trigger Count</th>
@@ -232,6 +111,7 @@
     {% for rule in rules %}
     <tr>
         <td>{{ rule.id }}</td>
+
         <td>
             {% if rule.rule_type == "threshold" %}
                 {{ rule.symbol }}.{{ rule.metric }}
@@ -247,27 +127,17 @@
             {% endif %}
         </td>
 
-<td>
-
-{% if rule.rule_type == "threshold" %}
-    <span class="badge badge-threshold">
-        threshold
-    </span>
-
-{% elif rule.rule_type == "whale_spike" %}
-    <span class="badge badge-spike">
-        whale spike
-    </span>
-
-{% elif rule.rule_type == "whale_drop" %}
-    <span class="badge badge-drop">
-        whale drop
-    </span>
-{% endif %}
-
-</td>
         <td>
+            {% if rule.rule_type == "threshold" %}
+                <span class="badge badge-threshold">threshold</span>
+            {% elif rule.rule_type == "whale_spike" %}
+                <span class="badge badge-spike">whale spike</span>
+            {% elif rule.rule_type == "whale_drop" %}
+                <span class="badge badge-drop">whale drop</span>
+            {% endif %}
+        </td>
 
+        <td>
             {% if rule.auto_generated %}
                 <span class="badge badge-auto">
                     auto {{ rule.source }}
@@ -277,9 +147,7 @@
                     manual
                 </span>
             {% endif %}
-
         </td>
-
 
         <td>
             {% if rule.is_active %}
@@ -293,10 +161,10 @@
             {% endif %}
         </td>
 
-
         <td>{{ "Yes" if rule.auto_disable_on_trigger else "No" }}</td>
         <td>{{ rule.trigger_count }}</td>
         <td>{{ rule.last_triggered_at or "" }}</td>
+
         <td>
             {% if rule.is_active %}
             <form class="inline" method="post" action="/alert-rules/{{ rule.id }}/disable">
@@ -316,5 +184,4 @@
     {% endfor %}
 </table>
 
-</body>
-</html>
+{% endblock %}
