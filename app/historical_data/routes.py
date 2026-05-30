@@ -23,6 +23,10 @@ from app.historical_data.backfill_service import (
     backfill_intraday_history,
 )
 
+from app.historical_data.gap_analysis_service import (
+    calculate_gap_days,
+)
+
 from fastapi.responses import HTMLResponse
 
 router = APIRouter()
@@ -252,4 +256,15 @@ def backfill_intraday_api(
         symbols=symbol_list,
         period=period,
         frequency=frequency,
+    )
+
+
+@router.get("/api/historical-data/gaps")
+def gap_days_api(
+    symbol: str,
+    limit: int = 500,
+):
+    return calculate_gap_days(
+        symbol=symbol,
+        limit=limit,
     )
