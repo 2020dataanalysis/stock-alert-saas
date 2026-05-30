@@ -1,6 +1,6 @@
 from pathlib import Path
 import sqlite3
-
+from contextlib import closing
 
 BASE_DIR = Path(__file__).resolve().parents[2]
 
@@ -296,3 +296,33 @@ def get_historical_bars(
         dict(row)
         for row in rows
     ]
+
+
+def upsert_historical_bars(
+    bars,
+):
+    with closing(get_historical_connection()) as conn:
+        conn.executemany("""
+            INSERT INTO historical_bars (
+                symbol,
+                timestamp,
+                timeframe,
+                open,
+                high,
+                low,
+                close,
+                volume
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(symbol, timestamp, timeframe)
+            DO UPDATE SET
+                open = excluded.open,
+                high = excluded.high,
+                low = excluded.low,
+                close = excluded.close,
+                volume = excluded.volume
+        """, bars)
+
+        conn.commit()
+
+    return len(bars)

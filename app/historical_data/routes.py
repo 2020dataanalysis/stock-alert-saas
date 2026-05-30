@@ -19,6 +19,10 @@ from app.historical_data.statistics_service import (
     calculate_daily_opening_summary,
 )
 
+from app.historical_data.backfill_service import (
+    backfill_intraday_history,
+)
+
 from fastapi.responses import HTMLResponse
 
 router = APIRouter()
@@ -229,4 +233,23 @@ def opening_summary_api(
     return calculate_daily_opening_summary(
         symbol=symbol,
         lookback_limit=lookback_limit,
+    )
+
+
+@router.post("/api/historical-data/backfill/intraday")
+def backfill_intraday_api(
+    symbols: str,
+    period: int = 10,
+    frequency: int = 1,
+):
+    symbol_list = [
+        symbol.strip().upper()
+        for symbol in symbols.split(",")
+        if symbol.strip()
+    ]
+
+    return backfill_intraday_history(
+        symbols=symbol_list,
+        period=period,
+        frequency=frequency,
     )

@@ -1,9 +1,7 @@
 from datetime import datetime, timezone
-
 from app.historical_data.repository import (
-    upsert_historical_bar,
+    upsert_historical_bars,
 )
-
 
 def epoch_ms_to_iso_datetime(epoch_ms):
     return datetime.fromtimestamp(
@@ -31,6 +29,7 @@ def normalize_timeframe(
     return f"{frequency}_{frequency_type}"
 
 
+
 def import_price_history_candles(
     symbol,
     candles,
@@ -42,23 +41,25 @@ def import_price_history_candles(
         frequency,
     )
 
-    imported_count = 0
+    rows = []
 
     for candle in candles:
-        upsert_historical_bar(
-            symbol=symbol.upper(),
-            timestamp=epoch_ms_to_iso_datetime(
+        rows.append((
+            symbol.upper(),
+            epoch_ms_to_iso_datetime(
                 candle["datetime"]
             ),
-            timeframe=timeframe,
-            open_price=candle["open"],
-            high_price=candle["high"],
-            low_price=candle["low"],
-            close_price=candle["close"],
-            volume=candle["volume"],
-        )
+            timeframe,
+            candle["open"],
+            candle["high"],
+            candle["low"],
+            candle["close"],
+            candle["volume"],
+        ))
 
-        imported_count += 1
+    imported_count = upsert_historical_bars(
+        rows
+    )
 
     return {
         "status": "ok",
