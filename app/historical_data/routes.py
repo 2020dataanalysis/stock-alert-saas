@@ -11,9 +11,9 @@ from app.historical_data.service import (
 )
 
 from app.historical_data.import_service import (
+    import_live_schwab_price_history,
     import_schwab_price_history_response,
 )
-
 
 router = APIRouter()
 
@@ -134,4 +134,26 @@ def import_schwab_price_history_api(
         response_data=payload,
         frequency_type=frequency_type,
         frequency=frequency,
+    )
+
+
+
+@router.post("/api/historical-data/import/live-schwab-price-history")
+def import_live_schwab_price_history_api(
+    symbol: str,
+    period_type: str = "day",
+    period: int = 10,
+    frequency_type: str = "minute",
+    frequency: int = 1,
+    need_extended_hours_data: bool = True,
+    need_previous_close: bool = True,
+):
+    return import_live_schwab_price_history(
+        symbol=symbol,
+        period_type=period_type,
+        period=period,
+        frequency_type=frequency_type,
+        frequency=frequency,
+        need_extended_hours_data=need_extended_hours_data,
+        need_previous_close=need_previous_close,
     )
