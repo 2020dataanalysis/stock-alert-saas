@@ -1,5 +1,7 @@
 import json
 from pathlib import Path
+import time
+from datetime import datetime, timezone
 
 from schwab_client import SchwabClient
 
@@ -73,20 +75,50 @@ def import_live_schwab_price_history(
     need_extended_hours_data=True,
     need_previous_close=True,
 ):
-    client = get_schwab_client()
+    started_at = time.time()
 
-    response_data = client.market_data.get_price_history(
-        symbol=symbol,
-        period_type=period_type,
-        period=period,
-        frequency_type=frequency_type,
-        frequency=frequency,
-        need_extended_hours_data=need_extended_hours_data,
-        need_previous_close=need_previous_close,
-    )
+    try:
+        client = get_schwab_client()
 
-    return import_schwab_price_history_response(
-        response_data=response_data,
-        frequency_type=frequency_type,
-        frequency=frequency,
-    )
+        response_data = client.market_data.get_price_history(
+            symbol=symbol,
+            period_type=period_type,
+            period=period,
+            frequency_type=frequency_type,
+            frequency=frequency,
+            need_extended_hours_data=need_extended_hours_data,
+            need_previous_close=need_previous_close,
+        )
+
+        result = import_schwab_price_history_response(
+            response_data=response_data,
+            frequency_type=frequency_type,
+            frequency=frequency,
+        )
+
+        result["sdk_status"] = "success"
+        result["sdk_duration_seconds"] = round(
+            time.time() - started_at,
+            3,
+        )
+        result["sdk_checked_at"] = datetime.now(
+            timezone.utc
+        ).isoformat()
+
+        return result
+
+    except Exception as error:
+        return {
+            "status": "error",
+            "sdk_status": "failure",
+            "symbol": symbol.upper(),
+            "operation": "get_price_history",
+            "error": str(error),
+            "sdk_duration_seconds": round(
+                time.time() - started_at,
+                3,
+            ),
+            "sdk_checked_at": datetime.now(
+                timezone.utc
+            ).isoformat(),
+        }
