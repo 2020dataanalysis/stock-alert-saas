@@ -37,6 +37,11 @@ from app.historical_data.gap_opening_summary_service import (
     calculate_gap_opening_pattern_summary,
 )
 
+from app.historical_data.backfill_service import (
+    backfill_default_watchlist_intraday,
+    backfill_intraday_history,
+)
+
 from fastapi.responses import HTMLResponse
 
 router = APIRouter()
@@ -320,4 +325,15 @@ def gap_opening_summary_api(
         bucket_upper=bucket_upper,
         opening_minutes=opening_minutes,
         limit=limit,
+    )
+
+
+@router.post("/api/historical-data/backfill/watchlist")
+def backfill_watchlist_api(
+    period: int = 10,
+    frequency: int = 1,
+):
+    return backfill_default_watchlist_intraday(
+        period=period,
+        frequency=frequency,
     )
