@@ -1,36 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta http-equiv="refresh" content="10">
-    <title>Logs</title>
-    <style>
-        body { font-family: Arial; margin: 40px; }
-        a { margin-right: 15px; }
-        pre {
-            background: #111;
-            color: #eee;
-            padding: 15px;
-            overflow-x: auto;
-            max-height: 300px;
-        }
-    </style>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block extra_head %}
+<meta http-equiv="refresh" content="10">
+{% endblock %}
+
+{% block content %}
 
 <h1>System Logs</h1>
-
-<nav>
-    <a href="/">Overview</a>
-    <a href="/status">Status</a>
-    <a href="/settings">Settings</a>
-    <a href="/market-state">Market State</a>
-    <a href="/charts">Charts</a>
-    <a href="/alert-rules">Alert Rules</a>
-    <a href="/scalp-state">Scalp State</a>
-    <a href="/alerts">Alerts</a>
-    <a href="/logs">Logs</a>
-</nav>
-
 
 <h2>Legacy File Logs (launchctl)</h2>
 <pre>{{ logs.debug_log }}</pre>
@@ -41,10 +17,9 @@
 <h2>Streamer Errors</h2>
 <pre>{{ logs.streamer_err }}</pre>
 
-
 <h2>System Events</h2>
 
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<table>
     <tr>
         <th>Timestamp</th>
         <th>Event Type</th>
@@ -64,12 +39,9 @@
     {% endfor %}
 </table>
 
-
-
-
 <h2>Provider Errors</h2>
 
-<table border="1" cellpadding="8" cellspacing="0" width="100%">
+<table>
     <tr>
         <th>Timestamp</th>
         <th>Provider</th>
@@ -89,8 +61,4 @@
     {% endfor %}
 </table>
 
-
-
-
-</body>
-</html>
+{% endblock %}
