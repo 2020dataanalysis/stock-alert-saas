@@ -49,3 +49,38 @@ def backfill_intraday_history(
         "symbol_count": len(symbols),
         "results": results,
     }
+
+
+def backfill_daily_history(
+    symbols,
+    period=1,
+):
+    results = []
+
+    for symbol in symbols:
+        result = import_live_schwab_price_history(
+            symbol=symbol,
+            period_type="year",
+            period=period,
+            frequency_type="daily",
+            frequency=1,
+            need_extended_hours_data=False,
+            need_previous_close=True,
+        )
+
+        results.append(result)
+
+    return {
+        "status": "ok",
+        "symbol_count": len(symbols),
+        "results": results,
+    }
+
+
+def backfill_default_watchlist_daily(
+    period=1,
+):
+    return backfill_daily_history(
+        symbols=DEFAULT_BACKFILL_SYMBOLS,
+        period=period,
+    )

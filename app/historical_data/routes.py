@@ -1,14 +1,20 @@
 from fastapi import APIRouter
+from fastapi.responses import HTMLResponse
 
-from app.historical_data.service import (
-    initialize_historical_data_module,
-    list_historical_bars,
-    list_minute_outcomes,
-    list_recent_opening_scenarios,
-    save_historical_bar,
-    save_minute_outcome,
-    save_opening_scenario,
-    get_historical_data_health,
+from app.historical_data.backfill_service import (
+    backfill_daily_history,
+    backfill_default_watchlist_daily,
+    backfill_default_watchlist_intraday,
+    backfill_intraday_history,
+)
+
+from app.historical_data.gap_analysis_service import (
+    calculate_gap_bucket_statistics,
+    calculate_gap_days,
+)
+
+from app.historical_data.gap_opening_summary_service import (
+    calculate_gap_opening_pattern_summary,
 )
 
 from app.historical_data.import_service import (
@@ -16,34 +22,25 @@ from app.historical_data.import_service import (
     import_schwab_price_history_response,
 )
 
-from app.historical_data.statistics_service import (
-    calculate_daily_opening_summary,
-)
-
-from app.historical_data.backfill_service import (
-    backfill_intraday_history,
-)
-
-
-from app.historical_data.gap_analysis_service import (
-    calculate_gap_bucket_statistics,
-    calculate_gap_days,
-)
-
 from app.historical_data.opening_pattern_service import (
     calculate_opening_patterns,
 )
 
-from app.historical_data.gap_opening_summary_service import (
-    calculate_gap_opening_pattern_summary,
+from app.historical_data.service import (
+    get_historical_data_health,
+    initialize_historical_data_module,
+    list_historical_bars,
+    list_minute_outcomes,
+    list_recent_opening_scenarios,
+    save_historical_bar,
+    save_minute_outcome,
+    save_opening_scenario,
 )
 
-from app.historical_data.backfill_service import (
-    backfill_default_watchlist_intraday,
-    backfill_intraday_history,
+from app.historical_data.statistics_service import (
+    calculate_daily_opening_summary,
 )
 
-from fastapi.responses import HTMLResponse
 
 router = APIRouter()
 
@@ -189,40 +186,6 @@ def import_live_schwab_price_history_api(
     )
 
 
-@router.get("/historical-data/import", response_class=HTMLResponse)
-def historical_data_import_page():
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>Historical Data Import</title>
-    </head>
-    <body>
-        <h1>Historical Data Import</h1>
-
-        <form method="post" action="/api/historical-data/import/live-schwab-price-history">
-            <label>Symbol</label>
-            <input name="symbol" value="TSLA">
-
-            <label>Period Type</label>
-            <input name="period_type" value="day">
-
-            <label>Period</label>
-            <input name="period" value="1">
-
-            <label>Frequency Type</label>
-            <input name="frequency_type" value="minute">
-
-            <label>Frequency</label>
-            <input name="frequency" value="1">
-
-            <button type="submit">
-                Import
-            </button>
-        </form>
-    </body>
-    </html>
-    """
 
 @router.get("/historical-data/import", response_class=HTMLResponse)
 def historical_data_import_page():
@@ -342,3 +305,29 @@ def backfill_watchlist_api(
 @router.get("/api/historical-data/health")
 def historical_data_health_api():
     return get_historical_data_health()
+
+
+@router.post("/api/historical-data/backfill/daily")
+def backfill_daily_api(
+    symbols: str,
+    period: int = 1,
+):
+    symbol_list = [
+        symbol.strip().upper()
+        for symbol in symbols.split(",")
+        if symbol.strip()
+    ]
+
+    return backfill_daily_history(
+        symbols=symbol_list,
+        period=period,
+    )
+
+
+@router.post("/api/historical-data/backfill/watchlist-daily")
+def backfill_watchlist_daily_api(
+    period: int = 1,
+):
+    return backfill_default_watchlist_daily(
+        period=period,
+    )
