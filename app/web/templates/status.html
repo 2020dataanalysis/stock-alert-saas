@@ -1,33 +1,14 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Status Dashboard</title>
+{% extends "base.html" %}
 
-    <meta http-equiv="refresh" content="5">
+{% block extra_head %}
+<meta http-equiv="refresh" content="5">
+<link rel="stylesheet" href="/static/status.css">
+<script src="/static/status.js" defer></script>
+{% endblock %}
 
-    <link rel="stylesheet" href="/static/status.css">
-    <script src="/static/status.js" defer></script>
-</head>
-
-<body>
+{% block content %}
 
 <h1>System Status</h1>
-
-
-<nav>
-    <a href="/">Overview</a>
-    <a href="/status">Status</a>
-    <a href="/settings">Settings</a>
-    <a href="/market-state">Market State</a>
-    <a href="/charts">Charts</a>
-    <a href="/alert-rules">Alert Rules</a>
-    <a href="/scalp-state">Scalp State</a>
-    <a href="/alerts">Alerts</a>
-    <a href="/logs">Logs</a>
-</nav>
-
-
-
 
 <div class="card-container">
 
@@ -48,13 +29,10 @@
 
             {% if streamer_status == 'ONLINE' %}
                 <span class="status-indicator status-online"></span>
-
             {% elif streamer_status == 'STALE' %}
                 <span class="status-indicator status-stale"></span>
-
             {% else %}
                 <span class="status-indicator status-offline"></span>
-
             {% endif %}
 
             <span>{{ streamer_status }}</span>
@@ -117,7 +95,6 @@
             {% endif %}
         </div>
 
-
         <div class="small-text">
             {{ message }}
         </div>
@@ -127,16 +104,9 @@
         <div class="card-title">Market Hours</div>
 
         <div class="small-text">
-            <strong>Pre:</strong>
-            {{ market_hours.premarket_display }}
-            <br>
-
-            <strong>Regular:</strong>
-            {{ market_hours.regular_display }}
-            <br>
-
-            <strong>Post:</strong>
-            {{ market_hours.after_hours_display }}
+            <strong>Pre:</strong> {{ market_hours.premarket_display }}<br>
+            <strong>Regular:</strong> {{ market_hours.regular_display }}<br>
+            <strong>Post:</strong> {{ market_hours.after_hours_display }}
         </div>
 
         <div class="tiny-text">
@@ -154,8 +124,6 @@
                 offline
             {% endif %}
         ">
-
-
             {{ token_status.token_status.replace("_", " ").title() }}
         </div>
 
@@ -186,7 +154,6 @@
         <div class="card-title">Latest System Event</div>
 
         {% if latest_system_event %}
-
             <div class="small-text">
                 <strong>{{ latest_system_event.event_type }}</strong>
             </div>
@@ -202,13 +169,10 @@
             <div class="tiny-text">
                 {{ latest_system_event.timestamp }}
             </div>
-
         {% else %}
-
             <div class="small-text">
                 No system events yet.
             </div>
-
         {% endif %}
     </div>
 
@@ -216,7 +180,6 @@
         <div class="card-title">Latest Provider Error</div>
 
         {% if latest_provider_error %}
-
             <div class="small-text">
                 <strong>{{ latest_provider_error.error_type }}</strong>
             </div>
@@ -238,17 +201,13 @@
             <div class="tiny-text">
                 {{ latest_provider_error.timestamp }}
             </div>
-
         {% else %}
-
             <div class="small-text">
                 No provider errors.
             </div>
-
         {% endif %}
     </div>
 
 </div>
 
-</body>
-</html>
+{% endblock %}

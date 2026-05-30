@@ -11,8 +11,20 @@
     flex-shrink: 0;
 }
 
-.status-online { background-color: #00c853; }
-.status-stale { background-color: #ffd600; }
-.status-offline { background-color: #d50000; }
+.status-online {
+    background-color: #00c853;
+}
 
-hr { margin: 10px 0; }
+.status-stale {
+    background-color: #ffd600;
+}
+
+.status-offline {
+    background-color: #d50000;
+}
+
+hr {
+    margin: 10px 0;
+    border: 0;
+    border-top: 1px solid #374151;
+}
