@@ -1,32 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Charts</title>
+{% extends "base.html" %}
 
-    <meta http-equiv="refresh" content="10">
+{% block extra_head %}
+<meta http-equiv="refresh" content="10">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-    <style>
-        body {
-            font-family: Arial;
-            margin: 40px;
-        }
-
-        canvas {
-            max-width: 900px;
-            margin-bottom: 60px;
-        }
-    </style>
-</head>
-<body>
+{% block content %}
 
 <h1>Stock Charts</h1>
 
 <div id="charts"></div>
 
 <script>
-
 const symbols = {{ settings["favorite_symbols"] | tojson }};
 
 async function loadChart(symbol) {
@@ -41,7 +26,6 @@ async function loadChart(symbol) {
     const prices = data.prices;
     const timestamps = data.timestamps;
 
-    // ALERT MARKERS
     const alertPoints = data.alerts.map(a => {
         if (a.index === null || a.index === undefined) return null;
 
@@ -81,8 +65,6 @@ async function loadChart(symbol) {
 }
 
 symbols.forEach(loadChart);
-
 </script>
 
-</body>
-</html>
+{% endblock %}
