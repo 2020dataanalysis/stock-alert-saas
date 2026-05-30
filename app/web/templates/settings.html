@@ -1,58 +1,19 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Settings</title>
-    <style>
-        body {
-            font-family: Arial;
-            margin: 40px;
-        }
+{% extends "base.html" %}
 
-        input[type="text"],
-        input[type="number"] {
-            padding: 6px;
-            margin: 5px 0;
-            width: 300px;
-        }
-
-        input[type="checkbox"] {
-            width: auto;
-            margin-right: 8px;
-        }
-
-        button {
-            padding: 8px 12px;
-        }
-
-        a {
-            margin-right: 15px;
-        }
-    </style>
-
-
-</head>
-<body>
+{% block content %}
 
 <h1>Settings</h1>
 
-<nav>
-    <a href="/">Overview</a>
-    <a href="/settings">Settings</a>
-    <a href="/charts">Charts</a>
-    <a href="/alerts">Alerts</a>
-</nav>
-<br>
 <form method="post" action="/settings">
 
     <label>Favorite Symbols</label><br>
     <input name="favorite_symbols" value="{{ settings['favorite_symbols'] | join(',') }}"><br>
     <br>
+
     <label>
         <input type="checkbox" name="use_movers" value="true"
         {% if settings['use_movers'] %}checked{% endif %}>
         Use Movers
-
-
     </label><br>
 
     <label>
@@ -72,27 +33,28 @@
     </label><br><br>
 
     <label>Movers Limit</label><br>
-
-
     <input name="movers_limit" type="number" value="{{ settings['movers_limit'] }}"><br>
 
     <h3>Alerts</h3>
 
     <label>Price Spike %</label><br>
-    <input name="price_spike_pct" type="number" step="0.1" value="{{ settings['price_spike_pct'] }}"><br>
+    <input name="price_spike_pct" type="number" step="0.1"
+           value="{{ settings['price_spike_pct'] }}"><br>
 
     <label>Volume Spike %</label><br>
-    <input name="volume_spike_pct" type="number" step="0.1" value="{{ settings['volume_spike_pct'] }}"><br>
+    <input name="volume_spike_pct" type="number" step="0.1"
+           value="{{ settings['volume_spike_pct'] }}"><br>
 
     <label>Window Size</label><br>
-    <input name="window_size" type="number" value="{{ settings['window_size'] }}"><br>
+    <input name="window_size" type="number"
+           value="{{ settings['window_size'] }}"><br>
 
     <label>Poll Seconds</label><br>
-    <input name="poll_seconds" type="number" value="{{ settings['poll_seconds'] }}"><br><br>
+    <input name="poll_seconds" type="number"
+           value="{{ settings['poll_seconds'] }}"><br><br>
 
     <button type="submit">Save</button>
 
 </form>
 
-</body>
-</html>
+{% endblock %}
