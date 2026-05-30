@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #111827;
+            color: #f3f4f6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-nav {
+            background: #1f2937;
+            padding: 14px 20px;
+            border-bottom: 1px solid #374151;
+        }
+
+        .main-nav a {
+            color: #f3f4f6;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: 500;
+        }
+
+        .main-nav a:hover {
+            text-decoration: underline;
+        }
+
+        .page-content {
+            padding: 24px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    {% include "partials/nav.html" %}
+
+    <div class="page-content">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</body>
+
+</html>
