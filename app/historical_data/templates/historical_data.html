@@ -2,6 +2,44 @@
 <html>
 <head>
     <title>Historical Data</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111827;
+            color: #f3f4f6;
+            margin: 0;
+            padding: 24px;
+        }
+
+        nav a {
+            color: #93c5fd;
+            margin-right: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+            background: #1f2937;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #374151;
+            text-align: left;
+        }
+
+        th {
+            background: #374151;
+        }
+
+        pre {
+            background: #1f2937;
+            padding: 16px;
+            overflow: auto;
+        }
+    </style>
 </head>
 
 <body>
@@ -19,7 +57,19 @@
     </nav>
 
     <h2>Dataset Health</h2>
-    <pre id="health-output">Loading...</pre>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Symbol</th>
+                <th>Timeframe</th>
+                <th>Bars</th>
+                <th>Earliest</th>
+                <th>Latest</th>
+            </tr>
+        </thead>
+        <tbody id="health-body"></tbody>
+    </table>
 
     <h2>Watchlist Gap Statistics</h2>
     <pre id="gap-output">Loading...</pre>
@@ -28,6 +78,36 @@
     <pre id="opening-output">Loading...</pre>
 
     <script>
+        function formatDate(value) {
+            if (!value) {
+                return "-";
+            }
+
+            return value.slice(0, 10);
+        }
+
+        async function loadHealthTable() {
+            const response = await fetch("/api/historical-data/health");
+            const data = await response.json();
+
+            const body = document.getElementById("health-body");
+            body.innerHTML = "";
+
+            for (const row of data.datasets) {
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td>${row.symbol}</td>
+                    <td>${row.timeframe}</td>
+                    <td>${row.bar_count}</td>
+                    <td>${formatDate(row.earliest_timestamp)}</td>
+                    <td>${formatDate(row.latest_timestamp)}</td>
+                `;
+
+                body.appendChild(tr);
+            }
+        }
+
         async function loadJson(url, elementId) {
             const response = await fetch(url);
             const data = await response.json();
@@ -36,7 +116,7 @@
                 JSON.stringify(data, null, 2);
         }
 
-        loadJson("/api/historical-data/health", "health-output");
+        loadHealthTable();
 
         loadJson(
             "/api/historical-data/watchlist/gaps/statistics?bucket_lower=-1.0&bucket_upper=-0.5&limit=500",
