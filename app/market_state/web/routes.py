@@ -2,7 +2,11 @@ from pathlib import Path
 
 from fastapi import APIRouter
 from fastapi.requests import Request
+# from fastapi.templating import Jinja2Templates
+from jinja2 import FileSystemLoader
 from fastapi.templating import Jinja2Templates
+from jinja2 import FileSystemLoader
+from jinja2 import FileSystemLoader
 
 from app.market_state.event_log_service import get_recent_market_events
 from app.market_state.latest_service import get_latest_market_state
@@ -18,9 +22,18 @@ TEMPLATE_DIR = (
 
 router = APIRouter()
 
+SHARED_TEMPLATE_DIR = (
+    BASE_DIR.parents[1] / "web" / "templates"
+)
+
 templates = Jinja2Templates(
     directory=str(TEMPLATE_DIR)
 )
+
+templates.env.loader = FileSystemLoader([
+    str(TEMPLATE_DIR),
+    str(SHARED_TEMPLATE_DIR),
+])
 
 
 def build_hud_summary(results):
