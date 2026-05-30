@@ -8,6 +8,7 @@ from app.historical_data.service import (
     save_historical_bar,
     save_minute_outcome,
     save_opening_scenario,
+    get_historical_data_health,
 )
 
 from app.historical_data.import_service import (
@@ -337,3 +338,7 @@ def backfill_watchlist_api(
         period=period,
         frequency=frequency,
     )
+
+@router.get("/api/historical-data/health")
+def historical_data_health_api():
+    return get_historical_data_health()

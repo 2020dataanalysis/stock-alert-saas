@@ -326,3 +326,22 @@ def upsert_historical_bars(
         conn.commit()
 
     return len(bars)
+
+def get_historical_bar_counts():
+    with get_historical_connection() as conn:
+        rows = conn.execute("""
+            SELECT
+                symbol,
+                timeframe,
+                COUNT(*) AS bar_count,
+                MIN(timestamp) AS earliest_timestamp,
+                MAX(timestamp) AS latest_timestamp
+            FROM historical_bars
+            GROUP BY symbol, timeframe
+            ORDER BY symbol, timeframe
+        """).fetchall()
+
+    return [
+        dict(row)
+        for row in rows
+    ]

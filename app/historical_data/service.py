@@ -6,6 +6,7 @@ from app.historical_data.repository import (
     get_recent_opening_scenarios,
     init_historical_db,
     upsert_historical_bar,
+    get_historical_bar_counts,
 )
 
 
@@ -139,4 +140,16 @@ def list_historical_bars(
     return {
         "count": len(bars),
         "bars": bars,
+    }
+
+
+def get_historical_data_health():
+    init_historical_db()
+
+    counts = get_historical_bar_counts()
+
+    return {
+        "status": "ok",
+        "dataset_count": len(counts),
+        "datasets": counts,
     }
