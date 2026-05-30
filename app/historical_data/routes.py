@@ -33,6 +33,10 @@ from app.historical_data.opening_pattern_service import (
     calculate_opening_patterns,
 )
 
+from app.historical_data.gap_opening_summary_service import (
+    calculate_gap_opening_pattern_summary,
+)
+
 from fastapi.responses import HTMLResponse
 
 router = APIRouter()
@@ -298,6 +302,22 @@ def opening_patterns_api(
 ):
     return calculate_opening_patterns(
         symbol=symbol,
+        opening_minutes=opening_minutes,
+        limit=limit,
+    )
+
+@router.get("/api/historical-data/gaps/opening-summary")
+def gap_opening_summary_api(
+    symbol: str,
+    bucket_lower: float,
+    bucket_upper: float,
+    opening_minutes: int = 30,
+    limit: int = 500,
+):
+    return calculate_gap_opening_pattern_summary(
+        symbol=symbol,
+        bucket_lower=bucket_lower,
+        bucket_upper=bucket_upper,
         opening_minutes=opening_minutes,
         limit=limit,
     )
