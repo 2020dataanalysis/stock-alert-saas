@@ -45,6 +45,10 @@ from app.historical_data.watchlist_gap_service import (
     calculate_watchlist_gap_statistics,
 )
 
+from app.historical_data.watchlist_gap_opening_service import (
+    calculate_watchlist_gap_opening_summary,
+)
+
 router = APIRouter()
 
 
@@ -344,5 +348,19 @@ def watchlist_gap_statistics_api(
     return calculate_watchlist_gap_statistics(
         bucket_lower=bucket_lower,
         bucket_upper=bucket_upper,
+        limit=limit,
+    )
+
+@router.get("/api/historical-data/watchlist/gaps/opening-summary")
+def watchlist_gap_opening_summary_api(
+    bucket_lower: float,
+    bucket_upper: float,
+    opening_minutes: int = 30,
+    limit: int = 500,
+):
+    return calculate_watchlist_gap_opening_summary(
+        bucket_lower=bucket_lower,
+        bucket_upper=bucket_upper,
+        opening_minutes=opening_minutes,
         limit=limit,
     )
