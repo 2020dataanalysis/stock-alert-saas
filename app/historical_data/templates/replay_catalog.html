@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Replay Catalog{% endblock %}
+
+{% block content %}
+<h1>Replay Catalog</h1>
+
+<p class="subtitle">
+    Review available streamed quote data and open a replay session.
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>Symbol</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Start Time</th>
+            <th>End Time</th>
+            <th>Duration</th>
+            <th>Data Points</th>
+            <th>Replay</th>
+        </tr>
+    </thead>
+    <tbody id="replay-catalog-body">
+        <tr>
+            <td colspan="8">Loading replay catalog...</td>
+        </tr>
+    </tbody>
+</table>
+
+<script src="/historical-data/static/js/replay_catalog.js"></script>
+{% endblock %}

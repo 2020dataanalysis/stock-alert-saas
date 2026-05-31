@@ -36,6 +36,7 @@ from app.scalp_state.routes import router as scalp_state_router
 
 from app.historical_data.routes import router as historical_data_router
 
+from fastapi.staticfiles import StaticFiles
 
 import sqlite3
 
@@ -415,3 +416,11 @@ async def alerts_page(request: Request):
 @app.api_route("/health", methods=["GET", "HEAD"])
 def health():
     return {"status": "ok"}
+
+
+
+app.mount(
+    "/historical-data/static",
+    StaticFiles(directory="app/historical_data/static"),
+    name="historical_data_static",
+)

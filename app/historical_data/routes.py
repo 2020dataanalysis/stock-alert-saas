@@ -50,6 +50,12 @@ from app.historical_data.watchlist_gap_opening_service import (
 )
 
 
+
+from app.historical_data.replay_catalog_service import (
+    get_replay_catalog,
+)
+
+
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
@@ -396,4 +402,24 @@ def watchlist_gap_opening_summary_api(
         bucket_upper=bucket_upper,
         opening_minutes=opening_minutes,
         limit=limit,
+    )
+
+
+
+@router.get("/api/replay/catalog")
+def replay_catalog_api():
+    return get_replay_catalog()
+
+
+
+@router.get("/historical-data/replay-catalog")
+def replay_catalog_page(
+    request: Request,
+):
+    return templates.TemplateResponse(
+        request,
+        "replay_catalog.html",
+        {
+            "request": request,
+        },
     )
