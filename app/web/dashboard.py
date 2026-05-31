@@ -65,6 +65,12 @@ app.mount(
     name="scalp_state_static",
 )
 
+app.mount(
+    "/historical-data-static",
+    StaticFiles(directory="app/historical_data/static"),
+    name="historical_data_static",
+)
+
 app.include_router(api_router)
 app.include_router(market_state_router)
 app.include_router(scalp_state_router)
