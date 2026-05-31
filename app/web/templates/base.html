@@ -288,6 +288,9 @@ select {
 
     </style>
 
+    {% block extra_head %}
+    {% endblock %}
+
 </head>
 
 <body>
@@ -298,6 +301,9 @@ select {
         {% block content %}
         {% endblock %}
     </div>
+
+    {% block extra_scripts %}
+    {% endblock %}
 
 </body>
 

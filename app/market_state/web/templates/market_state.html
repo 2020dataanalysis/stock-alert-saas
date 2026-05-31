@@ -1,20 +1,15 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Market State Replay</title>
+{% extends "base.html" %}
 
-    <link
-        rel="stylesheet"
-        href="/market-state-static/css/market_state.css"
-    >
-</head>
+{% block extra_head %}
+<link
+    rel="stylesheet"
+    href="/market-state-static/css/market_state.css"
+>
+{% endblock %}
 
-<body>
+{% block content %}
 
 <h1>Market State Replay</h1>
-
-{% include "partials/nav.html" %}
-
 
 {% include "partials/controls.html" %}
 
@@ -32,6 +27,9 @@
 
 {% include "partials/replay_table.html" %}
 
+{% endblock %}
+
+{% block extra_scripts %}
 <script src="/market-state-static/js/modules/state.js"></script>
 <script src="/market-state-static/js/modules/data.js"></script>
 <script src="/market-state-static/js/modules/hud.js"></script>
@@ -41,6 +39,4 @@
 <script src="/market-state-static/js/modules/overlays.js"></script>
 <script src="/market-state-static/js/modules/event_log.js"></script>
 <script src="/market-state-static/js/market_state.js"></script>
-
-</body>
-</html>
+{% endblock %}
