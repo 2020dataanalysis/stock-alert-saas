@@ -3,7 +3,8 @@ from pathlib import Path
 from fastapi import APIRouter
 from fastapi.requests import Request
 from fastapi.templating import Jinja2Templates
-
+from jinja2 import FileSystemLoader
+from jinja2 import FileSystemLoader
 from app.scalp_state.service import (
     get_recent_state_transitions,
     get_scalp_state_rows,
@@ -18,9 +19,18 @@ TEMPLATE_DIR = (
 
 router = APIRouter()
 
+SHARED_TEMPLATE_DIR = (
+    BASE_DIR.parent / "web" / "templates"
+)
+
 templates = Jinja2Templates(
     directory=str(TEMPLATE_DIR)
 )
+
+templates.env.loader = FileSystemLoader([
+    str(TEMPLATE_DIR),
+    str(SHARED_TEMPLATE_DIR),
+])
 
 
 @router.get("/scalp-state")
