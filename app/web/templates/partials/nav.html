@@ -25,10 +25,18 @@
        Charts
     </a>
 
-    <a href="/historical-data"
-       class="{% if request.url.path.startswith('/historical-data') %}active{% endif %}">
-       Historical Data
-    </a>
+
+   <a href="/historical-data/replay-catalog"
+      class="{% if request.url.path.startswith('/historical-data/replay') %}active{% endif %}">
+      Replay
+   </a>
+
+   <a href="/statistics"
+      class="{% if request.url.path == '/statistics' %}active{% endif %}">
+      Statistics
+   </a>
+
+
 
     <a href="/market-state"
        class="{% if request.url.path.startswith('/market-state') %}active{% endif %}">

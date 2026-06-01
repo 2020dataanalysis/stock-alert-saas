@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Replay{% endblock %}
+
+{% block content %}
+<h1>Replay</h1>
+
+<p class="subtitle">
+    Intrabar replay will rebuild live-forming candles from streamed quote data.
+</p>
+
+<div>
+    <strong>Symbol:</strong>
+    <span id="replay-symbol">Loading...</span>
+</div>
+
+<div style="margin-top: 24px;">
+    <label for="replay-speed">Replay Speed</label>
+    <select id="replay-speed">
+        <option value="1">1x</option>
+        <option value="5">5x</option>
+        <option value="10">10x</option>
+        <option value="25">25x</option>
+        <option value="50">50x</option>
+        <option value="100">100x</option>
+    </select>
+</div>
+
+<div style="margin-top: 24px;">
+    <button type="button" id="play-button">Play</button>
+    <button type="button" id="pause-button">Pause</button>
+</div>
+
+<div style="margin-top: 24px; padding: 24px; border: 1px solid #374151;">
+    Chart placeholder
+</div>
+
+<script src="/historical-data/static/js/replay.js"></script>
+{% endblock %}

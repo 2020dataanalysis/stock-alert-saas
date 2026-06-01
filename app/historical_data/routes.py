@@ -412,6 +412,7 @@ def replay_catalog_api():
 
 
 
+
 @router.get("/historical-data/replay-catalog")
 def replay_catalog_page(
     request: Request,
@@ -419,6 +420,33 @@ def replay_catalog_page(
     return templates.TemplateResponse(
         request,
         "replay_catalog.html",
+        {
+            "request": request,
+        },
+    )
+
+
+@router.get("/statistics")
+def statistics_page(
+    request: Request,
+):
+    return templates.TemplateResponse(
+        request,
+        "historical_data.html",
+        {
+            "request": request,
+        },
+    )
+
+
+
+@router.get("/historical-data/replay")
+def replay_page(
+    request: Request,
+):
+    return templates.TemplateResponse(
+        request,
+        "replay.html",
         {
             "request": request,
         },
