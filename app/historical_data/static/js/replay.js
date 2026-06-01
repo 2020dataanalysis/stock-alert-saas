@@ -19,6 +19,17 @@ function formatTimestamp(timestamp) {
     return timestamp.replace("T", " ").replace("+00:00", "");
 }
 
+function buildQuoteUrl(symbol, tradeDate = null) {
+    const params = new URLSearchParams();
+    params.set("symbol", symbol);
+
+    if (tradeDate) {
+        params.set("trade_date", tradeDate);
+    }
+
+    return `/api/replay/quotes?${params.toString()}`;
+}
+
 function renderSelectedSession(row) {
     const selectedSessionElement = document.getElementById("selected-session");
 
@@ -65,7 +76,7 @@ async function loadReplaySummary() {
     `;
 }
 
-async function loadReplayQuotes() {
+async function loadReplayQuotes(tradeDate = null) {
     const symbol = getQueryParam("symbol");
     const dataInfoElement = document.getElementById("replay-data-info");
 
@@ -73,8 +84,10 @@ async function loadReplayQuotes() {
         return;
     }
 
+    dataInfoElement.textContent = "Loading quote data...";
+
     const response = await fetch(
-        `/api/replay/quotes?symbol=${encodeURIComponent(symbol)}`
+        buildQuoteUrl(symbol, tradeDate)
     );
 
     const quotes = await response.json();
@@ -87,8 +100,12 @@ async function loadReplayQuotes() {
     const firstQuote = quotes[0];
     const lastQuote = quotes[quotes.length - 1];
 
+    const label = tradeDate
+        ? `Loaded Quotes for ${tradeDate}`
+        : "Loaded Quotes";
+
     dataInfoElement.innerHTML = `
-        <div><strong>Loaded Quotes:</strong> ${formatNumber(quotes.length)}</div>
+        <div><strong>${label}:</strong> ${formatNumber(quotes.length)}</div>
         <div><strong>First Quote:</strong> ${formatTimestamp(firstQuote.timestamp)}</div>
         <div><strong>Last Quote:</strong> ${formatTimestamp(lastQuote.timestamp)}</div>
     `;
@@ -129,7 +146,10 @@ async function loadReplayDates() {
     document.querySelectorAll(".replay-session-button").forEach((button) => {
         button.addEventListener("click", () => {
             const index = Number(button.dataset.sessionIndex);
-            renderSelectedSession(dates[index]);
+            const selectedSession = dates[index];
+
+            renderSelectedSession(selectedSession);
+            loadReplayQuotes(selectedSession.trade_date);
         });
     });
 }
