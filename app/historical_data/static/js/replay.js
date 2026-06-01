@@ -4,9 +4,12 @@ let selectedSessionIndex = 0;
 let replayChart = null;
 let candleSeries = null;
 
-let currentCandles = [];
-let replayIndex = 0;
+let replayQuotes = [];
+let replayStartTimestamp = null;
+let replayCurrentTimestamp = null;
 let replayTimer = null;
+
+const REPLAY_TICK_MS = 250;
 
 function getQueryParam(name) {
     const params = new URLSearchParams(window.location.search);
@@ -41,10 +44,18 @@ function formatDayOfWeek(tradeDate) {
     });
 }
 
-function formatReplayTime(unixSeconds) {
-    const date = new Date(unixSeconds * 1000);
+function formatReplayTimestamp(unixMs) {
+    if (!unixMs) {
+        return "";
+    }
+
+    const date = new Date(unixMs);
 
     return date.toLocaleString("en-US", {
+        weekday: "long",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
         hour: "numeric",
         minute: "2-digit",
         second: "2-digit",
@@ -135,6 +146,17 @@ function buildOneMinuteCandles(quotes) {
     return Array.from(candleMap.values()).sort((a, b) => a.time - b.time);
 }
 
+function getVisibleReplayQuotes() {
+    if (!replayCurrentTimestamp) {
+        return [];
+    }
+
+    return replayQuotes.filter((quote) => {
+        const quoteTime = new Date(quote.timestamp).getTime();
+        return quoteTime <= replayCurrentTimestamp;
+    });
+}
+
 function updatePlaybackStatus() {
     const statusElement = document.getElementById("replay-playback-status");
 
@@ -142,35 +164,34 @@ function updatePlaybackStatus() {
         return;
     }
 
-    if (!currentCandles.length) {
-        statusElement.textContent = "No replay candles loaded.";
-        return;
-    }
-
-    const currentCandle = currentCandles[Math.max(0, replayIndex - 1)];
-
-    if (!currentCandle) {
+    if (!replayQuotes.length || !replayCurrentTimestamp) {
         statusElement.textContent = "Replay ready.";
         return;
     }
 
+    const speedElement = document.getElementById("replay-speed");
+    const speed = Number(speedElement.value || 1);
+
+    const visibleQuotes = getVisibleReplayQuotes();
+
     statusElement.innerHTML = `
-        <div><strong>Replay Candle:</strong> ${replayIndex} / ${currentCandles.length}</div>
-        <div><strong>Replay Time:</strong> ${formatReplayTime(currentCandle.time)}</div>
-        <div><strong>Close:</strong> ${currentCandle.close}</div>
+        <div><strong>Replay Time:</strong> ${formatReplayTimestamp(replayCurrentTimestamp)}</div>
+        <div><strong>Replay Speed:</strong> ${speed}x</div>
+        <div><strong>Visible Quotes:</strong> ${formatNumber(visibleQuotes.length)} / ${formatNumber(replayQuotes.length)}</div>
     `;
 }
 
-function renderReplayWindow() {
+function renderReplayAtCurrentTime() {
     initializeChart();
 
     if (!candleSeries) {
         return;
     }
 
-    const visibleCandles = currentCandles.slice(0, replayIndex);
+    const visibleQuotes = getVisibleReplayQuotes();
+    const candles = buildOneMinuteCandles(visibleQuotes);
 
-    candleSeries.setData(visibleCandles);
+    candleSeries.setData(candles);
 
     requestAnimationFrame(() => {
         resizeChart();
@@ -180,37 +201,59 @@ function renderReplayWindow() {
     updatePlaybackStatus();
 }
 
-function resetReplay(candles) {
+function resetReplay(quotes) {
     pauseReplay();
 
-    currentCandles = candles;
-    replayIndex = currentCandles.length ? 1 : 0;
+    replayQuotes = quotes;
 
-    renderReplayWindow();
+    if (!replayQuotes.length) {
+        replayStartTimestamp = null;
+        replayCurrentTimestamp = null;
+        renderReplayAtCurrentTime();
+        return;
+    }
+
+    replayStartTimestamp = new Date(replayQuotes[0].timestamp).getTime();
+    replayCurrentTimestamp = replayStartTimestamp;
+
+    renderReplayAtCurrentTime();
 }
 
 function playReplay() {
-    if (!currentCandles.length) {
+    if (!replayQuotes.length || !replayCurrentTimestamp) {
         return;
     }
 
     pauseReplay();
 
-    const speedElement = document.getElementById("replay-speed");
-    const candlesPerTick = Number(speedElement.value || 1);
+    const lastTimestamp = new Date(
+        replayQuotes[replayQuotes.length - 1].timestamp
+    ).getTime();
+
+    let lastRealTimestamp = Date.now();
 
     replayTimer = window.setInterval(() => {
-        replayIndex = Math.min(
-            replayIndex + candlesPerTick,
-            currentCandles.length
+        const now = Date.now();
+        const realElapsedMs = now - lastRealTimestamp;
+
+        lastRealTimestamp = now;
+
+        const speedElement = document.getElementById("replay-speed");
+        const speed = Number(speedElement.value || 1);
+
+        const marketElapsedMs = realElapsedMs * speed;
+
+        replayCurrentTimestamp = Math.min(
+            replayCurrentTimestamp + marketElapsedMs,
+            lastTimestamp
         );
 
-        renderReplayWindow();
+        renderReplayAtCurrentTime();
 
-        if (replayIndex >= currentCandles.length) {
+        if (replayCurrentTimestamp >= lastTimestamp) {
             pauseReplay();
         }
-    }, 250);
+    }, REPLAY_TICK_MS);
 }
 
 function pauseReplay() {
@@ -218,12 +261,6 @@ function pauseReplay() {
         window.clearInterval(replayTimer);
         replayTimer = null;
     }
-}
-
-function renderChart(quotes) {
-    const candles = buildOneMinuteCandles(quotes);
-
-    resetReplay(candles);
 }
 
 function renderSelectedSession(row) {
@@ -320,6 +357,7 @@ async function loadReplayQuotes(tradeDate = null) {
 
     if (!quotes.length) {
         dataInfoElement.textContent = "No quote data found.";
+        resetReplay([]);
         return;
     }
 
@@ -336,7 +374,7 @@ async function loadReplayQuotes(tradeDate = null) {
         <div><strong>Last Quote:</strong> ${formatTimestamp(lastQuote.timestamp)}</div>
     `;
 
-    renderChart(quotes);
+    resetReplay(quotes);
 }
 
 async function loadReplayDates() {
