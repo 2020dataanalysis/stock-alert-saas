@@ -2,10 +2,8 @@ from datetime import datetime, timezone
 from app.storage.sqlite_store import get_connection, get_log_connection
 
 from app.services.token_status_service import get_token_status
-from app.services.market_hours_service import (
-    is_trading_session,
-    get_market_status,
-)
+from app.services.market_hours_service import get_market_status
+
 from app.services.watchlist_service import build_watchlist
 
 from app.storage.sqlite_store import (
@@ -32,11 +30,14 @@ def get_latest_heartbeat(cursor):
     
 
 def get_streamer_mode():
-    from contextlib import closing
     with market_db_connection() as conn:
         cur = conn.cursor()
 
-        cur.execute("SELECT mode, until_timestamp FROM streamer_control WHERE id = 1")
+        cur.execute("""
+            SELECT mode, until_timestamp
+            FROM streamer_control
+            WHERE id = 1
+        """)
         row = cur.fetchone()
 
     if not row:
@@ -50,17 +51,8 @@ def get_streamer_mode():
 
         if now > until:
             return "auto"
+
         return "online"
-
-    if mode == "online":
-        if is_trading_session():
-            return "online"
-        return "offline"
-
-    if mode == "auto":
-        if is_trading_session():
-            return "online"
-        return "offline"
 
     return mode
 
