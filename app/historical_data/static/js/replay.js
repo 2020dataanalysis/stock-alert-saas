@@ -82,5 +82,35 @@ async function loadReplayQuotes() {
     `;
 }
 
+
+
+async function loadReplayDates() {
+    const symbol = getQueryParam("symbol");
+
+    const datesElement =
+        document.getElementById("replay-dates");
+
+    if (!symbol) {
+        return;
+    }
+
+    const response = await fetch(
+        `/api/replay/dates?symbol=${encodeURIComponent(symbol)}`
+    );
+
+    const dates = await response.json();
+
+    datesElement.innerHTML = dates.map(
+        (row) => `
+            <div>
+                ${row.trade_date}
+                (${row.quote_count.toLocaleString()} quotes)
+            </div>
+        `
+    ).join("");
+}
+
+
 loadReplaySummary();
 loadReplayQuotes();
+loadReplayDates();
