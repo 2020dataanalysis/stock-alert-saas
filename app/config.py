@@ -10,7 +10,7 @@ DEFAULT_SETTINGS = {
     "price_spike_pct": 0.5,
     "volume_spike_pct": 5,
     "window_size": 5,
-    "poll_seconds": 2,
+    "poll_seconds": 1,
 }
 
 
