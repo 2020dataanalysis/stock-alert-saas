@@ -24,8 +24,6 @@ function formatTimestamp(timestamp) {
     return timestamp.replace("T", " ").replace("+00:00", "");
 }
 
-
-
 function formatDayOfWeek(tradeDate) {
     if (!tradeDate) {
         return "";
@@ -37,7 +35,6 @@ function formatDayOfWeek(tradeDate) {
         weekday: "long",
     });
 }
-
 
 function buildQuoteUrl(symbol, tradeDate = null) {
     const params = new URLSearchParams();
@@ -51,15 +48,11 @@ function buildQuoteUrl(symbol, tradeDate = null) {
 }
 
 function resizeChart() {
-    const chartElement = document.getElementById("replay-chart");
-
-    if (!replayChart || !chartElement) {
+    if (!replayChart) {
         return;
     }
 
-    const width = chartElement.getBoundingClientRect().width;
-
-    replayChart.resize(width, 500);
+    replayChart.resize(900, 500);
 }
 
 function initializeChart() {
@@ -69,10 +62,8 @@ function initializeChart() {
         return;
     }
 
-    const width = chartElement.getBoundingClientRect().width;
-
     replayChart = LightweightCharts.createChart(chartElement, {
-        width: width,
+        width: 900,
         height: 500,
         layout: {
             background: { color: "#111827" },
@@ -85,15 +76,13 @@ function initializeChart() {
         timeScale: {
             timeVisible: true,
             secondsVisible: false,
-            rightOffset: 0,
+            rightOffset: 5,
         },
     });
 
     candleSeries = replayChart.addSeries(
         LightweightCharts.CandlestickSeries
     );
-
-    window.addEventListener("resize", resizeChart);
 }
 
 function buildOneMinuteCandles(quotes) {
@@ -130,8 +119,6 @@ function buildOneMinuteCandles(quotes) {
     return Array.from(candleMap.values()).sort((a, b) => a.time - b.time);
 }
 
-
-
 function renderChart(quotes) {
     initializeChart();
 
@@ -148,10 +135,6 @@ function renderChart(quotes) {
         replayChart.timeScale().fitContent();
     });
 }
-
-
-
-
 
 function renderSelectedSession(row) {
     const selectedSessionElement = document.getElementById("selected-session");
