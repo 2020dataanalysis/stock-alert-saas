@@ -1,3 +1,6 @@
+let replaySessions = [];
+let selectedSessionIndex = 0;
+
 function getQueryParam(name) {
     const params = new URLSearchParams(window.location.search);
     return params.get(name);
@@ -39,6 +42,36 @@ function renderSelectedSession(row) {
         <div><strong>End:</strong> ${formatTimestamp(row.last_quote)}</div>
         <div><strong>Quotes:</strong> ${formatNumber(row.quote_count)}</div>
     `;
+}
+
+function updateSessionNavigationButtons() {
+    const previousButton = document.getElementById("previous-session-button");
+    const nextButton = document.getElementById("next-session-button");
+
+    if (!previousButton || !nextButton) {
+        return;
+    }
+
+    previousButton.disabled = selectedSessionIndex <= 0;
+    nextButton.disabled = selectedSessionIndex >= replaySessions.length - 1;
+}
+
+function selectSession(index) {
+    if (!replaySessions.length) {
+        return;
+    }
+
+    if (index < 0 || index >= replaySessions.length) {
+        return;
+    }
+
+    selectedSessionIndex = index;
+
+    const selectedSession = replaySessions[selectedSessionIndex];
+
+    renderSelectedSession(selectedSession);
+    loadReplayQuotes(selectedSession.trade_date);
+    updateSessionNavigationButtons();
 }
 
 async function loadReplaySummary() {
@@ -130,7 +163,9 @@ async function loadReplayDates() {
         return;
     }
 
-    datesElement.innerHTML = dates.map((row, index) => {
+    replaySessions = dates;
+
+    datesElement.innerHTML = replaySessions.map((row, index) => {
         return `
             <button
                 type="button"
@@ -143,15 +178,6 @@ async function loadReplayDates() {
         `;
     }).join("");
 
-
-
-    function selectSession(index) {
-        const selectedSession = dates[index];
-
-        renderSelectedSession(selectedSession);
-        loadReplayQuotes(selectedSession.trade_date);
-    }
-
     document.querySelectorAll(".replay-session-button").forEach((button) => {
         button.addEventListener("click", () => {
             const index = Number(button.dataset.sessionIndex);
@@ -159,17 +185,19 @@ async function loadReplayDates() {
         });
     });
 
+    const previousButton = document.getElementById("previous-session-button");
+    const nextButton = document.getElementById("next-session-button");
+
+    previousButton.addEventListener("click", () => {
+        selectSession(selectedSessionIndex - 1);
+    });
+
+    nextButton.addEventListener("click", () => {
+        selectSession(selectedSessionIndex + 1);
+    });
+
     selectSession(0);
-
-
 }
 
-
-
-
-
-
-
 loadReplaySummary();
-loadReplayQuotes();
 loadReplayDates();
