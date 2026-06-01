@@ -481,10 +481,12 @@ def replay_summary_api(
 @router.get("/api/replay/quotes")
 def replay_quotes_api(
     symbol: str,
+    trade_date: str | None = None,
     limit: int = 10000,
 ):
     return get_replay_quotes(
         symbol=symbol,
+        trade_date=trade_date,
         limit=limit,
     )
 
