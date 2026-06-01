@@ -417,8 +417,10 @@ def stream_quotes():
             log(f"RUNTIME: {runtime}")
 
 
-
-            if runtime["session"] == "CLOSED":
+            if (
+                runtime["session"] == "CLOSED"
+                and runtime["mode"] != "online"
+            ):
 
                 save_system_event(
                     event_type="STREAMER_EXITED",
@@ -431,6 +433,8 @@ def stream_quotes():
                 log("📴 Market closed. Stopping streamer.")
 
                 service_running = False
+
+
 
 
             last_heartbeat = maybe_save_heartbeat(

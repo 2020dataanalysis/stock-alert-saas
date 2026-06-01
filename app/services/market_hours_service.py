@@ -6,6 +6,13 @@ from app.data_adapters.schwab_adapter import SchwabAdapter
 PACIFIC = ZoneInfo("America/Los_Angeles")
 
 
+UNKNOWN = "UNKNOWN"
+CLOSED = "CLOSED"
+PREMARKET = "PREMARKET"
+REGULAR = "REGULAR"
+AFTER_HOURS = "AFTER_HOURS"
+
+
 def get_market_windows():
     market_hours = get_schwab_equity_market_hours()
 
@@ -36,8 +43,14 @@ def get_market_windows():
 def get_schwab_equity_market_hours():
     try:
         adapter = SchwabAdapter()
-
         response = adapter.get_market_hours("equity")
+
+        if not isinstance(response, dict):
+            print(
+                "FAILED TO GET SCHWAB MARKET HOURS: "
+                f"invalid response type {type(response).__name__}"
+            )
+            return None
 
         return (
             response
@@ -77,36 +90,26 @@ def get_market_session():
     market_hours = get_schwab_equity_market_hours()
 
     if not market_hours:
-        return "CLOSED"
+        return UNKNOWN
 
     is_open = market_hours.get("isOpen", False)
 
     if is_open is not True:
-        return "CLOSED"
+        return CLOSED
 
     now = datetime.now(PACIFIC)
-
     session_hours = market_hours.get("sessionHours", {})
 
-    if is_now_in_session(
-        now,
-        session_hours.get("preMarket")
-    ):
-        return "PREMARKET"
+    if is_now_in_session(now, session_hours.get("preMarket")):
+        return PREMARKET
 
-    if is_now_in_session(
-        now,
-        session_hours.get("regularMarket")
-    ):
-        return "REGULAR"
+    if is_now_in_session(now, session_hours.get("regularMarket")):
+        return REGULAR
 
-    if is_now_in_session(
-        now,
-        session_hours.get("postMarket")
-    ):
-        return "AFTER_HOURS"
+    if is_now_in_session(now, session_hours.get("postMarket")):
+        return AFTER_HOURS
 
-    return "CLOSED"
+    return CLOSED
 
 
 def is_now_in_session(now, session_list):
@@ -129,14 +132,14 @@ def is_now_in_session(now, session_list):
 
 
 def is_regular_market_hours():
-    return get_market_session() == "REGULAR"
+    return get_market_session() == REGULAR
 
 
 def is_trading_session():
     return get_market_session() in {
-        "PREMARKET",
-        "REGULAR",
-        "AFTER_HOURS",
+        PREMARKET,
+        REGULAR,
+        AFTER_HOURS,
     }
 
 
@@ -144,38 +147,46 @@ def get_market_is_open():
     market_hours = get_schwab_equity_market_hours()
 
     if not market_hours:
-        return False
+        return None
 
     return market_hours.get("isOpen", False)
 
 
 def get_market_status():
     session = get_market_session()
-
     is_open = get_market_is_open()
 
     return {
         "market_session": session,
-        "market_status": (
-            "OPEN"
-            if is_open
-            else "CLOSED"
-        ),
+        "market_status": get_market_status_label(session, is_open),
         "is_open": is_open,
-        "alerts_enabled": session == "REGULAR",
+        "alerts_enabled": session == REGULAR,
         "market_hours": get_market_windows(),
         "message": get_market_message(session),
     }
 
 
+def get_market_status_label(session, is_open):
+    if session == UNKNOWN:
+        return UNKNOWN
+
+    return "OPEN" if is_open else CLOSED
+
+
 def get_market_message(session):
-    if session == "REGULAR":
+    if session == REGULAR:
         return "Regular market hours. Alerts are active."
 
-    if session in {"PREMARKET", "AFTER_HOURS"}:
+    if session in {PREMARKET, AFTER_HOURS}:
         return (
             "Extended-hours session. Quotes may continue, "
             "but regular alerts are disabled."
+        )
+
+    if session == UNKNOWN:
+        return (
+            "Market hours are unavailable. Treat this as a provider-status "
+            "problem, not as confirmed market closed."
         )
 
     return (
