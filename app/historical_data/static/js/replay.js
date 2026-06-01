@@ -143,16 +143,32 @@ async function loadReplayDates() {
         `;
     }).join("");
 
+
+
+    function selectSession(index) {
+        const selectedSession = dates[index];
+
+        renderSelectedSession(selectedSession);
+        loadReplayQuotes(selectedSession.trade_date);
+    }
+
     document.querySelectorAll(".replay-session-button").forEach((button) => {
         button.addEventListener("click", () => {
             const index = Number(button.dataset.sessionIndex);
-            const selectedSession = dates[index];
-
-            renderSelectedSession(selectedSession);
-            loadReplayQuotes(selectedSession.trade_date);
+            selectSession(index);
         });
     });
+
+    selectSession(0);
+
+
 }
+
+
+
+
+
+
 
 loadReplaySummary();
 loadReplayQuotes();
