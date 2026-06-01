@@ -11,12 +11,30 @@ function formatNumber(value) {
     return Number(value).toLocaleString();
 }
 
+function formatTimestamp(timestamp) {
+    if (!timestamp) {
+        return "";
+    }
+
+    return timestamp.replace("T", " ").replace("+00:00", "");
+}
+
+function renderSelectedSession(row) {
+    const selectedSessionElement = document.getElementById("selected-session");
+
+    selectedSessionElement.innerHTML = `
+        <div><strong>Date:</strong> ${row.trade_date}</div>
+        <div><strong>Start:</strong> ${formatTimestamp(row.first_quote)}</div>
+        <div><strong>End:</strong> ${formatTimestamp(row.last_quote)}</div>
+        <div><strong>Quotes:</strong> ${formatNumber(row.quote_count)}</div>
+    `;
+}
+
 async function loadReplaySummary() {
     const symbol = getQueryParam("symbol");
     const summaryElement = document.getElementById("replay-summary");
 
     if (!summaryElement) {
-        console.error("Missing replay-summary element");
         return;
     }
 
@@ -51,13 +69,7 @@ async function loadReplayQuotes() {
     const symbol = getQueryParam("symbol");
     const dataInfoElement = document.getElementById("replay-data-info");
 
-    if (!dataInfoElement) {
-        console.error("Missing replay-data-info element");
-        return;
-    }
-
-    if (!symbol) {
-        dataInfoElement.textContent = "No symbol selected.";
+    if (!dataInfoElement || !symbol) {
         return;
     }
 
@@ -77,20 +89,16 @@ async function loadReplayQuotes() {
 
     dataInfoElement.innerHTML = `
         <div><strong>Loaded Quotes:</strong> ${formatNumber(quotes.length)}</div>
-        <div><strong>First Quote:</strong> ${firstQuote.timestamp}</div>
-        <div><strong>Last Quote:</strong> ${lastQuote.timestamp}</div>
+        <div><strong>First Quote:</strong> ${formatTimestamp(firstQuote.timestamp)}</div>
+        <div><strong>Last Quote:</strong> ${formatTimestamp(lastQuote.timestamp)}</div>
     `;
 }
 
-
-
 async function loadReplayDates() {
     const symbol = getQueryParam("symbol");
+    const datesElement = document.getElementById("replay-dates");
 
-    const datesElement =
-        document.getElementById("replay-dates");
-
-    if (!symbol) {
+    if (!datesElement || !symbol) {
         return;
     }
 
@@ -100,16 +108,31 @@ async function loadReplayDates() {
 
     const dates = await response.json();
 
-    datesElement.innerHTML = dates.map(
-        (row) => `
-            <div>
-                ${row.trade_date}
-                (${row.quote_count.toLocaleString()} quotes)
-            </div>
-        `
-    ).join("");
-}
+    if (!dates.length) {
+        datesElement.textContent = "No replay sessions found.";
+        return;
+    }
 
+    datesElement.innerHTML = dates.map((row, index) => {
+        return `
+            <button
+                type="button"
+                class="replay-session-button"
+                data-session-index="${index}"
+                style="display: block; margin-bottom: 8px;"
+            >
+                ${row.trade_date} (${formatNumber(row.quote_count)} quotes)
+            </button>
+        `;
+    }).join("");
+
+    document.querySelectorAll(".replay-session-button").forEach((button) => {
+        button.addEventListener("click", () => {
+            const index = Number(button.dataset.sessionIndex);
+            renderSelectedSession(dates[index]);
+        });
+    });
+}
 
 loadReplaySummary();
 loadReplayQuotes();
