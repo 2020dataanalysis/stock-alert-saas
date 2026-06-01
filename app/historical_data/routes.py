@@ -56,6 +56,11 @@ from app.historical_data.replay_catalog_service import (
 )
 
 
+from app.historical_data.replay_service import (
+    get_replay_summary,
+)
+
+
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
@@ -450,4 +455,13 @@ def replay_page(
         {
             "request": request,
         },
+    )
+
+
+@router.get("/api/replay/summary")
+def replay_summary_api(
+    symbol: str,
+):
+    return get_replay_summary(
+        symbol=symbol,
     )
