@@ -24,6 +24,21 @@ function formatTimestamp(timestamp) {
     return timestamp.replace("T", " ").replace("+00:00", "");
 }
 
+
+
+function formatDayOfWeek(tradeDate) {
+    if (!tradeDate) {
+        return "";
+    }
+
+    const date = new Date(`${tradeDate}T00:00:00`);
+
+    return date.toLocaleDateString("en-US", {
+        weekday: "long",
+    });
+}
+
+
 function buildQuoteUrl(symbol, tradeDate = null) {
     const params = new URLSearchParams();
     params.set("symbol", symbol);
@@ -142,7 +157,7 @@ function renderSelectedSession(row) {
     const selectedSessionElement = document.getElementById("selected-session");
 
     selectedSessionElement.innerHTML = `
-        <div><strong>Date:</strong> ${row.trade_date}</div>
+        <div><strong>Date:</strong> ${row.trade_date} (${formatDayOfWeek(row.trade_date)})</div>
         <div><strong>Start:</strong> ${formatTimestamp(row.first_quote)}</div>
         <div><strong>End:</strong> ${formatTimestamp(row.last_quote)}</div>
         <div><strong>Quotes:</strong> ${formatNumber(row.quote_count)}</div>
