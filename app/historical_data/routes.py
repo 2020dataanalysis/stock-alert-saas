@@ -61,6 +61,12 @@ from app.historical_data.replay_service import (
 )
 
 
+
+from app.historical_data.replay_quote_service import (
+    get_replay_quotes,
+)
+
+
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
@@ -464,4 +470,15 @@ def replay_summary_api(
 ):
     return get_replay_summary(
         symbol=symbol,
+    )
+
+
+@router.get("/api/replay/quotes")
+def replay_quotes_api(
+    symbol: str,
+    limit: int = 10000,
+):
+    return get_replay_quotes(
+        symbol=symbol,
+        limit=limit,
     )
