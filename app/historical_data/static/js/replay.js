@@ -35,6 +35,18 @@ function buildQuoteUrl(symbol, tradeDate = null) {
     return `/api/replay/quotes?${params.toString()}`;
 }
 
+function resizeChart() {
+    const chartElement = document.getElementById("replay-chart");
+
+    if (!replayChart || !chartElement) {
+        return;
+    }
+
+    const width = chartElement.getBoundingClientRect().width;
+
+    replayChart.resize(width, 500);
+}
+
 function initializeChart() {
     const chartElement = document.getElementById("replay-chart");
 
@@ -42,7 +54,10 @@ function initializeChart() {
         return;
     }
 
+    const width = chartElement.getBoundingClientRect().width;
+
     replayChart = LightweightCharts.createChart(chartElement, {
+        width: width,
         height: 500,
         layout: {
             background: { color: "#111827" },
@@ -55,15 +70,15 @@ function initializeChart() {
         timeScale: {
             timeVisible: true,
             secondsVisible: false,
+            rightOffset: 0,
         },
     });
 
-    // candleSeries = replayChart.addCandlestickSeries();
     candleSeries = replayChart.addSeries(
         LightweightCharts.CandlestickSeries
     );
 
-
+    window.addEventListener("resize", resizeChart);
 }
 
 function buildOneMinuteCandles(quotes) {
@@ -100,6 +115,8 @@ function buildOneMinuteCandles(quotes) {
     return Array.from(candleMap.values()).sort((a, b) => a.time - b.time);
 }
 
+
+
 function renderChart(quotes) {
     initializeChart();
 
@@ -110,25 +127,16 @@ function renderChart(quotes) {
     const candles = buildOneMinuteCandles(quotes);
 
     candleSeries.setData(candles);
-    replayChart.timeScale().fitContent();
 
-
-    function resizeChart() {
-        const chartElement = document.getElementById("replay-chart");
-
-        if (!replayChart || !chartElement) {
-            return;
-        }
-
-        replayChart.resize(chartElement.clientWidth, 500);
-    }
-
-
-    resizeChart();
-    replayChart.timeScale().fitContent();
-    window.addEventListener("resize", resizeChart);
-
+    requestAnimationFrame(() => {
+        resizeChart();
+        replayChart.timeScale().fitContent();
+    });
 }
+
+
+
+
 
 function renderSelectedSession(row) {
     const selectedSessionElement = document.getElementById("selected-session");
