@@ -111,6 +111,23 @@ function renderChart(quotes) {
 
     candleSeries.setData(candles);
     replayChart.timeScale().fitContent();
+
+
+    function resizeChart() {
+        const chartElement = document.getElementById("replay-chart");
+
+        if (!replayChart || !chartElement) {
+            return;
+        }
+
+        replayChart.resize(chartElement.clientWidth, 500);
+    }
+
+
+    resizeChart();
+    replayChart.timeScale().fitContent();
+    window.addEventListener("resize", resizeChart);
+
 }
 
 function renderSelectedSession(row) {
