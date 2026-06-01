@@ -47,4 +47,40 @@ async function loadReplaySummary() {
     `;
 }
 
+async function loadReplayQuotes() {
+    const symbol = getQueryParam("symbol");
+    const dataInfoElement = document.getElementById("replay-data-info");
+
+    if (!dataInfoElement) {
+        console.error("Missing replay-data-info element");
+        return;
+    }
+
+    if (!symbol) {
+        dataInfoElement.textContent = "No symbol selected.";
+        return;
+    }
+
+    const response = await fetch(
+        `/api/replay/quotes?symbol=${encodeURIComponent(symbol)}`
+    );
+
+    const quotes = await response.json();
+
+    if (!quotes.length) {
+        dataInfoElement.textContent = "No quote data found.";
+        return;
+    }
+
+    const firstQuote = quotes[0];
+    const lastQuote = quotes[quotes.length - 1];
+
+    dataInfoElement.innerHTML = `
+        <div><strong>Loaded Quotes:</strong> ${formatNumber(quotes.length)}</div>
+        <div><strong>First Quote:</strong> ${firstQuote.timestamp}</div>
+        <div><strong>Last Quote:</strong> ${lastQuote.timestamp}</div>
+    `;
+}
+
 loadReplaySummary();
+loadReplayQuotes();
