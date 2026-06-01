@@ -67,6 +67,11 @@ from app.historical_data.replay_quote_service import (
 )
 
 
+from app.historical_data.replay_date_service import (
+    get_replay_dates,
+)
+
+
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
@@ -481,4 +486,13 @@ def replay_quotes_api(
     return get_replay_quotes(
         symbol=symbol,
         limit=limit,
+    )
+
+
+@router.get("/api/replay/dates")
+def replay_dates_api(
+    symbol: str,
+):
+    return get_replay_dates(
+        symbol=symbol,
     )
