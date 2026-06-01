@@ -1,7 +1,12 @@
 let replaySessions = [];
 let selectedSessionIndex = 0;
+
 let replayChart = null;
 let candleSeries = null;
+
+let currentCandles = [];
+let replayIndex = 0;
+let replayTimer = null;
 
 function getQueryParam(name) {
     const params = new URLSearchParams(window.location.search);
@@ -33,6 +38,16 @@ function formatDayOfWeek(tradeDate) {
 
     return date.toLocaleDateString("en-US", {
         weekday: "long",
+    });
+}
+
+function formatReplayTime(unixSeconds) {
+    const date = new Date(unixSeconds * 1000);
+
+    return date.toLocaleString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+        second: "2-digit",
     });
 }
 
@@ -111,6 +126,7 @@ function buildOneMinuteCandles(quotes) {
         }
 
         const candle = candleMap.get(time);
+
         candle.high = Math.max(candle.high, price);
         candle.low = Math.min(candle.low, price);
         candle.close = price;
@@ -119,21 +135,95 @@ function buildOneMinuteCandles(quotes) {
     return Array.from(candleMap.values()).sort((a, b) => a.time - b.time);
 }
 
-function renderChart(quotes) {
+function updatePlaybackStatus() {
+    const statusElement = document.getElementById("replay-playback-status");
+
+    if (!statusElement) {
+        return;
+    }
+
+    if (!currentCandles.length) {
+        statusElement.textContent = "No replay candles loaded.";
+        return;
+    }
+
+    const currentCandle = currentCandles[Math.max(0, replayIndex - 1)];
+
+    if (!currentCandle) {
+        statusElement.textContent = "Replay ready.";
+        return;
+    }
+
+    statusElement.innerHTML = `
+        <div><strong>Replay Candle:</strong> ${replayIndex} / ${currentCandles.length}</div>
+        <div><strong>Replay Time:</strong> ${formatReplayTime(currentCandle.time)}</div>
+        <div><strong>Close:</strong> ${currentCandle.close}</div>
+    `;
+}
+
+function renderReplayWindow() {
     initializeChart();
 
     if (!candleSeries) {
         return;
     }
 
-    const candles = buildOneMinuteCandles(quotes);
+    const visibleCandles = currentCandles.slice(0, replayIndex);
 
-    candleSeries.setData(candles);
+    candleSeries.setData(visibleCandles);
 
     requestAnimationFrame(() => {
         resizeChart();
         replayChart.timeScale().fitContent();
     });
+
+    updatePlaybackStatus();
+}
+
+function resetReplay(candles) {
+    pauseReplay();
+
+    currentCandles = candles;
+    replayIndex = currentCandles.length ? 1 : 0;
+
+    renderReplayWindow();
+}
+
+function playReplay() {
+    if (!currentCandles.length) {
+        return;
+    }
+
+    pauseReplay();
+
+    const speedElement = document.getElementById("replay-speed");
+    const candlesPerTick = Number(speedElement.value || 1);
+
+    replayTimer = window.setInterval(() => {
+        replayIndex = Math.min(
+            replayIndex + candlesPerTick,
+            currentCandles.length
+        );
+
+        renderReplayWindow();
+
+        if (replayIndex >= currentCandles.length) {
+            pauseReplay();
+        }
+    }, 250);
+}
+
+function pauseReplay() {
+    if (replayTimer) {
+        window.clearInterval(replayTimer);
+        replayTimer = null;
+    }
+}
+
+function renderChart(quotes) {
+    const candles = buildOneMinuteCandles(quotes);
+
+    resetReplay(candles);
 }
 
 function renderSelectedSession(row) {
@@ -300,6 +390,9 @@ async function loadReplayDates() {
 
     selectSession(0);
 }
+
+document.getElementById("play-button").addEventListener("click", playReplay);
+document.getElementById("pause-button").addEventListener("click", pauseReplay);
 
 loadReplaySummary();
 loadReplayDates();
