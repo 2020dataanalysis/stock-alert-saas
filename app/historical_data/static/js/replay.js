@@ -1,5 +1,7 @@
 let replaySessions = [];
 let selectedSessionIndex = 0;
+let replayChart = null;
+let candleSeries = null;
 
 function getQueryParam(name) {
     const params = new URLSearchParams(window.location.search);
@@ -31,6 +33,84 @@ function buildQuoteUrl(symbol, tradeDate = null) {
     }
 
     return `/api/replay/quotes?${params.toString()}`;
+}
+
+function initializeChart() {
+    const chartElement = document.getElementById("replay-chart");
+
+    if (!chartElement || replayChart) {
+        return;
+    }
+
+    replayChart = LightweightCharts.createChart(chartElement, {
+        height: 500,
+        layout: {
+            background: { color: "#111827" },
+            textColor: "#d1d5db",
+        },
+        grid: {
+            vertLines: { color: "#1f2937" },
+            horzLines: { color: "#1f2937" },
+        },
+        timeScale: {
+            timeVisible: true,
+            secondsVisible: false,
+        },
+    });
+
+    // candleSeries = replayChart.addCandlestickSeries();
+    candleSeries = replayChart.addSeries(
+        LightweightCharts.CandlestickSeries
+    );
+
+
+}
+
+function buildOneMinuteCandles(quotes) {
+    const candleMap = new Map();
+
+    quotes.forEach((quote) => {
+        if (quote.last === null || quote.last === undefined) {
+            return;
+        }
+
+        const quoteDate = new Date(quote.timestamp);
+        quoteDate.setSeconds(0, 0);
+
+        const time = Math.floor(quoteDate.getTime() / 1000);
+        const price = Number(quote.last);
+
+        if (!candleMap.has(time)) {
+            candleMap.set(time, {
+                time,
+                open: price,
+                high: price,
+                low: price,
+                close: price,
+            });
+            return;
+        }
+
+        const candle = candleMap.get(time);
+        candle.high = Math.max(candle.high, price);
+        candle.low = Math.min(candle.low, price);
+        candle.close = price;
+    });
+
+    return Array.from(candleMap.values()).sort((a, b) => a.time - b.time);
+}
+
+function renderChart(quotes) {
+    initializeChart();
+
+    if (!candleSeries) {
+        return;
+    }
+
+    const candles = buildOneMinuteCandles(quotes);
+
+    candleSeries.setData(candles);
+    replayChart.timeScale().fitContent();
 }
 
 function renderSelectedSession(row) {
@@ -142,6 +222,8 @@ async function loadReplayQuotes(tradeDate = null) {
         <div><strong>First Quote:</strong> ${formatTimestamp(firstQuote.timestamp)}</div>
         <div><strong>Last Quote:</strong> ${formatTimestamp(lastQuote.timestamp)}</div>
     `;
+
+    renderChart(quotes);
 }
 
 async function loadReplayDates() {
@@ -185,14 +267,11 @@ async function loadReplayDates() {
         });
     });
 
-    const previousButton = document.getElementById("previous-session-button");
-    const nextButton = document.getElementById("next-session-button");
-
-    previousButton.addEventListener("click", () => {
+    document.getElementById("previous-session-button").addEventListener("click", () => {
         selectSession(selectedSessionIndex - 1);
     });
 
-    nextButton.addEventListener("click", () => {
+    document.getElementById("next-session-button").addEventListener("click", () => {
         selectSession(selectedSessionIndex + 1);
     });
 
