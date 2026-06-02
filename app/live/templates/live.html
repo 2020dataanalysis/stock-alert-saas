@@ -78,7 +78,7 @@
     </div>
 
 
-<div id="quote-header" style="margin-top: 24px;">
+<div id="quote-header" class="quote-header-card">
     No quote loaded.
 </div>
 
@@ -88,6 +88,40 @@
         <canvas id="live-chart"></canvas>
     </div>
 </section>
+
+<style>
+.quote-header-card {
+    margin-top: 24px;
+    padding: 24px;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    background: #1f2937;
+}
+
+.quote-symbol {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.quote-price {
+    font-size: 56px;
+    font-weight: 700;
+    margin-top: 8px;
+}
+
+.quote-change-row {
+    display: flex;
+    gap: 24px;
+    margin-top: 8px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.quote-meta {
+    margin-top: 12px;
+    color: #9ca3af;
+}
+</style>
 
 <script src="/live/static/js/live.js"></script>
 {% endblock %}

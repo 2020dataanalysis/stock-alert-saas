@@ -50,12 +50,29 @@ function updateQuoteHeader(symbol, data) {
     const latestTimestamp = timestamps[timestamps.length - 1];
 
     document.getElementById("quote-header").innerHTML = `
-        <div><strong>${symbol}</strong></div>
-        <div>Price: ${latestPrice.toFixed(2)}</div>
-        <div>Change: ${change.toFixed(2)}</div>
-        <div>Change %: ${changePct.toFixed(2)}%</div>
-        <div>Points: ${prices.length.toLocaleString()}</div>
-        <div>Last Quote: ${latestTimestamp}</div>
+        <div class="quote-symbol">
+            ${symbol}
+        </div>
+
+        <div class="quote-price">
+            $${latestPrice.toFixed(2)}
+        </div>
+
+        <div class="quote-change-row">
+            <div>
+                ${change.toFixed(2)}
+            </div>
+
+            <div>
+                ${changePct.toFixed(2)}%
+            </div>
+        </div>
+
+        <div class="quote-meta">
+            Volume Points: ${prices.length.toLocaleString()}
+            &nbsp;&nbsp;&nbsp;
+            Last Quote: ${latestTimestamp}
+        </div>
     `;
 }
 
