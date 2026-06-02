@@ -58,7 +58,6 @@ def chart_data(symbol: str):
             SELECT id, timestamp, last, volume
             FROM quotes
             WHERE symbol = ?
-            AND timestamp >= datetime('now', '-2 hours')
             ORDER BY id DESC
             LIMIT 200
         """, (symbol,)).fetchall()

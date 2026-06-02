@@ -5,24 +5,16 @@ let refreshTimer = null;
 const REFRESH_INTERVAL_MS = 5000;
 
 function getManualSymbol() {
-    const input = document.getElementById(
-        "manual-symbol-input"
-    );
-
+    const input = document.getElementById("manual-symbol-input");
     return input.value.trim().toUpperCase();
 }
 
 function setStatus(message) {
-    document.getElementById(
-        "live-chart-status"
-    ).textContent = message;
+    document.getElementById("live-chart-status").textContent = message;
 }
 
 async function fetchChartData(symbol) {
-    const response = await fetch(
-        `/api/chart-data/${symbol}`
-    );
-
+    const response = await fetch(`/api/chart-data/${symbol}`);
     return response.json();
 }
 
@@ -39,6 +31,34 @@ function buildAlertPoints(alerts, prices) {
     }).filter((point) => point !== null);
 }
 
+function updateQuoteHeader(symbol, data) {
+    const prices = data.prices || [];
+    const timestamps = data.timestamps || [];
+
+    if (!prices.length) {
+        document.getElementById("quote-header").textContent =
+            "No quote loaded.";
+        return;
+    }
+
+    const latestPrice = prices[prices.length - 1];
+    const firstPrice = prices[0];
+    const change = latestPrice - firstPrice;
+    const changePct = firstPrice === 0
+        ? 0
+        : (change / firstPrice) * 100;
+    const latestTimestamp = timestamps[timestamps.length - 1];
+
+    document.getElementById("quote-header").innerHTML = `
+        <div><strong>${symbol}</strong></div>
+        <div>Price: ${latestPrice.toFixed(2)}</div>
+        <div>Change: ${change.toFixed(2)}</div>
+        <div>Change %: ${changePct.toFixed(2)}%</div>
+        <div>Points: ${prices.length.toLocaleString()}</div>
+        <div>Last Quote: ${latestTimestamp}</div>
+    `;
+}
+
 function renderChart(symbol, data) {
     const prices = data.prices || [];
     const timestamps = data.timestamps || [];
@@ -49,11 +69,7 @@ function renderChart(symbol, data) {
         return;
     }
 
-    const alertPoints = buildAlertPoints(
-        alerts,
-        prices
-    );
-
+    const alertPoints = buildAlertPoints(alerts, prices);
     const canvas = document.getElementById("live-chart");
     const ctx = canvas.getContext("2d");
 
@@ -98,41 +114,20 @@ function renderChart(symbol, data) {
     liveChart.update("none");
 }
 
-
-
-
-
-
-
 async function refreshSelectedChart() {
     if (!selectedSymbol) {
         return;
     }
 
-    const data = await fetchChartData(
-        selectedSymbol
-    );
+    const data = await fetchChartData(selectedSymbol);
 
-    renderChart(
-        selectedSymbol,
-        data
-    );
-
-    updateQuoteHeader(
-        selectedSymbol,
-        data
-    );
+    renderChart(selectedSymbol, data);
+    updateQuoteHeader(selectedSymbol, data);
 
     setStatus(
         `Loaded ${(data.prices || []).length.toLocaleString()} points for ${selectedSymbol}. Auto-refreshing every ${REFRESH_INTERVAL_MS / 1000}s.`
     );
 }
-
-
-
-
-
-
 
 function startAutoRefresh() {
     stopAutoRefresh();
@@ -158,13 +153,9 @@ async function loadLiveChart(symbol) {
 
     selectedSymbol = normalizedSymbol;
 
-    document.getElementById(
-        "manual-symbol-input"
-    ).value = normalizedSymbol;
-
-    document.getElementById(
-        "selected-symbol-heading"
-    ).textContent = `Live: ${normalizedSymbol}`;
+    document.getElementById("manual-symbol-input").value = normalizedSymbol;
+    document.getElementById("selected-symbol-heading").textContent =
+        `Live: ${normalizedSymbol}`;
 
     setStatus(`Loading ${normalizedSymbol}...`);
 
@@ -200,53 +191,5 @@ document
 
         alert(`Add to Favorites coming later: ${symbol}`);
     });
-
-
-
-
-function updateQuoteHeader(
-    symbol,
-    data
-) {
-    const prices = data.prices || [];
-    const timestamps = data.timestamps || [];
-
-    if (!prices.length) {
-        return;
-    }
-
-    const latestPrice =
-        prices[prices.length - 1];
-
-    const firstPrice =
-        prices[0];
-
-    const change =
-        latestPrice - firstPrice;
-
-    const changePct =
-        firstPrice === 0
-            ? 0
-            : (change / firstPrice) * 100;
-
-    const latestTimestamp =
-        timestamps[timestamps.length - 1];
-
-    document.getElementById(
-        "quote-header"
-    ).innerHTML = `
-        <div><strong>${symbol}</strong></div>
-        <div>Price: ${latestPrice.toFixed(2)}</div>
-        <div>Change: ${change.toFixed(2)}</div>
-        <div>Change %: ${changePct.toFixed(2)}%</div>
-        <div>Points: ${prices.length.toLocaleString()}</div>
-        <div>Last Quote: ${latestTimestamp}</div>
-    `;
-}
-
-
-
-
-
 
 bindSymbolButtons();
