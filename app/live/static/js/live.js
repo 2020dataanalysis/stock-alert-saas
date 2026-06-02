@@ -1,4 +1,8 @@
 let liveChart = null;
+let selectedSymbol = null;
+let refreshTimer = null;
+
+const REFRESH_INTERVAL_MS = 5000;
 
 function getManualSymbol() {
     const input = document.getElementById(
@@ -14,12 +18,128 @@ function setStatus(message) {
     ).textContent = message;
 }
 
+async function fetchChartData(symbol) {
+    const response = await fetch(
+        `/api/chart-data/${symbol}`
+    );
+
+    return response.json();
+}
+
+function buildAlertPoints(alerts, prices) {
+    return alerts.map((alert) => {
+        if (alert.index === null || alert.index === undefined) {
+            return null;
+        }
+
+        return {
+            x: alert.index,
+            y: prices[alert.index],
+        };
+    }).filter((point) => point !== null);
+}
+
+function renderChart(symbol, data) {
+    const prices = data.prices || [];
+    const timestamps = data.timestamps || [];
+    const alerts = data.alerts || [];
+
+    if (!prices.length) {
+        setStatus(`No chart data found for ${symbol}.`);
+        return;
+    }
+
+    const alertPoints = buildAlertPoints(
+        alerts,
+        prices
+    );
+
+    const canvas = document.getElementById("live-chart");
+    const ctx = canvas.getContext("2d");
+
+    if (!liveChart) {
+        liveChart = new Chart(ctx, {
+            type: "line",
+            data: {
+                labels: timestamps,
+                datasets: [
+                    {
+                        label: symbol,
+                        data: prices,
+                        borderWidth: 2,
+                        tension: 0.2,
+                    },
+                    {
+                        label: "Alerts",
+                        data: alertPoints,
+                        pointRadius: 6,
+                        showLine: false,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                animation: false,
+                scales: {
+                    x: {
+                        display: false,
+                    },
+                },
+            },
+        });
+
+        return;
+    }
+
+    liveChart.data.labels = timestamps;
+    liveChart.data.datasets[0].label = symbol;
+    liveChart.data.datasets[0].data = prices;
+    liveChart.data.datasets[1].data = alertPoints;
+    liveChart.update("none");
+}
+
+async function refreshSelectedChart() {
+    if (!selectedSymbol) {
+        return;
+    }
+
+    const data = await fetchChartData(
+        selectedSymbol
+    );
+
+    renderChart(
+        selectedSymbol,
+        data
+    );
+
+    setStatus(
+        `Loaded ${(data.prices || []).length.toLocaleString()} points for ${selectedSymbol}. Auto-refreshing every ${REFRESH_INTERVAL_MS / 1000}s.`
+    );
+}
+
+function startAutoRefresh() {
+    stopAutoRefresh();
+
+    refreshTimer = window.setInterval(() => {
+        refreshSelectedChart();
+    }, REFRESH_INTERVAL_MS);
+}
+
+function stopAutoRefresh() {
+    if (refreshTimer) {
+        window.clearInterval(refreshTimer);
+        refreshTimer = null;
+    }
+}
+
 async function loadLiveChart(symbol) {
     const normalizedSymbol = symbol.trim().toUpperCase();
 
     if (!normalizedSymbol) {
         return;
     }
+
+    selectedSymbol = normalizedSymbol;
 
     document.getElementById(
         "manual-symbol-input"
@@ -31,72 +151,9 @@ async function loadLiveChart(symbol) {
 
     setStatus(`Loading ${normalizedSymbol}...`);
 
-    const response = await fetch(
-        `/api/chart-data/${normalizedSymbol}`
-    );
+    await refreshSelectedChart();
 
-    const data = await response.json();
-
-    const prices = data.prices || [];
-    const timestamps = data.timestamps || [];
-    const alerts = data.alerts || [];
-
-    if (!prices.length) {
-        setStatus(`No chart data found for ${normalizedSymbol}.`);
-        return;
-    }
-
-    const alertPoints = alerts.map((alert) => {
-        if (alert.index === null || alert.index === undefined) {
-            return null;
-        }
-
-        return {
-            x: alert.index,
-            y: prices[alert.index],
-        };
-    }).filter((point) => point !== null);
-
-    const canvas = document.getElementById("live-chart");
-    const ctx = canvas.getContext("2d");
-
-    if (liveChart) {
-        liveChart.destroy();
-    }
-
-    liveChart = new Chart(ctx, {
-        type: "line",
-        data: {
-            labels: timestamps,
-            datasets: [
-                {
-                    label: normalizedSymbol,
-                    data: prices,
-                    borderWidth: 2,
-                    tension: 0.2,
-                },
-                {
-                    label: "Alerts",
-                    data: alertPoints,
-                    pointRadius: 6,
-                    showLine: false,
-                },
-            ],
-        },
-        options: {
-            responsive: true,
-            animation: false,
-            scales: {
-                x: {
-                    display: false,
-                },
-            },
-        },
-    });
-
-    setStatus(
-        `Loaded ${prices.length.toLocaleString()} points for ${normalizedSymbol}.`
-    );
+    startAutoRefresh();
 }
 
 function bindSymbolButtons() {
