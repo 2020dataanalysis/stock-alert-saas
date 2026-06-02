@@ -98,6 +98,12 @@ function renderChart(symbol, data) {
     liveChart.update("none");
 }
 
+
+
+
+
+
+
 async function refreshSelectedChart() {
     if (!selectedSymbol) {
         return;
@@ -112,10 +118,21 @@ async function refreshSelectedChart() {
         data
     );
 
+    updateQuoteHeader(
+        selectedSymbol,
+        data
+    );
+
     setStatus(
         `Loaded ${(data.prices || []).length.toLocaleString()} points for ${selectedSymbol}. Auto-refreshing every ${REFRESH_INTERVAL_MS / 1000}s.`
     );
 }
+
+
+
+
+
+
 
 function startAutoRefresh() {
     stopAutoRefresh();
@@ -183,5 +200,53 @@ document
 
         alert(`Add to Favorites coming later: ${symbol}`);
     });
+
+
+
+
+function updateQuoteHeader(
+    symbol,
+    data
+) {
+    const prices = data.prices || [];
+    const timestamps = data.timestamps || [];
+
+    if (!prices.length) {
+        return;
+    }
+
+    const latestPrice =
+        prices[prices.length - 1];
+
+    const firstPrice =
+        prices[0];
+
+    const change =
+        latestPrice - firstPrice;
+
+    const changePct =
+        firstPrice === 0
+            ? 0
+            : (change / firstPrice) * 100;
+
+    const latestTimestamp =
+        timestamps[timestamps.length - 1];
+
+    document.getElementById(
+        "quote-header"
+    ).innerHTML = `
+        <div><strong>${symbol}</strong></div>
+        <div>Price: ${latestPrice.toFixed(2)}</div>
+        <div>Change: ${change.toFixed(2)}</div>
+        <div>Change %: ${changePct.toFixed(2)}%</div>
+        <div>Points: ${prices.length.toLocaleString()}</div>
+        <div>Last Quote: ${latestTimestamp}</div>
+    `;
+}
+
+
+
+
+
 
 bindSymbolButtons();
