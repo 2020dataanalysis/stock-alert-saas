@@ -37,6 +37,7 @@ from app.scalp_state.routes import router as scalp_state_router
 from app.historical_data.routes import router as historical_data_router
 
 from fastapi.staticfiles import StaticFiles
+from app.live.routes import router as live_router
 
 import sqlite3
 
@@ -72,10 +73,17 @@ app.mount(
     name="historical_data_static",
 )
 
+app.mount(
+    "/live/static",
+    StaticFiles(directory="app/live/static"),
+    name="live_static",
+)
+
 app.include_router(api_router)
 app.include_router(market_state_router)
 app.include_router(scalp_state_router)
 app.include_router(historical_data_router)
+app.include_router(live_router)
 
 templates = Jinja2Templates(directory="app/web/templates")
 

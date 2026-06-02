@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Live{% endblock %}
+
+{% block content %}
+<h1>Live</h1>
+
+<p class="subtitle">
+    Select a favorite, mover, or manual symbol to view live market data.
+</p>
+
+<section>
+    <h2>Favorites</h2>
+    <div id="favorite-symbols">
+        Loading favorites...
+    </div>
+</section>
+
+<section style="margin-top: 24px;">
+    <h2>Movers</h2>
+    <div id="mover-symbols">
+        Loading movers...
+    </div>
+</section>
+
+<section style="margin-top: 24px;">
+    <h2>Manual Symbol</h2>
+
+    <input
+        id="manual-symbol-input"
+        type="text"
+        placeholder="Enter symbol, e.g. TSLA"
+        style="text-transform: uppercase;"
+    >
+
+    <button type="button" id="load-symbol-button">
+        Load
+    </button>
+
+    <button type="button" id="add-favorite-button">
+        Add to Favorites
+    </button>
+</section>
+
+<section style="margin-top: 24px;">
+    <h2 id="selected-symbol-heading">
+        Select a symbol
+    </h2>
+
+    <div id="live-chart">
+        Live chart placeholder
+    </div>
+</section>
+
+<script src="/live/static/js/live.js"></script>
+{% endblock %}

@@ -48,6 +48,12 @@
        Scalp State
     </a>
 
+
+   <a href="/live"
+      class="{% if request.url.path.startswith('/live') %}active{% endif %}">
+      Live
+   </a>
+
     <a href="/settings"
        class="{% if request.url.path == '/settings' %}active{% endif %}">
        Settings
