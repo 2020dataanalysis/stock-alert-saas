@@ -36,7 +36,6 @@ from app.scalp_state.routes import router as scalp_state_router
 
 from app.historical_data.routes import router as historical_data_router
 
-from fastapi.staticfiles import StaticFiles
 from app.live.routes import router as live_router
 
 import sqlite3
@@ -53,12 +52,6 @@ app.mount(
     "/market-state-static",
     StaticFiles(directory="app/market_state/web/static"),
     name="market_state_static",
-)
-
-app.mount(
-    "/scalp-state-static",
-    StaticFiles(directory="app/scalp_state/static"),
-    name="scalp_state_static",
 )
 
 app.mount(
