@@ -2,6 +2,10 @@
 
 {% block title %}Live{% endblock %}
 
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
 {% block content %}
 <h1>Live</h1>
 
@@ -13,7 +17,6 @@
     <h2>Favorites</h2>
 
     <div id="favorite-symbols">
-
         {% for symbol in favorite_symbols %}
             <button
                 type="button"
@@ -23,7 +26,6 @@
                 {{ symbol }}
             </button>
         {% endfor %}
-
     </div>
 </section>
 
@@ -31,9 +33,7 @@
     <h2>Movers</h2>
 
     <div id="mover-symbols">
-
         {% if mover_symbols %}
-
             {% for symbol in mover_symbols %}
                 <button
                     type="button"
@@ -43,13 +43,9 @@
                     {{ symbol }}
                 </button>
             {% endfor %}
-
         {% else %}
-
             No movers available.
-
         {% endif %}
-
     </div>
 </section>
 
@@ -77,8 +73,12 @@
         Select a symbol
     </h2>
 
-    <div id="live-chart">
-        Live chart placeholder
+    <div id="live-chart-status">
+        No symbol selected.
+    </div>
+
+    <div style="margin-top: 24px;">
+        <canvas id="live-chart"></canvas>
     </div>
 </section>
 
