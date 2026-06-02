@@ -4,6 +4,9 @@ from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
 
+from app.config import load_settings
+from app.data_adapters.movers_adapter import get_mover_symbols
+
 
 router = APIRouter()
 
@@ -23,10 +26,26 @@ templates.env.loader = FileSystemLoader([
 def live_page(
     request: Request,
 ):
+    settings = load_settings()
+
+    favorite_symbols = settings.get(
+        "favorite_symbols",
+        []
+    )
+
+    mover_symbols = []
+
+    if settings.get("use_movers"):
+        mover_symbols = get_mover_symbols(
+            limit=settings.get("movers_limit", 10)
+        )
+
     return templates.TemplateResponse(
         request,
         "live.html",
         {
             "request": request,
+            "favorite_symbols": favorite_symbols,
+            "mover_symbols": mover_symbols,
         },
     )

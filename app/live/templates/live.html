@@ -11,15 +11,45 @@
 
 <section>
     <h2>Favorites</h2>
+
     <div id="favorite-symbols">
-        Loading favorites...
+
+        {% for symbol in favorite_symbols %}
+            <button
+                type="button"
+                class="symbol-button"
+                data-symbol="{{ symbol }}"
+            >
+                {{ symbol }}
+            </button>
+        {% endfor %}
+
     </div>
 </section>
 
 <section style="margin-top: 24px;">
     <h2>Movers</h2>
+
     <div id="mover-symbols">
-        Loading movers...
+
+        {% if mover_symbols %}
+
+            {% for symbol in mover_symbols %}
+                <button
+                    type="button"
+                    class="symbol-button"
+                    data-symbol="{{ symbol }}"
+                >
+                    {{ symbol }}
+                </button>
+            {% endfor %}
+
+        {% else %}
+
+            No movers available.
+
+        {% endif %}
+
     </div>
 </section>
 
