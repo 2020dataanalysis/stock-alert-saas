@@ -63,9 +63,9 @@ app.mount(
 )
 
 app.mount(
-    "/historical-data-static",
-    StaticFiles(directory="app/historical_data/static"),
-    name="historical_data_static",
+    "/historical-replay-static",
+    StaticFiles(directory="app/historical_data/replay/static"),
+    name="historical_replay_static",
 )
 
 app.mount(
@@ -429,9 +429,3 @@ def health():
     return {"status": "ok"}
 
 
-
-app.mount(
-    "/historical-data/static",
-    StaticFiles(directory="app/historical_data/static"),
-    name="historical_data_static",
-)

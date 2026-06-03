@@ -28,7 +28,7 @@ TEMPLATE_DIR = (
 )
 
 SHARED_TEMPLATE_DIR = (
-    BASE_DIR.parent / "web" / "templates"
+    BASE_DIR.parent.parent / "web" / "templates"
 )
 
 templates = Jinja2Templates(
