@@ -35,6 +35,7 @@ from app.market_state.web.routes import router as market_state_router
 from app.scalp_state.routes import router as scalp_state_router
 
 from app.historical_data.routes import router as historical_data_router
+from app.statistics.routes import router as statistics_router
 
 from app.live.routes import router as live_router
 
@@ -67,6 +68,12 @@ app.mount(
 )
 
 app.mount(
+    "/statistics-static",
+    StaticFiles(directory="app/statistics/static"),
+    name="statistics_static",
+)
+
+app.mount(
     "/live/static",
     StaticFiles(directory="app/live/static"),
     name="live_static",
@@ -76,6 +83,7 @@ app.include_router(api_router)
 app.include_router(market_state_router)
 app.include_router(scalp_state_router)
 app.include_router(historical_data_router)
+app.include_router(statistics_router)
 app.include_router(live_router)
 
 templates = Jinja2Templates(directory="app/web/templates")

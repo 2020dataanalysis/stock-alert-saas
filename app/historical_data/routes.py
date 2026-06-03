@@ -147,20 +147,6 @@ def recent_opening_scenarios_api(
         limit=limit
     )
 
-
-@router.get("/historical-data")
-def historical_data_page(
-    request: Request,
-):
-    return templates.TemplateResponse(
-        request,
-        "historical_data.html",
-        {
-            "request": request,
-        },
-    )
-
-
 @router.get(
     "/api/historical-data/opening-scenarios/{scenario_id}/outcomes"
 )
@@ -440,20 +426,6 @@ def replay_catalog_page(
             "request": request,
         },
     )
-
-
-@router.get("/statistics")
-def statistics_page(
-    request: Request,
-):
-    return templates.TemplateResponse(
-        request,
-        "historical_data.html",
-        {
-            "request": request,
-        },
-    )
-
 
 
 @router.get("/historical-data/replay")
