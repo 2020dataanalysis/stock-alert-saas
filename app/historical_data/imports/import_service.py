@@ -9,7 +9,7 @@ from app.historical_data.bars.repository import (
     init_historical_db,
 )
 
-from app.historical_data.schwab_importer import (
+from app.historical_data.imports.schwab_importer import (
     import_price_history_candles,
 )
 
