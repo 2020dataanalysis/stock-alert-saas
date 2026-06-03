@@ -2,7 +2,7 @@ from app.historical_data.bars.imports.backfill_service import (
     DEFAULT_BACKFILL_SYMBOLS,
 )
 
-from app.historical_data.gap_analysis_service import (
+from app.historical_data.studies.gaps.gap_analysis_service import (
     calculate_gap_bucket_statistics,
 )
 
@@ -34,7 +34,7 @@ from app.historical_data.bars.imports.backfill_service import (
     DEFAULT_BACKFILL_SYMBOLS,
 )
 
-from app.historical_data.gap_analysis_service import (
+from app.historical_data.studies.gaps.gap_analysis_service import (
     calculate_gap_bucket_statistics,
 )
 

@@ -1,8 +1,8 @@
-from app.historical_data.gap_analysis_service import (
+from app.historical_data.studies.gaps.gap_analysis_service import (
     calculate_gap_days,
 )
 
-from app.historical_data.opening_pattern_service import (
+from app.historical_data.studies.openings.opening_pattern_service import (
     calculate_opening_patterns,
 )
 

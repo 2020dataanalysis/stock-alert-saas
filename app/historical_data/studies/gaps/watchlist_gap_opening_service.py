@@ -2,7 +2,7 @@ from app.historical_data.bars.imports.backfill_service import (
     DEFAULT_BACKFILL_SYMBOLS,
 )
 
-from app.historical_data.gap_opening_summary_service import (
+from app.historical_data.studies.gaps.gap_opening_summary_service import (
     calculate_gap_opening_pattern_summary,
 )
 

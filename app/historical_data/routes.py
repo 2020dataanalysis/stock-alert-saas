@@ -8,12 +8,12 @@ from app.historical_data.bars.imports.backfill_service import (
     backfill_intraday_history,
 )
 
-from app.historical_data.gap_analysis_service import (
+from app.historical_data.studies.gaps.gap_analysis_service import (
     calculate_gap_bucket_statistics,
     calculate_gap_days,
 )
 
-from app.historical_data.gap_opening_summary_service import (
+from app.historical_data.studies.gaps.gap_opening_summary_service import (
     calculate_gap_opening_pattern_summary,
 )
 
@@ -22,7 +22,7 @@ from app.historical_data.bars.imports.import_service import (
     import_schwab_price_history_response,
 )
 
-from app.historical_data.opening_pattern_service import (
+from app.historical_data.studies.openings.opening_pattern_service import (
     calculate_opening_patterns,
 )
 
@@ -37,15 +37,15 @@ from app.historical_data.bars.service import (
     save_opening_scenario,
 )
 
-from app.historical_data.statistics_service import (
+from app.historical_data.studies.statistics.statistics_service import (
     calculate_daily_opening_summary,
 )
 
-from app.historical_data.watchlist_gap_service import (
+from app.historical_data.studies.gaps.watchlist_gap_service import (
     calculate_watchlist_gap_statistics,
 )
 
-from app.historical_data.watchlist_gap_opening_service import (
+from app.historical_data.studies.gaps.watchlist_gap_opening_service import (
     calculate_watchlist_gap_opening_summary,
 )
 
