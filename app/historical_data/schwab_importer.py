@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from app.historical_data.repository import (
+from app.historical_data.bars.repository import (
     upsert_historical_bars,
 )
 

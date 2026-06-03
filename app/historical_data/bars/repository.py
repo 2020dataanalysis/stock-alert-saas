@@ -2,7 +2,7 @@ from pathlib import Path
 import sqlite3
 from contextlib import closing
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+BASE_DIR = Path(__file__).resolve().parents[3]
 
 HISTORICAL_DB_PATH = (
     BASE_DIR / "data" / "historical_data.db"

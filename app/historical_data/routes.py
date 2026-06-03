@@ -26,7 +26,7 @@ from app.historical_data.opening_pattern_service import (
     calculate_opening_patterns,
 )
 
-from app.historical_data.service import (
+from app.historical_data.bars.service import (
     get_historical_data_health,
     initialize_historical_data_module,
     list_historical_bars,

@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from app.historical_data.repository import (
+from app.historical_data.bars.repository import (
     get_historical_bars,
 )
 

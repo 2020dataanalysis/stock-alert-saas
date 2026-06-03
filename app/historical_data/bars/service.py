@@ -1,4 +1,4 @@
-from app.historical_data.repository import (
+from app.historical_data.bars.repository import (
     add_minute_outcome,
     create_opening_scenario,
     get_historical_bars,

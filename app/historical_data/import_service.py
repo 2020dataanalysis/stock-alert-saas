@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 
 from schwab_client import SchwabClient
 
-from app.historical_data.repository import (
+from app.historical_data.bars.repository import (
     init_historical_db,
 )
 
