@@ -35,7 +35,7 @@ from app.market_state.web.routes import router as market_state_router
 from app.scalp_state.routes import router as scalp_state_router
 
 from app.historical_data.routes import router as historical_data_router
-from app.historical_data.replay_routes import router as historical_replay_router
+from app.historical_data.replay.routes import router as historical_replay_router
 from app.statistics.routes import router as statistics_router
 
 from app.live.routes import router as live_router

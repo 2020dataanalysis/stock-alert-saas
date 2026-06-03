@@ -5,16 +5,16 @@ from fastapi import Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
 
-from app.historical_data.replay_catalog_service import (
+from app.historical_data.replay.catalog_service import (
     get_replay_catalog,
 )
-from app.historical_data.replay_service import (
+from app.historical_data.replay.service import (
     get_replay_summary,
 )
-from app.historical_data.replay_quote_service import (
+from app.historical_data.replay.quote_service import (
     get_replay_quotes,
 )
-from app.historical_data.replay_date_service import (
+from app.historical_data.replay.date_service import (
     get_replay_dates,
 )
 
