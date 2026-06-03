@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
-from app.historical_data.imports.backfill_service import (
+from app.historical_data.bars.imports.backfill_service import (
     backfill_daily_history,
     backfill_default_watchlist_daily,
     backfill_default_watchlist_intraday,
@@ -17,7 +17,7 @@ from app.historical_data.gap_opening_summary_service import (
     calculate_gap_opening_pattern_summary,
 )
 
-from app.historical_data.imports.import_service import (
+from app.historical_data.bars.imports.import_service import (
     import_live_schwab_price_history,
     import_schwab_price_history_response,
 )

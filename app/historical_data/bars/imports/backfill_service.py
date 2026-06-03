@@ -1,4 +1,4 @@
-from app.historical_data.imports.import_service import (
+from app.historical_data.bars.imports.import_service import (
     import_live_schwab_price_history,
 )
 
