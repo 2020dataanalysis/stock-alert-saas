@@ -15,8 +15,8 @@ from app.market_state.event_log_service import (
     append_permission_blocked_event,
     append_shock_threshold_event,
 )
-from app.market_state.feature_engine import FeatureEngine
-from app.market_state.state_engine import classify_market_state
+from app.market_state.engine.feature_engine import FeatureEngine
+from app.market_state.engine.state_engine import classify_market_state
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
