@@ -9,7 +9,7 @@ from app.storage.sqlite_store import (
 
 
 PROJECT_PARENT = Path(__file__).resolve().parents[3]
-SCHWAB_PATH = PROJECT_PARENT / "2024schwab"
+SCHWAB_PATH = PROJECT_PARENT / "schwab-api-client"
 
 if not SCHWAB_PATH.exists():
     raise RuntimeError(f"Schwab repo not found at: {SCHWAB_PATH}")
@@ -17,7 +17,7 @@ if not SCHWAB_PATH.exists():
 if str(SCHWAB_PATH) not in sys.path:
     sys.path.insert(0, str(SCHWAB_PATH))
 
-from SchwabAPIClient import SchwabAPIClient
+from schwab_client.client import SchwabClient
 
 
 
@@ -26,62 +26,24 @@ from SchwabAPIClient import SchwabAPIClient
 
 class SchwabAdapter:
     def __init__(self):
-        self.client = SchwabAPIClient(
-            credentials_file="credentials.json",
-            grant_flow_type_filenames_file="grant_flow_type_filenames.json"
+        credentials_file = SCHWAB_PATH / "private" / "credentials.json"
+        token_file = SCHWAB_PATH / "private" / "refresh_token.json"
+
+        with credentials_file.open() as f:
+            credentials = json.load(f)
+
+        self.client = SchwabClient(
+            app_key=credentials["app_key"],
+            app_secret=credentials["app_secret"],
+            redirect_uri=credentials["redirect_uri"],
+            token_file=token_file,
         )
-
-
-        oauth_error = getattr(self.client.oauth_client, "last_oauth_error", None)
-
-        if oauth_error:
-            save_provider_error(
-                provider="schwab",
-                symbol=None,
-                operation="oauth_refresh",
-                error_type=oauth_error.get(
-                    "error_type",
-                    "refresh_token_authentication_error"
-                ),
-                message="Schwab OAuth refresh failed",
-                raw_response=oauth_error,
-            )
-
-            save_system_event(
-                event_type="SCHWAB_OAUTH_REFRESH_FAILED",
-                service="schwab_adapter",
-                status="ERROR",
-                message=oauth_error.get("response_text"),
-                metadata=oauth_error,
-            )
-
-
-
-        oauth_event = getattr(
-            self.client.oauth_client,
-            "last_oauth_event",
-            None
-        )
-
-        if oauth_event:
-            save_system_event(
-                event_type=oauth_event.get(
-                    "event_type",
-                    "SCHWAB_OAUTH_EVENT"
-                ),
-                service="schwab_adapter",
-                status="INFO",
-                message=json.dumps(oauth_event),
-                metadata=oauth_event,
-            )
-
-
 
 
 
 
     def get_quote(self, symbol: str):
-        data = self.client.get_ticker_data(symbol)
+        data = self.client.market_data.get_quote(symbol)
 
         if not data:
             save_provider_error(
@@ -121,36 +83,13 @@ class SchwabAdapter:
         }
 
     def get_movers(self, symbol_id="$DJI", sort="VOLUME", frequency=0):
-        base_url = "https://api.schwabapi.com/marketdata/v1"
-        endpoint = f"/movers/{symbol_id}"
-
-        params = {
-            "sort": sort,
-            "frequency": frequency,
-        }
-
-        response = self.client.get_request_endpoint(
-            base_url,
-            endpoint,
-            params=params
+        return self.client.market_data.get_movers(
+            symbol_id=symbol_id,
+            sort=sort,
+            frequency=frequency,
         )
-
-        # print("DEBUG RAW RESPONSE:", response)
-
-        return response
-
-
-
-
 
     def get_market_hours(self, market_id="equity"):
-        base_url = "https://api.schwabapi.com/marketdata/v1"
-        endpoint = f"/markets/{market_id}"
-
-        response = self.client.get_request_endpoint(
-            base_url,
-            endpoint,
-            params=None,
+        return self.client.market_data.get_market_hours(
+            markets=market_id,
         )
-
-        return response

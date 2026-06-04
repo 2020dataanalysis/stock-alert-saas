@@ -2,12 +2,12 @@ import json
 import asyncio
 import websockets
 
-from SchwabAPIClient import SchwabAPIClient
+from schwab_client.client import SchwabClient
 
 
 class SchwabStreamer:
     def __init__(self):
-        self.client = SchwabAPIClient(
+        self.client = SchwabClient(
             credentials_file="credentials.json",
             grant_flow_type_filenames_file="grant_flow_type_filenames.json"
         )
