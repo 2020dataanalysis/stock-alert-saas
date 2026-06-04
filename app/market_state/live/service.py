@@ -19,7 +19,7 @@ from app.market_state.engine.feature_engine import FeatureEngine
 from app.market_state.engine.state_engine import classify_market_state
 
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+BASE_DIR = Path(__file__).resolve().parents[3]
 
 MARKET_DATA_DB_PATH = (
     BASE_DIR / "data" / "market_data.db"

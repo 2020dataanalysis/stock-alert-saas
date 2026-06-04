@@ -36,9 +36,12 @@ def live_page(
     mover_symbols = []
 
     if settings.get("use_movers"):
-        mover_symbols = get_mover_symbols(
-            limit=settings.get("movers_limit", 10)
-        )
+        try:
+            mover_symbols = get_mover_symbols(
+                limit=settings.get("movers_limit", 10)
+            )
+        except Exception:
+            mover_symbols = []
 
     return templates.TemplateResponse(
         request,
