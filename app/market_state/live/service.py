@@ -9,7 +9,7 @@
 import sqlite3
 from pathlib import Path
 
-from app.market_state.event_log_service import (
+from app.market_state.events.service import (
     append_high_noise_event,
     append_market_event,
     append_permission_blocked_event,
