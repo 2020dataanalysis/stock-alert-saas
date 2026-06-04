@@ -1,4 +1,4 @@
-from app.market_state.db import get_connection
+from app.market_state.storage.db import get_connection
 
 
 def save_snapshot(

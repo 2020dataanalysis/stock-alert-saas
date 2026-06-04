@@ -1,9 +1,9 @@
 import sqlite3
 from pathlib import Path
 
-from app.market_state.event_repository import save_event
+from app.market_state.storage.event_repository import save_event
 from app.market_state.feature_engine import FeatureEngine
-from app.market_state.snapshot_repository import save_snapshot
+from app.market_state.storage.snapshot_repository import save_snapshot
 from app.market_state.state_engine import classify_market_state
 
 
