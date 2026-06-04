@@ -12,10 +12,17 @@ from app.web.api import router as api_router
 from app.services.alert_service import get_recent_alerts
 from app.services.provider_error_service import get_recent_provider_errors
 from app.services.system_event_service import get_recent_system_events
-from app.storage.sqlite_store import clear_alerts, save_system_event
+# from app.storage.sqlite_store import clear_alerts, save_system_event
 from app.services.market_hours_service import get_market_status
 from app.data_adapters.movers_adapter import get_mover_symbols
 from fastapi.staticfiles import StaticFiles
+
+from app.storage.sqlite_store import (
+    clear_alerts,
+    clear_alert_rules,
+    save_system_event,
+)
+
 
 from app.services.alert_rule_service import (
     get_alert_rules,
@@ -285,6 +292,31 @@ async def clear_alerts_route():
     )
 
     return RedirectResponse("/alerts", status_code=303)
+
+
+
+@app.post("/alert-rules/clear")
+async def clear_alert_rules_route():
+
+    clear_alert_rules()
+
+    save_system_event(
+        event_type="ALERT_RULES_CLEARED",
+        service="web_dashboard",
+        status="OK",
+        message="User cleared all alert rules",
+    )
+
+    return RedirectResponse(
+        "/alert-rules",
+        status_code=303,
+    )
+
+
+
+def clear_alert_rules():
+    with market_db_connection() as conn:
+        conn.execute("DELETE FROM alert_rules")
 
 
 @app.get("/alert-rules", response_class=HTMLResponse)

@@ -18,6 +18,17 @@
 </div>
 {% endif %}
 
+
+<form
+    method="post"
+    action="/alert-rules/clear"
+    onsubmit="return confirm('Delete ALL alert rules?');"
+>
+    <button type="submit">
+        Clear All Rules
+    </button>
+</form>
+
 <div class="form-box">
 
     <h2>Create Threshold Rule</h2>

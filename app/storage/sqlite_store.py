@@ -317,6 +317,13 @@ def clear_alerts():
         conn.execute("DELETE FROM alerts")
 
 
+
+def clear_alert_rules():
+    with market_db_connection() as conn:
+        conn.execute("DELETE FROM alert_rules")
+
+
+
 def save_alert(alert):
     with market_db_connection() as conn:
         conn.execute("""
