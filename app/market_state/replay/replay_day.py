@@ -1,6 +1,6 @@
 import argparse
 
-from app.market_state.replay_service import replay_quotes
+from app.market_state.replay.service import replay_quotes
 
 
 def main():

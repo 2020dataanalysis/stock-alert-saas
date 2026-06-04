@@ -10,7 +10,7 @@ from jinja2 import FileSystemLoader
 
 from app.market_state.event_log_service import get_recent_market_events
 from app.market_state.live.service import get_latest_market_state
-from app.market_state.replay_service import replay_quotes
+from app.market_state.replay.service import replay_quotes
 
 
 BASE_DIR = Path(__file__).resolve().parent
