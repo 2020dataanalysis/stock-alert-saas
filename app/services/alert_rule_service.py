@@ -19,6 +19,7 @@ def get_alert_rules():
                 threshold,
                 price_change_pct,
                 volume_change_pct,
+                require_volume_confirmation,
                 window_size,
                 is_active,
                 auto_disable_on_trigger,
@@ -79,6 +80,7 @@ def create_whale_rule(
     price_change_pct,
     volume_change_pct,
     window_size,
+    require_volume_confirmation=True,
     is_active=True,
     auto_disable_on_trigger=True,
     auto_generated=False,
@@ -99,6 +101,7 @@ def create_whale_rule(
                 threshold,
                 price_change_pct,
                 volume_change_pct,
+                require_volume_confirmation,
                 window_size,
                 is_active,
                 auto_disable_on_trigger,
@@ -107,13 +110,14 @@ def create_whale_rule(
                 created_at,
                 updated_at
             )
-            VALUES (?, ?, ?, 'price_change_pct', '>=', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, 'price_change_pct', '>=', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             symbol.upper(),
             rule_type,
             direction,
             float(price_change_pct),
             float(volume_change_pct),
+            int(require_volume_confirmation),
             int(window_size),
             int(is_active),
             int(auto_disable_on_trigger),

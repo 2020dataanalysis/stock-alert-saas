@@ -86,6 +86,15 @@
         <input name="volume_change_pct" type="number" step="any" value="20" required>
         <span>% volume change</span>
 
+        <label>
+            <input
+                type="checkbox"
+                name="require_volume_confirmation"
+                checked
+            >
+            Require volume confirmation
+        </label>
+
         <input name="window_size" type="number" value="5" required>
         <span>window size</span>
 
@@ -102,7 +111,17 @@
         <button type="submit">Create Whale Rule</button>
     </form>
 
+    <div style="
+        margin-bottom:20px;
+        padding:10px;
+        background:#3f3f46;
+        border-radius:6px;
+    ">
+        Alert rules are evaluated during REGULAR market hours only.
+    </div>
+
 </div>
+
 
 <h2>Existing Rules</h2>
 
@@ -133,7 +152,11 @@
                 {{ rule.rule_type }}
                 {{ rule.direction }}
                 price {{ rule.price_change_pct }}%
-                volume {{ rule.volume_change_pct }}%
+                {% if rule.require_volume_confirmation %}
+                    volume {{ rule.volume_change_pct }}%
+                {% else %}
+                    volume not required
+                {% endif %}
                 window {{ rule.window_size }}
             {% endif %}
         </td>

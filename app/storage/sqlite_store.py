@@ -175,6 +175,14 @@ def init_db():
             pass
 
         try:
+            conn.execute("""
+                ALTER TABLE alert_rules
+                ADD COLUMN require_volume_confirmation INTEGER DEFAULT 1
+            """)
+        except sqlite3.OperationalError:
+            pass
+
+        try:
             conn.execute("ALTER TABLE alert_rules ADD COLUMN window_size INTEGER")
         except sqlite3.OperationalError:
             pass

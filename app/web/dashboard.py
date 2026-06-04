@@ -349,6 +349,7 @@ async def create_alert_rule_route(
     price_change_pct: float = Form(1.0),
     volume_change_pct: float = Form(10.0),
     window_size: int = Form(5),
+    require_volume_confirmation: bool = Form(False),
     is_active: bool = Form(False),
     auto_disable_on_trigger: bool = Form(False),
 ):
@@ -373,6 +374,7 @@ async def create_alert_rule_route(
                 price_change_pct=price_change_pct,
                 volume_change_pct=volume_change_pct,
                 window_size=window_size,
+                require_volume_confirmation=require_volume_confirmation,
                 is_active=is_active,
                 auto_disable_on_trigger=auto_disable_on_trigger,
             )
@@ -383,6 +385,7 @@ async def create_alert_rule_route(
                 price_change_pct=price_change_pct,
                 volume_change_pct=volume_change_pct,
                 window_size=window_size,
+                require_volume_confirmation=require_volume_confirmation,
                 is_active=is_active,
                 auto_disable_on_trigger=auto_disable_on_trigger,
             )
@@ -395,6 +398,7 @@ async def create_alert_rule_route(
                 price_change_pct=price_change_pct,
                 volume_change_pct=volume_change_pct,
                 window_size=window_size,
+                require_volume_confirmation=require_volume_confirmation,
                 is_active=is_active,
                 auto_disable_on_trigger=auto_disable_on_trigger,
             )
