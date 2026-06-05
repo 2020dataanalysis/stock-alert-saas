@@ -45,10 +45,22 @@ def evaluate_whale_rule(rule, quote):
         if volume_change_pct < required_volume_change:
             return False
     
+    price_triggered = False
+
     if direction == "up":
-        return price_change_pct >= required_price_change
+        price_triggered = price_change_pct >= required_price_change
 
-    if direction == "down":
-        return price_change_pct <= -required_price_change
+    elif direction == "down":
+        price_triggered = price_change_pct <= -required_price_change
 
-    return False
+    if not price_triggered:
+        return False
+
+    return {
+        "price_change_pct": round(price_change_pct, 4),
+        "volume_change_pct": round(volume_change_pct, 4),
+        "oldest_price": start_price,
+        "newest_price": current_price,
+        "oldest_volume": start_volume,
+        "newest_volume": current_volume,
+    }

@@ -6,7 +6,6 @@ from datetime import datetime, UTC
 
 from app.config import load_settings
 from app.data_adapters.schwab_adapter import SchwabAdapter
-from app.signals.spike_detector import SpikeDetector
 # from app.storage.sqlite_store import init_db, save_quote, save_alert
 from app.storage.sqlite_store import save_system_event
 # from app.services.status_service import get_streamer_mode
@@ -57,12 +56,6 @@ adapter = create_adapter()
 log("✅ Schwab adapter initialized")
 
 
-detector = SpikeDetector(
-    price_spike_pct=settings["price_spike_pct"],
-    volume_spike_pct=settings["volume_spike_pct"],
-    window_size=settings["window_size"],
-)
-
 service_running = True
 
 FAILED_CYCLE_LIMIT = 3
@@ -97,9 +90,6 @@ def prepare_startup_mover_rules(startup_watchlist):
 
         created = generate_mover_rules(
             startup_watchlist["movers"],
-            price_change_pct=settings["price_spike_pct"],
-            volume_change_pct=settings["volume_spike_pct"],
-            window_size=settings["window_size"],
         )
 
         log(
@@ -376,11 +366,7 @@ def process_symbol(
     if runtime["should_process_alerts"]:
 
 
-        alerts = detector.process_quote(quote)
-
-        alerts.extend(
-            evaluate_typed_rules(quote)
-        )
+        alerts = evaluate_typed_rules(quote)
 
 
 

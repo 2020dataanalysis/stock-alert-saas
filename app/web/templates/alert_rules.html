@@ -4,6 +4,57 @@
 
 <h1>Alert Rules</h1>
 
+<div class="form-box">
+    <h2>Alert Settings</h2>
+
+    <form method="post" action="/alert-rules/settings">
+        <label>Favorite Symbols</label><br>
+        <input
+            name="favorite_symbols"
+            value="{{ settings['favorite_symbols'] | join(',') }}"
+        ><br><br>
+
+        <label>
+            <input
+                type="checkbox"
+                name="use_movers"
+                value="true"
+                {% if settings['use_movers'] %}checked{% endif %}
+            >
+            Use Movers
+        </label><br>
+
+        <label>Movers Limit</label><br>
+        <input
+            name="movers_limit"
+            type="number"
+            value="{{ settings['movers_limit'] }}"
+        ><br><br>
+
+        <label>
+            <input
+                type="checkbox"
+                name="auto_generate_mover_alerts"
+                value="true"
+                {% if settings.get('auto_generate_mover_alerts') %}checked{% endif %}
+            >
+            Auto-generate mover alert rules on startup
+        </label><br>
+
+        <label>
+            <input
+                type="checkbox"
+                name="clear_existing_mover_alerts_on_startup"
+                value="true"
+                {% if settings.get('clear_existing_mover_alerts_on_startup') %}checked{% endif %}
+            >
+            Clear existing mover alert rules on startup
+        </label><br><br>
+
+        <button type="submit">Save Alert Settings</button>
+    </form>
+</div>
+
 <div style="margin-bottom: 20px;">
     <form method="post" action="/alert-rules/generate-movers">
         <button type="submit">

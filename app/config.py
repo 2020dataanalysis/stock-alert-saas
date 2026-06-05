@@ -7,9 +7,8 @@ DEFAULT_SETTINGS = {
     "favorite_symbols": ["AAPL", "TSLA", "NVDA"],
     "use_movers": True,
     "movers_limit": 10,
-    "price_spike_pct": 0.5,
-    "volume_spike_pct": 5,
-    "window_size": 5,
+    "auto_generate_mover_alerts": False,
+    "clear_existing_mover_alerts_on_startup": False,
     "poll_seconds": 1,
 }
 

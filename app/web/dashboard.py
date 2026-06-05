@@ -182,32 +182,10 @@ async def settings_page(request: Request):
 
 @app.post("/settings")
 async def update_settings(
-    favorite_symbols: str = Form(...),
-    use_movers: bool = Form(False),
-    auto_generate_mover_alerts: bool = Form(False),
-    clear_existing_mover_alerts_on_startup: bool = Form(False),
-    movers_limit: int = Form(...),
-    price_spike_pct: float = Form(...),
-    volume_spike_pct: float = Form(...),
-    window_size: int = Form(...),
     poll_seconds: int = Form(...),
 ):
-    settings = {
-        "favorite_symbols": [
-            s.strip().upper()
-            for s in favorite_symbols.split(",")
-            if s.strip()
-        ],
-        "use_movers": use_movers,
-        "auto_generate_mover_alerts": auto_generate_mover_alerts,
-        "clear_existing_mover_alerts_on_startup":
-            clear_existing_mover_alerts_on_startup,
-        "movers_limit": movers_limit,
-        "price_spike_pct": price_spike_pct,
-        "volume_spike_pct": volume_spike_pct,
-        "window_size": window_size,
-        "poll_seconds": poll_seconds,
-    }
+    settings = load_settings()
+    settings["poll_seconds"] = poll_seconds
 
     path = Path("config/settings.json")
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -326,15 +304,52 @@ async def alert_rules_page(
     message_type: str = "info",
 ):
     rules = get_alert_rules()
+    settings = load_settings()
 
     return templates.TemplateResponse(
         request=request,
         name="alert_rules.html",
         context={
             "rules": rules,
+            "settings": settings,
             "message": message,
             "message_type": message_type,
         },
+    )
+
+
+@app.post("/alert-rules/settings")
+async def update_alert_rule_settings(
+    favorite_symbols: str = Form(...),
+    use_movers: bool = Form(False),
+    auto_generate_mover_alerts: bool = Form(False),
+    clear_existing_mover_alerts_on_startup: bool = Form(False),
+    movers_limit: int = Form(...),
+):
+    settings = load_settings()
+
+    settings["favorite_symbols"] = [
+        s.strip().upper()
+        for s in favorite_symbols.split(",")
+        if s.strip()
+    ]
+
+    settings["use_movers"] = use_movers
+    settings["auto_generate_mover_alerts"] = auto_generate_mover_alerts
+    settings["clear_existing_mover_alerts_on_startup"] = (
+        clear_existing_mover_alerts_on_startup
+    )
+    settings["movers_limit"] = movers_limit
+
+    path = Path("config/settings.json")
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    with path.open("w") as f:
+        json.dump(settings, f, indent=2)
+
+    return RedirectResponse(
+        "/alert-rules?message=Alert+settings+saved&message_type=success",
+        status_code=303,
     )
 
 

@@ -6,48 +6,7 @@
 
 <form method="post" action="/settings">
 
-    <label>Favorite Symbols</label><br>
-    <input name="favorite_symbols" value="{{ settings['favorite_symbols'] | join(',') }}"><br>
-    <br>
-
-    <label>
-        <input type="checkbox" name="use_movers" value="true"
-        {% if settings['use_movers'] %}checked{% endif %}>
-        Use Movers
-    </label><br>
-
-    <label>
-        <input type="checkbox"
-            name="auto_generate_mover_alerts"
-            value="true"
-            {% if settings.get('auto_generate_mover_alerts') %}checked{% endif %}>
-        Auto-generate mover alerts on startup
-    </label><br>
-
-    <label>
-        <input type="checkbox"
-            name="clear_existing_mover_alerts_on_startup"
-            value="true"
-            {% if settings.get('clear_existing_mover_alerts_on_startup') %}checked{% endif %}>
-        Clear existing mover alert rules on startup
-    </label><br><br>
-
-    <label>Movers Limit</label><br>
-    <input name="movers_limit" type="number" value="{{ settings['movers_limit'] }}"><br>
-
-    <h3>Alerts</h3>
-
-    <label>Price Spike %</label><br>
-    <input name="price_spike_pct" type="number" step="0.1"
-           value="{{ settings['price_spike_pct'] }}"><br>
-
-    <label>Volume Spike %</label><br>
-    <input name="volume_spike_pct" type="number" step="0.1"
-           value="{{ settings['volume_spike_pct'] }}"><br>
-
-    <label>Window Size</label><br>
-    <input name="window_size" type="number"
-           value="{{ settings['window_size'] }}"><br>
+    <h3>Runtime</h3>
 
     <label>Poll Seconds</label><br>
     <input name="poll_seconds" type="number"

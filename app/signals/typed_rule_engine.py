@@ -26,12 +26,14 @@ def evaluate_typed_rules(quote):
             continue
 
         triggered = False
+        trigger_details = {}
 
         if rule["rule_type"] == "threshold":
             triggered = evaluate_threshold_rule(rule, quote)
 
         elif rule["rule_type"] in {"whale_spike", "whale_drop"}:
-            triggered = evaluate_whale_rule(rule, quote)
+            trigger_details = evaluate_whale_rule(rule, quote)
+            triggered = bool(trigger_details)
 
         if triggered:
 
@@ -40,12 +42,15 @@ def evaluate_typed_rules(quote):
             if rule["auto_disable_on_trigger"]:
                 disable_rule(rule["id"])
 
-
-            triggered_alerts.append({
+            alert = {
                 "symbol": quote["symbol"],
                 "type": rule["rule_type"],
                 "rule_id": rule["id"],
                 "message": f'{quote["symbol"]} triggered {rule["rule_type"]}',
-            })
+            }
+
+            alert.update(trigger_details)
+
+            triggered_alerts.append(alert)
 
     return triggered_alerts
