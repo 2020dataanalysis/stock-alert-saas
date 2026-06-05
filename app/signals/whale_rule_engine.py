@@ -40,9 +40,11 @@ def evaluate_whale_rule(rule, quote):
     required_price_change = rule["price_change_pct"]
     required_volume_change = rule["volume_change_pct"]
 
-    if volume_change_pct < required_volume_change:
-        return False
+    if rule["require_volume_confirmation"]:
 
+        if volume_change_pct < required_volume_change:
+            return False
+    
     if direction == "up":
         return price_change_pct >= required_price_change
 
