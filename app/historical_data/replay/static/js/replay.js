@@ -3,6 +3,7 @@ let selectedSessionIndex = 0;
 
 let replayChart = null;
 let candleSeries = null;
+let replayMarkersPlugin = null;
 
 let replayQuotes = [];
 let replaySimulatedAlerts = [];
@@ -205,6 +206,109 @@ function renderReplayAlertsTable() {
     }).join("");
 }
 
+
+function setReplayPlaybackState(state) {
+    const playButton = document.getElementById("play-button");
+    const pauseButton = document.getElementById("pause-button");
+
+    if (!playButton || !pauseButton) {
+        return;
+    }
+
+    playButton.dataset.replayState = state;
+    pauseButton.dataset.replayState = state;
+
+    if (state === "playing") {
+        playButton.disabled = true;
+        playButton.textContent = "Playing...";
+        playButton.style.opacity = "0.55";
+        playButton.style.cursor = "not-allowed";
+        playButton.style.background = "#4b5563";
+
+        pauseButton.disabled = false;
+        pauseButton.textContent = "Pause";
+        pauseButton.style.opacity = "1";
+        pauseButton.style.cursor = "pointer";
+        pauseButton.style.background = "#2563eb";
+        return;
+    }
+
+    if (state === "finished") {
+        playButton.disabled = false;
+        playButton.textContent = "Replay Finished";
+        playButton.style.opacity = "0.85";
+        playButton.style.cursor = "pointer";
+        playButton.style.background = "#6b7280";
+
+        pauseButton.disabled = true;
+        pauseButton.textContent = "Pause";
+        pauseButton.style.opacity = "0.55";
+        pauseButton.style.cursor = "not-allowed";
+        pauseButton.style.background = "#4b5563";
+        return;
+    }
+
+    playButton.disabled = false;
+    playButton.textContent = "Play";
+    playButton.style.opacity = "1";
+    playButton.style.cursor = "pointer";
+    playButton.style.background = "#16a34a";
+
+    pauseButton.disabled = true;
+    pauseButton.textContent = "Pause";
+    pauseButton.style.opacity = "0.55";
+    pauseButton.style.cursor = "not-allowed";
+    pauseButton.style.background = "#4b5563";
+}
+
+function getReplayAlertMarkerTime(alert) {
+    const alertDate = new Date(alert.timestamp);
+    alertDate.setSeconds(0, 0);
+    return Math.floor(alertDate.getTime() / 1000);
+}
+
+function buildReplayAlertMarkers() {
+    return getVisibleReplayAlerts().slice(-200).map((alert) => {
+        const isDrop = alert.direction === "down";
+
+        return {
+            time: getReplayAlertMarkerTime(alert),
+            position: isDrop ? "belowBar" : "aboveBar",
+            shape: isDrop ? "arrowDown" : "arrowUp",
+            color: isDrop ? "#ef4444" : "#22c55e",
+            text: isDrop ? "Drop" : "Spike",
+        };
+    });
+}
+
+function applyReplayAlertMarkers() {
+    if (!candleSeries) {
+        return;
+    }
+
+    const markers = buildReplayAlertMarkers();
+
+    if (
+        window.LightweightCharts &&
+        typeof LightweightCharts.createSeriesMarkers === "function"
+    ) {
+        if (replayMarkersPlugin && typeof replayMarkersPlugin.setMarkers === "function") {
+            replayMarkersPlugin.setMarkers(markers);
+            return;
+        }
+
+        replayMarkersPlugin = LightweightCharts.createSeriesMarkers(
+            candleSeries,
+            markers
+        );
+        return;
+    }
+
+    if (typeof candleSeries.setMarkers === "function") {
+        candleSeries.setMarkers(markers);
+    }
+}
+
 function updatePlaybackStatus() {
     const statusElement = document.getElementById("replay-playback-status");
 
@@ -242,6 +346,7 @@ function renderReplayAtCurrentTime() {
     const candles = buildOneMinuteCandles(visibleQuotes);
 
     candleSeries.setData(candles);
+    applyReplayAlertMarkers();
 
     requestAnimationFrame(() => {
         resizeChart();
@@ -260,6 +365,7 @@ function resetReplay(quotes) {
     if (!replayQuotes.length) {
         replayStartTimestamp = null;
         replayCurrentTimestamp = null;
+        setReplayPlaybackState("paused");
         renderReplayAtCurrentTime();
         return;
     }
@@ -267,6 +373,7 @@ function resetReplay(quotes) {
     replayStartTimestamp = new Date(replayQuotes[0].timestamp).getTime();
     replayCurrentTimestamp = replayStartTimestamp;
 
+    setReplayPlaybackState("paused");
     renderReplayAtCurrentTime();
 }
 
@@ -276,6 +383,7 @@ function playReplay() {
     }
 
     pauseReplay();
+    setReplayPlaybackState("playing");
 
     const lastTimestamp = new Date(
         replayQuotes[replayQuotes.length - 1].timestamp
@@ -303,6 +411,7 @@ function playReplay() {
 
         if (replayCurrentTimestamp >= lastTimestamp) {
             pauseReplay();
+            setReplayPlaybackState("finished");
         }
     }, REPLAY_TICK_MS);
 }
@@ -312,6 +421,19 @@ function pauseReplay() {
         window.clearInterval(replayTimer);
         replayTimer = null;
     }
+
+    if (replayCurrentTimestamp && replayQuotes.length) {
+        const lastTimestamp = new Date(
+            replayQuotes[replayQuotes.length - 1].timestamp
+        ).getTime();
+
+        if (replayCurrentTimestamp >= lastTimestamp) {
+            setReplayPlaybackState("finished");
+            return;
+        }
+    }
+
+    setReplayPlaybackState("paused");
 }
 
 function renderSelectedSession(row) {
@@ -490,6 +612,8 @@ async function loadReplayDates() {
 
 document.getElementById("play-button").addEventListener("click", playReplay);
 document.getElementById("pause-button").addEventListener("click", pauseReplay);
+
+setReplayPlaybackState("paused");
 
 loadReplaySummary();
 loadReplayDates();

@@ -218,7 +218,7 @@
                 {% endif %}
 
                 {% if rule.price_move_type == "cents" %}
-                    ${{ "%.2f"|format(rule.price_move_cents) }}
+                    {{ "{:g}".format(rule.price_move_cents) }}¢
                 {% else %}
                     {{ rule.price_change_pct }}%
                 {% endif %}
