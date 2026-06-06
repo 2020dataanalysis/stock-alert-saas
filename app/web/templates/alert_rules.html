@@ -208,20 +208,26 @@
                 {{ rule.operator }}
                 {{ rule.threshold }}
             {% else %}
-                {{ rule.symbol }}
-                {{ rule.rule_type }}
-                {{ rule.direction }}
+                Ticker: {{ rule.symbol }} |
+
+                Price
+                {% if rule.direction == "down" %}
+                    drops
+                {% else %}
+                    rises
+                {% endif %}
+
                 {% if rule.price_move_type == "cents" %}
-                    price {{ rule.price_move_cents }}¢
+                    ${{ "%.2f"|format(rule.price_move_cents) }}
                 {% else %}
-                    price {{ rule.price_change_pct }}%
+                    {{ rule.price_change_pct }}%
                 {% endif %}
+
+                within {{ rule.window_size }} quotes
+
                 {% if rule.require_volume_confirmation %}
-                    volume {{ rule.volume_change_pct }}%
-                {% else %}
-                    volume not required
+                    | Volume increase ≥ {{ rule.volume_change_pct }}%
                 {% endif %}
-                window {{ rule.window_size }}
             {% endif %}
         </td>
 
