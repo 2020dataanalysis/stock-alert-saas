@@ -40,18 +40,34 @@ def evaluate_whale_rule(rule, quote):
     required_price_change = rule["price_change_pct"]
     required_volume_change = rule["volume_change_pct"]
 
+    price_move_type = rule["price_move_type"] or "percent"
+    required_price_move_cents = rule["price_move_cents"] or 0
+
+    price_delta = current_price - start_price
+    required_price_delta = required_price_move_cents / 100
+
     if rule["require_volume_confirmation"]:
 
         if volume_change_pct < required_volume_change:
             return False
-    
+
     price_triggered = False
 
-    if direction == "up":
-        price_triggered = price_change_pct >= required_price_change
+    if price_move_type == "cents":
 
-    elif direction == "down":
-        price_triggered = price_change_pct <= -required_price_change
+        if direction == "up":
+            price_triggered = price_delta >= required_price_delta
+
+        elif direction == "down":
+            price_triggered = price_delta <= -required_price_delta
+
+    else:
+
+        if direction == "up":
+            price_triggered = price_change_pct >= required_price_change
+
+        elif direction == "down":
+            price_triggered = price_change_pct <= -required_price_change
 
     if not price_triggered:
         return False

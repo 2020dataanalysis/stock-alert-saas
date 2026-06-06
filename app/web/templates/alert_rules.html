@@ -131,8 +131,17 @@
             <option value="down">Drop Down</option>
         </select>
 
-        <input name="price_change_pct" type="number" step="any" value="1.5" required>
-        <span>% price change</span>
+        <label>Price Move Type</label><br>
+        <select name="price_move_type">
+            <option value="cents" selected>Cents</option>
+            <option value="percent">Percent</option>
+        </select><br>
+
+        <input name="price_move_cents" type="number" step="any" value="5" required>
+        <span>cents</span><br>
+
+        <input name="price_change_pct" type="number" step="any" value="0.1" required>
+        <span>% price change, only used when Percent is selected</span><br>
 
         <input name="volume_change_pct" type="number" step="any" value="20" required>
         <span>% volume change</span>
@@ -202,7 +211,11 @@
                 {{ rule.symbol }}
                 {{ rule.rule_type }}
                 {{ rule.direction }}
-                price {{ rule.price_change_pct }}%
+                {% if rule.price_move_type == "cents" %}
+                    price {{ rule.price_move_cents }}¢
+                {% else %}
+                    price {{ rule.price_change_pct }}%
+                {% endif %}
                 {% if rule.require_volume_confirmation %}
                     volume {{ rule.volume_change_pct }}%
                 {% else %}

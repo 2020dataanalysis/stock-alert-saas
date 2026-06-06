@@ -183,6 +183,20 @@ def init_db():
             pass
 
         try:
+            conn.execute(
+                "ALTER TABLE alert_rules ADD COLUMN price_move_type TEXT DEFAULT 'cents'"
+            )
+        except sqlite3.OperationalError:
+            pass
+
+        try:
+            conn.execute(
+                "ALTER TABLE alert_rules ADD COLUMN price_move_cents REAL DEFAULT 5"
+            )
+        except sqlite3.OperationalError:
+            pass
+
+        try:
             conn.execute("ALTER TABLE alert_rules ADD COLUMN window_size INTEGER")
         except sqlite3.OperationalError:
             pass
