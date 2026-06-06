@@ -5,6 +5,7 @@ let replayChart = null;
 let candleSeries = null;
 
 let replayQuotes = [];
+let replaySimulatedAlerts = [];
 let replayStartTimestamp = null;
 let replayCurrentTimestamp = null;
 let replayTimer = null;
@@ -157,6 +158,53 @@ function getVisibleReplayQuotes() {
     });
 }
 
+
+function getVisibleReplayAlerts() {
+    if (!replayCurrentTimestamp) {
+        return [];
+    }
+
+    return replaySimulatedAlerts.filter((alert) => {
+        const alertTime = new Date(alert.timestamp).getTime();
+        return alertTime <= replayCurrentTimestamp;
+    });
+}
+
+function renderReplayAlertsTable() {
+    const tableBody = document.getElementById("replay-alerts-body");
+
+    if (!tableBody) {
+        return;
+    }
+
+    const visibleAlerts = getVisibleReplayAlerts();
+
+    if (!visibleAlerts.length) {
+        tableBody.innerHTML = `
+            <tr>
+                <td colspan="7">No replay alerts fired yet.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    tableBody.innerHTML = visibleAlerts.slice(-50).reverse().map((alert) => {
+        const details = alert.details || {};
+
+        return `
+            <tr>
+                <td>${formatTimestamp(alert.timestamp)}</td>
+                <td>${alert.symbol}</td>
+                <td>${alert.rule_type}</td>
+                <td>${alert.direction}</td>
+                <td>${Number(alert.last).toFixed(2)}</td>
+                <td>${details.price_change_pct ?? ""}%</td>
+                <td>${details.volume_change_pct ?? ""}%</td>
+            </tr>
+        `;
+    }).join("");
+}
+
 function updatePlaybackStatus() {
     const statusElement = document.getElementById("replay-playback-status");
 
@@ -173,11 +221,13 @@ function updatePlaybackStatus() {
     const speed = Number(speedElement.value || 1);
 
     const visibleQuotes = getVisibleReplayQuotes();
+    const visibleAlerts = getVisibleReplayAlerts();
 
     statusElement.innerHTML = `
         <div><strong>Replay Time:</strong> ${formatReplayTimestamp(replayCurrentTimestamp)}</div>
         <div><strong>Replay Speed:</strong> ${speed}x</div>
         <div><strong>Visible Quotes:</strong> ${formatNumber(visibleQuotes.length)} / ${formatNumber(replayQuotes.length)}</div>
+        <div><strong>Replay Alerts Fired:</strong> ${formatNumber(visibleAlerts.length)} / ${formatNumber(replaySimulatedAlerts.length)}</div>
     `;
 }
 
@@ -199,6 +249,7 @@ function renderReplayAtCurrentTime() {
     });
 
     updatePlaybackStatus();
+    renderReplayAlertsTable();
 }
 
 function resetReplay(quotes) {
@@ -339,6 +390,7 @@ async function loadReplaySummary() {
     `;
 }
 
+
 async function loadReplayQuotes(tradeDate = null) {
     const symbol = getQueryParam("symbol");
     const dataInfoElement = document.getElementById("replay-data-info");
@@ -353,7 +405,10 @@ async function loadReplayQuotes(tradeDate = null) {
         buildQuoteUrl(symbol, tradeDate)
     );
 
-    const quotes = await response.json();
+    const payload = await response.json();
+
+    const quotes = payload.quotes || [];
+    const simulatedAlerts = payload.simulated_alerts || [];
 
     if (!quotes.length) {
         dataInfoElement.textContent = "No quote data found.";
@@ -372,10 +427,14 @@ async function loadReplayQuotes(tradeDate = null) {
         <div><strong>${label}:</strong> ${formatNumber(quotes.length)}</div>
         <div><strong>First Quote:</strong> ${formatTimestamp(firstQuote.timestamp)}</div>
         <div><strong>Last Quote:</strong> ${formatTimestamp(lastQuote.timestamp)}</div>
+        <div><strong>Simulated Alerts:</strong> ${formatNumber(simulatedAlerts.length)}</div>
     `;
+
+    replaySimulatedAlerts = simulatedAlerts;
 
     resetReplay(quotes);
 }
+
 
 async function loadReplayDates() {
     const symbol = getQueryParam("symbol");

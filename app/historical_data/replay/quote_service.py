@@ -1,4 +1,7 @@
 from app.storage.sqlite_store import get_row_connection
+from app.historical_data.replay.alert_simulation_service import (
+    simulate_replay_alerts,
+)
 
 
 def get_replay_quotes(
@@ -6,10 +9,13 @@ def get_replay_quotes(
     trade_date=None,
     limit=10000,
 ):
+    requested_symbol = symbol.upper()
+
     with get_row_connection() as conn:
 
         sql = """
             SELECT
+                symbol,
                 timestamp,
                 last,
                 volume
@@ -17,7 +23,7 @@ def get_replay_quotes(
             WHERE symbol = ?
         """
 
-        params = [symbol.upper()]
+        params = [requested_symbol]
 
         if trade_date:
             sql += """
@@ -37,11 +43,17 @@ def get_replay_quotes(
             params,
         ).fetchall()
 
-        return [
+        quotes = [
             {
+                "symbol": row["symbol"],
                 "timestamp": row["timestamp"],
                 "last": row["last"],
                 "volume": row["volume"],
             }
             for row in rows
         ]
+
+    return {
+        "quotes": quotes,
+        "simulated_alerts": simulate_replay_alerts(quotes),
+    }
