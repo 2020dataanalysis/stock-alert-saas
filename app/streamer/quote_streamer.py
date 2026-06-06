@@ -405,8 +405,7 @@ def stream_quotes():
 
 
             if (
-                runtime["session"] == "CLOSED"
-                and runtime["mode"] != "online"
+                runtime["session"] in ("CLOSED", "UNKNOWN")
             ):
 
                 save_system_event(

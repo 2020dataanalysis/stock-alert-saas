@@ -27,7 +27,7 @@ def get_runtime_state(poll_seconds):
 
     should_fetch_quotes = (
         mode != "offline"
-        and session != CLOSED
+        and session in {REGULAR, PREMARKET, AFTER_HOURS}
     )
 
     should_process_alerts = (
