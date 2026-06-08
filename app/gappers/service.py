@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from typing import Any
 
 from app.config import load_settings
 from app.data_adapters.movers_adapter import get_mover_symbols
 from app.data_adapters.schwab_adapter import SchwabAdapter
+from app.gappers.db_init import initialize_gap_database
+from app.gappers.storage import save_gap_event
 
 
 def _calculate_gap_pct(open_price: float | None, previous_close: float | None) -> float | None:
@@ -14,15 +17,28 @@ def _calculate_gap_pct(open_price: float | None, previous_close: float | None) -
     return (open_price - previous_close) * 100.0 / previous_close
 
 
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _today_utc_date() -> str:
+    return datetime.now(timezone.utc).date().isoformat()
+
 def get_live_gappers(
     minimum_gap_pct: float = 2.0,
     limit: int | None = None,
 ) -> dict[str, Any]:
+    initialize_gap_database()
+
     settings = load_settings()
     movers_limit = limit or settings.get("movers_limit", 10)
 
     mover_symbols = get_mover_symbols(limit=movers_limit)
     adapter = SchwabAdapter()
+
+    detected_at = _utc_now_iso()
+    trade_date = _today_utc_date()
 
     rows: list[dict[str, Any]] = []
 
@@ -43,11 +59,29 @@ def get_live_gappers(
         if abs(gap_pct) < minimum_gap_pct:
             continue
 
+        direction = "up" if gap_pct > 0 else "down"
+
+        saved_event = save_gap_event(
+            symbol=symbol,
+            trade_date=trade_date,
+            detected_at=detected_at,
+            gap_pct=round(gap_pct, 4),
+            gap_direction=direction,
+            previous_close=quote.get("previous_close"),
+            open_price=quote.get("open"),
+            last_price=quote.get("last"),
+            volume=quote.get("volume"),
+            is_shortable=quote.get("is_shortable"),
+            hard_to_borrow=quote.get("hard_to_borrow"),
+            source="movers",
+        )
+
         rows.append(
             {
                 "symbol": symbol,
+                "gap_event_id": saved_event.get("id"),
                 "gap_pct": round(gap_pct, 4),
-                "direction": "up" if gap_pct > 0 else "down",
+                "direction": direction,
                 "previous_close": quote.get("previous_close"),
                 "open": quote.get("open"),
                 "last": quote.get("last"),
