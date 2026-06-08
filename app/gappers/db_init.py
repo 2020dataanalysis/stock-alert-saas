@@ -51,6 +51,30 @@ def initialize_gap_database():
             """
         )
 
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS gap_outcomes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                gap_event_id INTEGER NOT NULL UNIQUE,
+
+                filled INTEGER,
+                fill_timestamp TEXT,
+                minutes_to_fill REAL,
+
+                max_run_pct REAL,
+                max_drop_pct REAL,
+
+                close_result_pct REAL,
+
+                calculated_at TEXT NOT NULL,
+
+                FOREIGN KEY (gap_event_id)
+                    REFERENCES gap_events(id)
+            )
+            """
+        )
+
     return {
         "database": str(DB_PATH),
         "initialized": True,
