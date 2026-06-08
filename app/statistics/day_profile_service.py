@@ -344,6 +344,8 @@ def build_day_profile(symbol: str, trade_date: str) -> dict[str, Any]:
             if raw_rows
             else 0,
         },
+        "clean_open_timestamp": clean_quotes[0].timestamp if clean_quotes else None,
+        "clean_close_timestamp": clean_quotes[-1].timestamp if clean_quotes else None,
         "range": range_stats,
         "prior_day_context": _prior_day_context(symbol, trade_date, range_stats),
         "largest_move_windows": _largest_move_windows(clean_quotes),

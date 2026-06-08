@@ -89,6 +89,54 @@ def _fetch_previous_close(symbol: str, trade_date: str) -> dict[str, Any] | None
     }
 
 
+
+def _fetch_gap_fill_timestamp(
+    symbol: str,
+    trade_date: str,
+    gap_direction: str,
+    fill_level: float,
+) -> str | None:
+    symbol = symbol.upper()
+
+    if gap_direction == "up":
+        condition = "last <= ?"
+    elif gap_direction == "down":
+        condition = "last >= ?"
+    else:
+        return None
+
+    with get_connection() as conn:
+        row = conn.execute(
+            f"""
+            SELECT timestamp
+            FROM quotes
+            WHERE symbol = ?
+              AND DATE(timestamp) = ?
+              AND last IS NOT NULL
+              AND {condition}
+            ORDER BY timestamp ASC
+            LIMIT 1
+            """,
+            (symbol, trade_date, fill_level),
+        ).fetchone()
+
+    if not row:
+        return None
+
+    return row[0]
+
+
+def _minutes_between(start_timestamp: str, end_timestamp: str | None) -> float | None:
+    if not start_timestamp or not end_timestamp:
+        return None
+
+    from datetime import datetime
+
+    start = datetime.fromisoformat(start_timestamp)
+    end = datetime.fromisoformat(end_timestamp)
+
+    return round((end - start).total_seconds() / 60.0, 2)
+
 def build_gap_profile(symbol: str, trade_date: str) -> dict[str, Any]:
     symbol = symbol.upper()
 
@@ -105,6 +153,7 @@ def build_gap_profile(symbol: str, trade_date: str) -> dict[str, Any]:
 
     previous_close = previous["previous_close"]
     open_price = day["open"]
+    open_timestamp = profile.get("clean_open_timestamp")
 
     gap_dollars = open_price - previous_close
     gap_pct = gap_dollars * 100.0 / previous_close if previous_close else 0.0
@@ -121,6 +170,17 @@ def build_gap_profile(symbol: str, trade_date: str) -> dict[str, Any]:
         gap_direction = "flat"
         filled = True
         distance_to_fill_dollars = 0.0
+
+    fill_timestamp = (
+        _fetch_gap_fill_timestamp(symbol, trade_date, gap_direction, previous_close)
+        if filled
+        else None
+    )
+
+    minutes_to_fill = _minutes_between(
+        open_timestamp,
+        fill_timestamp,
+    )
 
     distance_to_fill_pct = (
         distance_to_fill_dollars * 100.0 / previous_close
@@ -143,6 +203,8 @@ def build_gap_profile(symbol: str, trade_date: str) -> dict[str, Any]:
         "gap_direction": gap_direction,
         "fill_level": round(previous_close, 4),
         "filled": filled,
+        "fill_timestamp": fill_timestamp,
+        "minutes_to_fill": minutes_to_fill,
         "distance_to_fill_dollars": round(distance_to_fill_dollars, 4),
         "distance_to_fill_pct": round(distance_to_fill_pct, 4),
     }
