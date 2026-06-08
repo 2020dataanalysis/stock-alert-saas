@@ -2,6 +2,8 @@ from pathlib import Path
 
 from fastapi import APIRouter
 
+from app.statistics.gap_profile_service import build_gap_profile
+
 from app.statistics.day_profile_service import build_day_profile
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
@@ -46,3 +48,8 @@ def statistics_page(
 @router.get("/api/statistics/day-profile")
 def get_day_profile(symbol: str, trade_date: str):
     return build_day_profile(symbol, trade_date)
+
+
+@router.get("/api/statistics/gap-profile")
+def get_gap_profile(symbol: str, trade_date: str):
+    return build_gap_profile(symbol, trade_date)
