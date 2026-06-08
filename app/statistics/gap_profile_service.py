@@ -95,6 +95,9 @@ def _fetch_gap_fill_timestamp(
     trade_date: str,
     gap_direction: str,
     fill_level: float,
+    include_premarket: bool = False,
+    include_regular: bool = True,
+    include_after_hours: bool = False,
 ) -> str | None:
     symbol = symbol.upper()
 
@@ -105,6 +108,24 @@ def _fetch_gap_fill_timestamp(
     else:
         return None
 
+    session_conditions: list[str] = []
+
+    if include_premarket:
+        session_conditions.append("TIME(timestamp) < '13:30:00'")
+
+    if include_regular:
+        session_conditions.append(
+            "TIME(timestamp) >= '13:30:00' AND TIME(timestamp) <= '20:00:00'"
+        )
+
+    if include_after_hours:
+        session_conditions.append("TIME(timestamp) > '20:00:00'")
+
+    if not session_conditions:
+        return None
+
+    session_sql = " OR ".join(f"({item})" for item in session_conditions)
+
     with get_connection() as conn:
         row = conn.execute(
             f"""
@@ -114,6 +135,7 @@ def _fetch_gap_fill_timestamp(
               AND DATE(timestamp) = ?
               AND last IS NOT NULL
               AND {condition}
+              AND ({session_sql})
             ORDER BY timestamp ASC
             LIMIT 1
             """,
@@ -137,7 +159,32 @@ def _minutes_between(start_timestamp: str, end_timestamp: str | None) -> float |
 
     return round((end - start).total_seconds() / 60.0, 2)
 
-def build_gap_profile(symbol: str, trade_date: str) -> dict[str, Any]:
+
+def _session_baseline_timestamp(
+    trade_date: str,
+    open_timestamp: str | None,
+    include_premarket: bool,
+    include_regular: bool,
+    include_after_hours: bool,
+) -> str | None:
+    if include_premarket:
+        return open_timestamp
+
+    if include_regular:
+        return f"{trade_date}T13:30:00+00:00"
+
+    if include_after_hours:
+        return f"{trade_date}T20:00:00+00:00"
+
+    return open_timestamp
+
+def build_gap_profile(
+    symbol: str,
+    trade_date: str,
+    include_premarket: bool = False,
+    include_regular: bool = True,
+    include_after_hours: bool = False,
+) -> dict[str, Any]:
     symbol = symbol.upper()
 
     profile = build_day_profile(symbol, trade_date)
@@ -172,13 +219,30 @@ def build_gap_profile(symbol: str, trade_date: str) -> dict[str, Any]:
         distance_to_fill_dollars = 0.0
 
     fill_timestamp = (
-        _fetch_gap_fill_timestamp(symbol, trade_date, gap_direction, previous_close)
+        _fetch_gap_fill_timestamp(
+            symbol,
+            trade_date,
+            gap_direction,
+            previous_close,
+            include_premarket=include_premarket,
+            include_regular=include_regular,
+            include_after_hours=include_after_hours,
+        )
         if filled
         else None
     )
 
+    if include_premarket:
+        baseline_timestamp = open_timestamp
+    elif include_regular:
+        baseline_timestamp = f"{trade_date}T13:30:00+00:00"
+    elif include_after_hours:
+        baseline_timestamp = f"{trade_date}T20:00:00+00:00"
+    else:
+        baseline_timestamp = open_timestamp
+
     minutes_to_fill = _minutes_between(
-        open_timestamp,
+        baseline_timestamp,
         fill_timestamp,
     )
 
@@ -203,7 +267,13 @@ def build_gap_profile(symbol: str, trade_date: str) -> dict[str, Any]:
         "gap_direction": gap_direction,
         "fill_level": round(previous_close, 4),
         "filled": filled,
+        "sessions": {
+            "include_premarket": include_premarket,
+            "include_regular": include_regular,
+            "include_after_hours": include_after_hours,
+        },
         "fill_timestamp": fill_timestamp,
+        "fill_baseline_timestamp": baseline_timestamp,
         "minutes_to_fill": minutes_to_fill,
         "distance_to_fill_dollars": round(distance_to_fill_dollars, 4),
         "distance_to_fill_pct": round(distance_to_fill_pct, 4),

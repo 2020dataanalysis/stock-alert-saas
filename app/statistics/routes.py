@@ -51,5 +51,17 @@ def get_day_profile(symbol: str, trade_date: str):
 
 
 @router.get("/api/statistics/gap-profile")
-def get_gap_profile(symbol: str, trade_date: str):
-    return build_gap_profile(symbol, trade_date)
+def get_gap_profile(
+    symbol: str,
+    trade_date: str,
+    include_premarket: bool = False,
+    include_regular: bool = True,
+    include_after_hours: bool = False,
+):
+    return build_gap_profile(
+        symbol,
+        trade_date,
+        include_premarket=include_premarket,
+        include_regular=include_regular,
+        include_after_hours=include_after_hours,
+    )
