@@ -79,6 +79,7 @@ def get_live_gappers(
         rows.append(
             {
                 "symbol": symbol,
+                "trade_date": trade_date,
                 "gap_event_id": saved_event.get("id"),
                 "gap_pct": round(gap_pct, 4),
                 "direction": direction,
@@ -103,4 +104,154 @@ def get_live_gappers(
         "mover_count": len(mover_symbols),
         "gapper_count": len(rows),
         "gappers": rows,
+    }
+
+
+def get_gap_event_detail(
+    symbol: str,
+    trade_date: str,
+    minimum_gap_pct: float = 2.0,
+    research_lookback_days: int | None = 365,
+):
+    from app.gappers.storage import (
+        get_gap_event,
+        get_gap_outcome,
+        count_prior_gap_events,
+        count_prior_gap_events_by_direction,
+    )
+
+    event = get_gap_event(
+        symbol=symbol,
+        trade_date=trade_date,
+    )
+
+    if not event:
+        return {
+            "found": False,
+        }
+
+    outcome = get_gap_outcome(
+        event["id"]
+    )
+
+    return {
+        "found": True,
+        "event": event,
+        "outcome": outcome,
+        "historical_sample": {
+            "minimum_gap_pct": minimum_gap_pct,
+            "research_lookback_days": research_lookback_days,
+            "total": count_prior_gap_events(
+                symbol=symbol,
+                trade_date=trade_date,
+                minimum_gap_pct=minimum_gap_pct,
+                lookback_days=research_lookback_days,
+            ),
+            "directions": count_prior_gap_events_by_direction(
+                symbol=symbol,
+                trade_date=trade_date,
+                minimum_gap_pct=minimum_gap_pct,
+                lookback_days=research_lookback_days,
+            ),
+        },
+    }
+
+
+def get_gap_event_detail(
+    symbol: str,
+    trade_date: str,
+    minimum_gap_pct: float = 2.0,
+    research_lookback_days: int | None = 365,
+):
+    from app.gappers.storage import (
+        get_gap_event,
+        get_gap_outcome,
+        count_prior_gap_events,
+        count_prior_gap_events_by_direction,
+    )
+
+    event = get_gap_event(
+        symbol=symbol,
+        trade_date=trade_date,
+    )
+
+    if not event:
+        return {
+            "found": False,
+        }
+
+    outcome = get_gap_outcome(
+        event["id"]
+    )
+
+    return {
+        "found": True,
+        "event": event,
+        "outcome": outcome,
+        "historical_sample": {
+            "minimum_gap_pct": minimum_gap_pct,
+            "research_lookback_days": research_lookback_days,
+            "total": count_prior_gap_events(
+                symbol=symbol,
+                trade_date=trade_date,
+                minimum_gap_pct=minimum_gap_pct,
+                lookback_days=research_lookback_days,
+            ),
+            "directions": count_prior_gap_events_by_direction(
+                symbol=symbol,
+                trade_date=trade_date,
+                minimum_gap_pct=minimum_gap_pct,
+                lookback_days=research_lookback_days,
+            ),
+        },
+    }
+
+
+def get_gap_event_detail(
+    symbol: str,
+    trade_date: str,
+    minimum_gap_pct: float = 2.0,
+    research_lookback_days: int | None = 365,
+):
+    from app.gappers.storage import (
+        get_gap_event,
+        get_gap_outcome,
+        count_prior_gap_events,
+        count_prior_gap_events_by_direction,
+    )
+
+    event = get_gap_event(
+        symbol=symbol,
+        trade_date=trade_date,
+    )
+
+    if not event:
+        return {
+            "found": False,
+        }
+
+    outcome = get_gap_outcome(
+        event["id"]
+    )
+
+    return {
+        "found": True,
+        "event": event,
+        "outcome": outcome,
+        "historical_sample": {
+            "minimum_gap_pct": minimum_gap_pct,
+            "research_lookback_days": research_lookback_days,
+            "total": count_prior_gap_events(
+                symbol=symbol,
+                trade_date=trade_date,
+                minimum_gap_pct=minimum_gap_pct,
+                lookback_days=research_lookback_days,
+            ),
+            "directions": count_prior_gap_events_by_direction(
+                symbol=symbol,
+                trade_date=trade_date,
+                minimum_gap_pct=minimum_gap_pct,
+                lookback_days=research_lookback_days,
+            ),
+        },
     }

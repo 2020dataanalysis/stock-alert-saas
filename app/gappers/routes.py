@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
 
-from app.gappers.service import get_live_gappers
+from app.gappers.service import get_live_gappers, get_gap_event_detail
 
 
 router = APIRouter()
@@ -41,5 +41,26 @@ def gappers_page(
         "gappers.html",
         {
             "request": request,
+        },
+    )
+
+
+@router.get("/gappers/{symbol}/{trade_date}")
+def gap_detail_page(
+    request: Request,
+    symbol: str,
+    trade_date: str,
+):
+    detail = get_gap_event_detail(
+        symbol=symbol,
+        trade_date=trade_date,
+    )
+
+    return templates.TemplateResponse(
+        request,
+        "gap_detail.html",
+        {
+            "request": request,
+            "detail": detail,
         },
     )

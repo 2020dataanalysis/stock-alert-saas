@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Gap Detail{% endblock %}
+
+{% block content %}
+
+<h1>Gap Details</h1>
+
+<p>
+    <a href="/gappers">← Back to Gappers</a>
+</p>
+
+{% if detail.found %}
+
+<h2>Current Gap</h2>
+
+<table>
+    <tbody>
+        <tr><th>Symbol</th><td>{{ detail.event.symbol }}</td></tr>
+        <tr><th>Date</th><td>{{ detail.event.trade_date }}</td></tr>
+        <tr><th>Gap %</th><td>{{ detail.event.gap_pct }}</td></tr>
+        <tr><th>Direction</th><td>{{ detail.event.gap_direction }}</td></tr>
+        <tr><th>Previous Close</th><td>{{ detail.event.previous_close }}</td></tr>
+        <tr><th>Open</th><td>{{ detail.event.open_price }}</td></tr>
+        <tr><th>Last</th><td>{{ detail.event.last_price }}</td></tr>
+    </tbody>
+</table>
+
+<h2>Outcome</h2>
+
+<table>
+    <tbody>
+        <tr>
+            <th>Filled</th>
+            <td>{% if detail.outcome %}{{ detail.outcome.filled }}{% else %}-{% endif %}</td>
+        </tr>
+        <tr>
+            <th>Minutes To Fill</th>
+            <td>{% if detail.outcome %}{{ detail.outcome.minutes_to_fill }}{% else %}-{% endif %}</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Historical Sample</h2>
+
+<table>
+    <tbody>
+        <tr><th>Lookback Days</th><td>{{ detail.historical_sample.research_lookback_days }}</td></tr>
+        <tr><th>Prior Gaps</th><td>{{ detail.historical_sample.total }}</td></tr>
+        <tr><th>Prior Up Gaps</th><td>{{ detail.historical_sample.directions.up }}</td></tr>
+        <tr><th>Prior Down Gaps</th><td>{{ detail.historical_sample.directions.down }}</td></tr>
+    </tbody>
+</table>
+
+<h2>Historical Research</h2>
+<p>Coming soon.</p>
+
+<h2>Similar Gaps</h2>
+<p>Coming soon.</p>
+
+{% else %}
+
+<p>Gap event not found.</p>
+
+{% endif %}
+
+{% endblock %}

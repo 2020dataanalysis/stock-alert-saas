@@ -65,7 +65,11 @@ async function loadGappers() {
 
         body.innerHTML = data.gappers.map((row) => `
             <tr>
-                <td>${row.symbol}</td>
+                <td>
+                    <a href="/gappers/${row.symbol}/${row.trade_date}">
+                        ${row.symbol}
+                    </a>
+                </td>
                 <td class="${row.gap_pct > 0 ? "positive" : "negative"}">
                     ${formatPercent(row.gap_pct)}
                 </td>
