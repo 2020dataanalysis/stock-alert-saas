@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Gappers{% endblock %}
+
+{% block content %}
+<h1>Gappers</h1>
+
+<p class="subtitle">
+    Live gappers from the current movers list.
+</p>
+
+<label>Minimum Gap %</label>
+<input id="minimum-gap-pct" type="number" step="0.25" value="2.0">
+
+<label>Movers Limit</label>
+<input id="gappers-limit" type="number" step="1" value="20">
+
+<button onclick="loadGappers()">
+    Refresh
+</button>
+
+<div id="gappers-summary"></div>
+
+<table>
+    <thead>
+        <tr>
+            <th>Symbol</th>
+            <th>Gap %</th>
+            <th>Direction</th>
+            <th>Previous Close</th>
+            <th>Open</th>
+            <th>Last</th>
+            <th>Net %</th>
+            <th>Volume</th>
+            <th>Shortable</th>
+            <th>HTB</th>
+        </tr>
+    </thead>
+    <tbody id="gappers-body">
+        <tr>
+            <td colspan="10">Loading gappers...</td>
+        </tr>
+    </tbody>
+</table>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="/gappers-static/js/gappers.js"></script>
+{% endblock %}

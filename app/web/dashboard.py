@@ -46,6 +46,7 @@ from app.historical_data.replay.routes import router as historical_replay_router
 from app.statistics.routes import router as statistics_router
 
 from app.live.routes import router as live_router
+from app.gappers.routes import router as gappers_router
 
 import sqlite3
 
@@ -87,6 +88,12 @@ app.mount(
     name="live_static",
 )
 
+app.mount(
+    "/gappers-static",
+    StaticFiles(directory="app/gappers/static"),
+    name="gappers-static",
+)
+
 app.include_router(api_router)
 app.include_router(market_state_router)
 app.include_router(scalp_state_router)
@@ -94,6 +101,7 @@ app.include_router(historical_data_router)
 app.include_router(historical_replay_router)
 app.include_router(statistics_router)
 app.include_router(live_router)
+app.include_router(gappers_router)
 
 templates = Jinja2Templates(directory="app/web/templates")
 
