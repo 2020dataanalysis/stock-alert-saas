@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Any
 
 from app.gappers.db_init import get_gap_connection
@@ -110,3 +110,83 @@ def list_gap_events(
         ).fetchall()
 
     return [dict(row) for row in rows]
+
+
+def count_prior_gap_events(
+    symbol: str,
+    trade_date: str,
+    minimum_gap_pct: float = 2.0,
+    lookback_days: int | None = 365,
+) -> int:
+    cutoff_date = None
+
+    if lookback_days:
+        trade_day = datetime.fromisoformat(trade_date).date()
+        cutoff_date = (trade_day - timedelta(days=lookback_days)).isoformat()
+    with get_gap_connection() as conn:
+        row = conn.execute(
+            """
+            SELECT COUNT(*) AS count
+            FROM gap_events
+            WHERE symbol = ?
+              AND trade_date < ?
+              AND (? IS NULL OR trade_date >= ?)
+              AND ABS(gap_pct) >= ?
+            """,
+            (
+                symbol.upper(),
+                trade_date,
+                cutoff_date,
+                cutoff_date,
+                minimum_gap_pct,
+            ),
+        ).fetchone()
+
+    return row["count"] if row else 0
+
+
+def count_prior_gap_events_by_direction(
+    symbol: str,
+    trade_date: str,
+    minimum_gap_pct: float = 2.0,
+    lookback_days: int | None = 365,
+) -> dict[str, int]:
+    cutoff_date = None
+
+    if lookback_days:
+        trade_day = datetime.fromisoformat(trade_date).date()
+        cutoff_date = (trade_day - timedelta(days=lookback_days)).isoformat()
+    with get_gap_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                gap_direction,
+                COUNT(*) AS count
+            FROM gap_events
+            WHERE symbol = ?
+              AND trade_date < ?
+              AND (? IS NULL OR trade_date >= ?)
+              AND ABS(gap_pct) >= ?
+            GROUP BY gap_direction
+            """,
+            (
+                symbol.upper(),
+                trade_date,
+                cutoff_date,
+                cutoff_date,
+                minimum_gap_pct,
+            ),
+        ).fetchall()
+
+    result = {
+        "up": 0,
+        "down": 0,
+    }
+
+    for row in rows:
+        direction = row["gap_direction"]
+
+        if direction in result:
+            result[direction] = row["count"]
+
+    return result
