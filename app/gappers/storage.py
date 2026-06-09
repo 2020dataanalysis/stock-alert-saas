@@ -112,7 +112,6 @@ def list_gap_events(
     return [dict(row) for row in rows]
 
 
-<<<<<<< HEAD
 def save_gap_outcome(
     *,
     gap_event_id: int,
@@ -188,8 +187,6 @@ def get_gap_outcome(
     return dict(row) if row else None
 
 
-=======
->>>>>>> feature/gap-details-page
 def count_prior_gap_events(
     symbol: str,
     trade_date: str,
@@ -201,10 +198,7 @@ def count_prior_gap_events(
     if lookback_days:
         trade_day = datetime.fromisoformat(trade_date).date()
         cutoff_date = (trade_day - timedelta(days=lookback_days)).isoformat()
-<<<<<<< HEAD
 
-=======
->>>>>>> feature/gap-details-page
     with get_gap_connection() as conn:
         row = conn.execute(
             """
@@ -238,10 +232,7 @@ def count_prior_gap_events_by_direction(
     if lookback_days:
         trade_day = datetime.fromisoformat(trade_date).date()
         cutoff_date = (trade_day - timedelta(days=lookback_days)).isoformat()
-<<<<<<< HEAD
 
-=======
->>>>>>> feature/gap-details-page
     with get_gap_connection() as conn:
         rows = conn.execute(
             """
