@@ -47,6 +47,8 @@ def gappers_page(
 
 
 
+
+
 @router.get("/api/gappers/{symbol}/daily-history-status")
 def daily_history_status_api(
     symbol: str,
@@ -77,6 +79,25 @@ def import_daily_history_api(
     return import_missing_daily_history(
         symbol=symbol,
         lookback_days=lookback_days,
+    )
+
+
+
+
+@router.get("/api/gappers/{symbol}/research")
+def gap_research_api(
+    symbol: str,
+    start_date: str,
+    end_date: str,
+    minimum_gap_pct: float = 2.0,
+    target_gap_pct: float | None = None,
+):
+    return calculate_gap_research_v2(
+        symbol=symbol,
+        start_date=start_date,
+        end_date=end_date,
+        minimum_gap_pct=minimum_gap_pct,
+        target_gap_pct=target_gap_pct,
     )
 
 
@@ -120,4 +141,9 @@ from app.gappers.historical_gap_service import (
     get_daily_history_status,
     build_daily_history_import_plan,
     import_missing_daily_history,
+)
+
+
+from app.gappers.research_service import (
+    calculate_gap_research_v2,
 )
