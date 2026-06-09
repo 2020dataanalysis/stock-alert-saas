@@ -283,3 +283,109 @@ def count_prior_gap_events_by_direction(
             result[direction] = row["count"]
 
     return result
+
+
+def save_daily_bar(
+    *,
+    symbol: str,
+    trade_date: str,
+    open_price: float | None,
+    high_price: float | None,
+    low_price: float | None,
+    close_price: float | None,
+    volume: int | None,
+) -> dict[str, Any]:
+    created_at = utc_now_iso()
+
+    with get_gap_connection() as conn:
+        conn.execute(
+            """
+            INSERT INTO daily_bars (
+                symbol,
+                trade_date,
+                open_price,
+                high_price,
+                low_price,
+                close_price,
+                volume,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(symbol, trade_date) DO UPDATE SET
+                open_price = excluded.open_price,
+                high_price = excluded.high_price,
+                low_price = excluded.low_price,
+                close_price = excluded.close_price,
+                volume = excluded.volume
+            """,
+            (
+                symbol.upper(),
+                trade_date,
+                open_price,
+                high_price,
+                low_price,
+                close_price,
+                volume,
+                created_at,
+            ),
+        )
+
+        row = conn.execute(
+            """
+            SELECT *
+            FROM daily_bars
+            WHERE symbol = ?
+              AND trade_date = ?
+            """,
+            (symbol.upper(), trade_date),
+        ).fetchone()
+
+    return dict(row) if row else {}
+
+
+def get_daily_bars(
+    symbol: str,
+    start_date: str,
+    end_date: str,
+) -> list[dict[str, Any]]:
+    with get_gap_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM daily_bars
+            WHERE symbol = ?
+              AND trade_date >= ?
+              AND trade_date <= ?
+            ORDER BY trade_date ASC
+            """,
+            (
+                symbol.upper(),
+                start_date,
+                end_date,
+            ),
+        ).fetchall()
+
+    return [dict(row) for row in rows]
+
+
+def get_daily_bar_coverage(
+    symbol: str,
+) -> dict[str, Any]:
+    with get_gap_connection() as conn:
+        row = conn.execute(
+            """
+            SELECT
+                COUNT(*) AS count,
+                MIN(trade_date) AS earliest_trade_date,
+                MAX(trade_date) AS latest_trade_date
+            FROM daily_bars
+            WHERE symbol = ?
+            """,
+            (symbol.upper(),),
+        ).fetchone()
+
+    return dict(row) if row else {
+        "count": 0,
+        "earliest_trade_date": None,
+        "latest_trade_date": None,
+    }

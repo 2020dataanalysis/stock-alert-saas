@@ -3,6 +3,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+from app.gappers.historical_gap_service import get_or_build_historical_gap_sample
+
 from app.config import load_settings
 from app.data_adapters.movers_adapter import get_mover_symbols
 from app.data_adapters.schwab_adapter import SchwabAdapter
@@ -154,6 +156,11 @@ def get_gap_event_detail(
                 lookback_days=research_lookback_days,
             ),
         },
+        "historical_gap_research": get_or_build_historical_gap_sample(
+            symbol=symbol,
+            minimum_gap_pct=minimum_gap_pct,
+            lookback_days=research_lookback_days or 365,
+        ),
     }
 
 
@@ -204,6 +211,11 @@ def get_gap_event_detail(
                 lookback_days=research_lookback_days,
             ),
         },
+        "historical_gap_research": get_or_build_historical_gap_sample(
+            symbol=symbol,
+            minimum_gap_pct=minimum_gap_pct,
+            lookback_days=research_lookback_days or 365,
+        ),
     }
 
 
@@ -254,4 +266,9 @@ def get_gap_event_detail(
                 lookback_days=research_lookback_days,
             ),
         },
+        "historical_gap_research": get_or_build_historical_gap_sample(
+            symbol=symbol,
+            minimum_gap_pct=minimum_gap_pct,
+            lookback_days=research_lookback_days or 365,
+        ),
     }

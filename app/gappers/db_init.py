@@ -53,6 +53,28 @@ def initialize_gap_database():
 
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS daily_bars (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                symbol TEXT NOT NULL,
+                trade_date TEXT NOT NULL,
+
+                open_price REAL,
+                high_price REAL,
+                low_price REAL,
+                close_price REAL,
+                volume INTEGER,
+
+                created_at TEXT NOT NULL,
+
+                UNIQUE(symbol, trade_date)
+            )
+            """
+        )
+
+
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS gap_outcomes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
 
