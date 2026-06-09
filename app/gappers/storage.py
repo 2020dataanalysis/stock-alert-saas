@@ -95,6 +95,22 @@ def get_gap_event(
     return dict(row) if row else None
 
 
+def get_gap_event_by_id(
+    gap_event_id: int,
+) -> dict[str, Any] | None:
+    with get_gap_connection() as conn:
+        row = conn.execute(
+            """
+            SELECT *
+            FROM gap_events
+            WHERE id = ?
+            """,
+            (gap_event_id,),
+        ).fetchone()
+
+    return dict(row) if row else None
+
+
 def list_gap_events(
     limit: int = 100,
 ) -> list[dict[str, Any]]:
