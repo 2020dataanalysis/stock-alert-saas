@@ -46,6 +46,7 @@ def get_or_build_historical_gap_sample(
 
 from app.gappers.storage import (
     get_daily_bar_coverage,
+    get_daily_bars,
 )
 
 
@@ -171,7 +172,10 @@ def build_daily_history_import_plan(
 
 
 from app.data_adapters.schwab_adapter import SchwabAdapter
-from app.gappers.storage import save_daily_bar
+from app.gappers.storage import (
+    save_daily_bar,
+    save_gap_event,
+)
 
 
 def _epoch_ms_to_trade_date(
@@ -239,4 +243,102 @@ def import_missing_daily_history(
         **plan,
         "status": "imported",
         "imported_count": imported_count,
+    }
+
+
+def discover_historical_gaps(
+    symbol: str,
+    start_date: str,
+    end_date: str,
+    minimum_gap_pct: float = 2.0,
+) -> dict[str, Any]:
+    rows = get_daily_bars(
+        symbol=symbol,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    gaps = []
+
+    previous_row = None
+
+    for row in rows:
+        if previous_row is None:
+            previous_row = row
+            continue
+
+        gap_pct = _calculate_gap_pct(
+            open_price=row.get("open_price"),
+            previous_close=previous_row.get("close_price"),
+        )
+
+        if gap_pct is None:
+            previous_row = row
+            continue
+
+        if abs(gap_pct) >= minimum_gap_pct:
+            gaps.append({
+                "symbol": symbol.upper(),
+                "trade_date": row["trade_date"],
+                "previous_trade_date": previous_row["trade_date"],
+                "previous_close": previous_row.get("close_price"),
+                "open_price": row.get("open_price"),
+                "gap_pct": round(gap_pct, 4),
+                "gap_direction": "up" if gap_pct > 0 else "down",
+                "volume": row.get("volume"),
+            })
+
+        previous_row = row
+
+    return {
+        "symbol": symbol.upper(),
+        "start_date": start_date,
+        "end_date": end_date,
+        "minimum_gap_pct": minimum_gap_pct,
+        "daily_bar_count": len(rows),
+        "gap_count": len(gaps),
+        "gaps": gaps,
+    }
+
+
+def save_discovered_historical_gaps(
+    symbol: str,
+    start_date: str,
+    end_date: str,
+    minimum_gap_pct: float = 2.0,
+) -> dict[str, Any]:
+    discovery = discover_historical_gaps(
+        symbol=symbol,
+        start_date=start_date,
+        end_date=end_date,
+        minimum_gap_pct=minimum_gap_pct,
+    )
+
+    saved_count = 0
+
+    for gap in discovery["gaps"]:
+        save_gap_event(
+            symbol=gap["symbol"],
+            trade_date=gap["trade_date"],
+            detected_at=datetime.utcnow().isoformat(),
+            gap_pct=gap["gap_pct"],
+            gap_direction=gap["gap_direction"],
+            previous_close=gap["previous_close"],
+            open_price=gap["open_price"],
+            last_price=None,
+            volume=gap["volume"],
+            is_shortable=None,
+            hard_to_borrow=None,
+            source="historical_daily",
+        )
+
+        saved_count += 1
+
+    return {
+        "symbol": symbol.upper(),
+        "start_date": start_date,
+        "end_date": end_date,
+        "minimum_gap_pct": minimum_gap_pct,
+        "discovered_count": discovery["gap_count"],
+        "saved_count": saved_count,
     }
