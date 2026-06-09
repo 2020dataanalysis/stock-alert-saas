@@ -174,6 +174,8 @@ def build_daily_history_import_plan(
 from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.gappers.storage import (
     save_daily_bar,
+    save_minute_bar,
+    save_minute_bars,
     save_gap_event,
 )
 
@@ -341,4 +343,132 @@ def save_discovered_historical_gaps(
         "minimum_gap_pct": minimum_gap_pct,
         "discovered_count": discovery["gap_count"],
         "saved_count": saved_count,
+    }
+
+
+def _epoch_ms_to_iso(
+    epoch_ms: int,
+) -> str:
+    return datetime.fromtimestamp(
+        epoch_ms / 1000,
+        tz=timezone.utc,
+    ).isoformat()
+
+
+def import_minute_bars_for_gap_day(
+    symbol: str,
+    trade_date: str,
+) -> dict[str, Any]:
+    adapter = SchwabAdapter()
+
+    start_ms = int(
+        datetime.fromisoformat(
+            f"{trade_date}T00:00:00"
+        ).replace(
+            tzinfo=timezone.utc
+        ).timestamp() * 1000
+    )
+
+    end_ms = int(
+        datetime.fromisoformat(
+            f"{trade_date}T23:59:59"
+        ).replace(
+            tzinfo=timezone.utc
+        ).timestamp() * 1000
+    )
+
+    for frequency in [1, 5, 10, 15, 30]:
+        response = adapter.client.market_data.get_price_history(
+            symbol=symbol.upper(),
+            period_type="day",
+            period=10,
+            frequency_type="minute",
+            frequency=frequency,
+            start_date=start_ms,
+            end_date=end_ms,
+            need_extended_hours_data=True,
+            need_previous_close=True,
+        )
+
+        candles = response.get("candles", [])
+
+        if not candles:
+            continue
+
+        bars = [
+            {
+                "symbol": symbol,
+                "trade_date": trade_date,
+                "bar_timestamp": _epoch_ms_to_iso(
+                    candle["datetime"]
+                ),
+                "open_price": candle.get("open"),
+                "high_price": candle.get("high"),
+                "low_price": candle.get("low"),
+                "close_price": candle.get("close"),
+                "volume": candle.get("volume"),
+            }
+            for candle in candles
+        ]
+
+        imported_count = save_minute_bars(
+            bars
+        )
+
+        return {
+            "symbol": symbol.upper(),
+            "trade_date": trade_date,
+            "status": "imported",
+            "frequency": frequency,
+            "candles_imported": imported_count,
+        }
+
+    return {
+        "symbol": symbol.upper(),
+        "trade_date": trade_date,
+        "status": "unavailable",
+        "frequency": None,
+        "candles_imported": 0,
+    }
+
+
+def import_minute_bars_for_historical_gaps(
+    symbol: str,
+    start_date: str,
+    end_date: str,
+    minimum_gap_pct: float = 2.0,
+) -> dict[str, Any]:
+    discovery = discover_historical_gaps(
+        symbol=symbol,
+        start_date=start_date,
+        end_date=end_date,
+        minimum_gap_pct=minimum_gap_pct,
+    )
+
+    results = []
+
+    for gap in discovery["gaps"]:
+        result = import_minute_bars_for_gap_day(
+            symbol=symbol,
+            trade_date=gap["trade_date"],
+        )
+
+        results.append(result)
+
+    imported = [
+        item for item in results
+        if item["status"] == "imported"
+    ]
+
+    unavailable = [
+        item for item in results
+        if item["status"] == "unavailable"
+    ]
+
+    return {
+        "symbol": symbol.upper(),
+        "gap_count": discovery["gap_count"],
+        "imported_days": len(imported),
+        "unavailable_days": len(unavailable),
+        "results": results,
     }

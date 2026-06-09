@@ -389,3 +389,125 @@ def get_daily_bar_coverage(
         "earliest_trade_date": None,
         "latest_trade_date": None,
     }
+
+
+def save_minute_bar(
+    symbol: str,
+    trade_date: str,
+    bar_timestamp: str,
+    open_price: float,
+    high_price: float,
+    low_price: float,
+    close_price: float,
+    volume: int,
+):
+    with get_gap_connection() as conn:
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO minute_bars (
+                symbol,
+                trade_date,
+                bar_timestamp,
+                open_price,
+                high_price,
+                low_price,
+                close_price,
+                volume,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                symbol.upper(),
+                trade_date,
+                bar_timestamp,
+                open_price,
+                high_price,
+                low_price,
+                close_price,
+                volume,
+                datetime.utcnow().isoformat(),
+            ),
+        )
+
+        row = conn.execute(
+            """
+            SELECT *
+            FROM minute_bars
+            WHERE symbol = ?
+              AND bar_timestamp = ?
+            """,
+            (
+                symbol.upper(),
+                bar_timestamp,
+            ),
+        ).fetchone()
+
+    return dict(row)
+
+
+def get_minute_bars(
+    symbol: str,
+    trade_date: str,
+):
+    with get_gap_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT *
+            FROM minute_bars
+            WHERE symbol = ?
+              AND trade_date = ?
+            ORDER BY bar_timestamp ASC
+            """,
+            (
+                symbol.upper(),
+                trade_date,
+            ),
+        ).fetchall()
+
+    return [dict(row) for row in rows]
+
+
+def save_minute_bars(
+    bars: list[dict[str, Any]],
+) -> int:
+    if not bars:
+        return 0
+
+    created_at = utc_now_iso()
+
+    rows = [
+        (
+            bar["symbol"].upper(),
+            bar["trade_date"],
+            bar["bar_timestamp"],
+            bar.get("open_price"),
+            bar.get("high_price"),
+            bar.get("low_price"),
+            bar.get("close_price"),
+            bar.get("volume"),
+            created_at,
+        )
+        for bar in bars
+    ]
+
+    with get_gap_connection() as conn:
+        conn.executemany(
+            """
+            INSERT OR IGNORE INTO minute_bars (
+                symbol,
+                trade_date,
+                bar_timestamp,
+                open_price,
+                high_price,
+                low_price,
+                close_price,
+                volume,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            rows,
+        )
+
+    return len(rows)

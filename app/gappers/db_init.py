@@ -4,7 +4,8 @@ from pathlib import Path
 import sqlite3
 
 
-DB_PATH = Path("data/gap_data.db")
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DB_PATH = PROJECT_ROOT / "data" / "gap_data.db"
 
 
 def get_gap_connection():
@@ -47,6 +48,24 @@ def initialize_gap_database():
                 created_at TEXT NOT NULL,
 
                 UNIQUE(symbol, trade_date)
+            )
+            """
+        )
+
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS minute_bars (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                symbol TEXT NOT NULL,
+                trade_date TEXT NOT NULL,
+                bar_timestamp TEXT NOT NULL,
+                open_price REAL,
+                high_price REAL,
+                low_price REAL,
+                close_price REAL,
+                volume INTEGER,
+                created_at TEXT NOT NULL,
+                UNIQUE(symbol, bar_timestamp)
             )
             """
         )
