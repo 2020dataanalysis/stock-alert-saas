@@ -45,6 +45,56 @@ def gappers_page(
     )
 
 
+
+
+@router.get("/api/gappers/{symbol}/daily-history-status")
+def daily_history_status_api(
+    symbol: str,
+    lookback_days: int = 365,
+):
+    return get_daily_history_status(
+        symbol=symbol,
+        lookback_days=lookback_days,
+    )
+
+
+@router.get("/api/gappers/{symbol}/daily-history-import-plan")
+def daily_history_import_plan_api(
+    symbol: str,
+    lookback_days: int = 365,
+):
+    return build_daily_history_import_plan(
+        symbol=symbol,
+        lookback_days=lookback_days,
+    )
+
+
+@router.post("/api/gappers/{symbol}/import-daily-history")
+def import_daily_history_api(
+    symbol: str,
+    lookback_days: int = 365,
+):
+    return import_missing_daily_history(
+        symbol=symbol,
+        lookback_days=lookback_days,
+    )
+
+
+@router.get("/api/gappers/{symbol}/{trade_date}")
+def gap_detail_api(
+    symbol: str,
+    trade_date: str,
+    minimum_gap_pct: float = 2.0,
+    research_lookback_days: int = 365,
+):
+    return get_gap_event_detail(
+        symbol=symbol,
+        trade_date=trade_date,
+        minimum_gap_pct=minimum_gap_pct,
+        research_lookback_days=research_lookback_days,
+    )
+
+
 @router.get("/gappers/{symbol}/{trade_date}")
 def gap_detail_page(
     request: Request,
@@ -64,3 +114,10 @@ def gap_detail_page(
             "detail": detail,
         },
     )
+
+
+from app.gappers.historical_gap_service import (
+    get_daily_history_status,
+    build_daily_history_import_plan,
+    import_missing_daily_history,
+)
