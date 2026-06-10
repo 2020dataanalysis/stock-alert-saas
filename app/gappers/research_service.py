@@ -3,6 +3,7 @@ from app.gappers.historical_gap_service import (
 )
 from app.gappers.outcome_service import (
     calculate_daily_gap_outcome,
+    calculate_minute_gap_fill_timing,
 )
 from app.gappers.storage import (
     get_daily_bars,
@@ -157,6 +158,13 @@ def build_gap_research_records(
             close_price=row["close_price"],
         )
 
+        minute_timing = calculate_minute_gap_fill_timing(
+            symbol=symbol,
+            trade_date=gap["trade_date"],
+            previous_close=gap["previous_close"],
+            gap_direction=gap["gap_direction"],
+        )
+
         records.append({
             "symbol": symbol.upper(),
             "trade_date": gap["trade_date"],
@@ -164,6 +172,7 @@ def build_gap_research_records(
             "abs_gap_pct": abs(gap["gap_pct"]),
             "gap_direction": gap["gap_direction"],
             **outcome,
+            **minute_timing,
         })
 
     return records
@@ -352,6 +361,9 @@ def calculate_gap_research_v2(
         "gap_size_buckets": calculate_gap_size_bucket_statistics(
             records
         ),
+        "fill_timing": calculate_fill_timing_statistics(
+            records
+        ),
     }
 
     if target_gap_pct is not None:
@@ -361,3 +373,58 @@ def calculate_gap_research_v2(
         )
 
     return result
+
+
+
+def calculate_fill_timing_statistics(records):
+    available = [
+        record
+        for record in records
+        if record.get("minute_data_available")
+    ]
+
+    if not available:
+        return {
+            "minute_sample_size": 0,
+            "filled_within_5_min_pct": 0,
+            "filled_within_15_min_pct": 0,
+            "filled_within_30_min_pct": 0,
+            "filled_within_60_min_pct": 0,
+            "filled_after_60_min_pct": 0,
+            "never_filled_pct": 0,
+        }
+
+    count = len(available)
+
+    def pct(predicate):
+        return round(
+            sum(1 for record in available if predicate(record)) / count * 100,
+            2,
+        )
+
+    return {
+        "minute_sample_size": count,
+        "filled_within_5_min_pct": pct(
+            lambda record: record.get("minutes_to_fill") is not None
+            and record["minutes_to_fill"] <= 5
+        ),
+        "filled_within_15_min_pct": pct(
+            lambda record: record.get("minutes_to_fill") is not None
+            and record["minutes_to_fill"] <= 15
+        ),
+        "filled_within_30_min_pct": pct(
+            lambda record: record.get("minutes_to_fill") is not None
+            and record["minutes_to_fill"] <= 30
+        ),
+        "filled_within_60_min_pct": pct(
+            lambda record: record.get("minutes_to_fill") is not None
+            and record["minutes_to_fill"] <= 60
+        ),
+        "filled_after_60_min_pct": pct(
+            lambda record: record.get("minutes_to_fill") is not None
+            and record["minutes_to_fill"] > 60
+        ),
+        "never_filled_pct": pct(
+            lambda record: record.get("filled") is False
+        ),
+    }
