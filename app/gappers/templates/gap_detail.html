@@ -77,6 +77,10 @@
             <th>Avg Close Result</th>
             <td>{{ detail.active_direction_statistics.avg_close_result_pct }}%</td>
         </tr>
+        <tr>
+            <th>Avg Gap Fill Progress</th>
+            <td>{{ detail.active_direction_statistics.avg_gap_fill_progress_pct }}%</td>
+        </tr>
     </tbody>
 </table>
 
@@ -124,6 +128,7 @@
             <th>Avg Max Favorable</th>
             <th>Avg Max Adverse</th>
             <th>Avg Close Result</th>
+            <th>Avg Gap Fill Progress</th>
         </tr>
     </thead>
     <tbody>
@@ -135,6 +140,7 @@
             <td>{{ stats.avg_max_favorable_pct }}%</td>
             <td>{{ stats.avg_max_adverse_pct }}%</td>
             <td>{{ stats.avg_close_result_pct }}%</td>
+            <td>{{ stats.avg_gap_fill_progress_pct }}%</td>
         </tr>
         {% endfor %}
     </tbody>
@@ -151,6 +157,7 @@
             <th>Avg Max Favorable</th>
             <th>Avg Max Adverse</th>
             <th>Avg Close Result</th>
+            <th>Avg Gap Fill Progress</th>
         </tr>
     </thead>
     <tbody>
@@ -163,6 +170,7 @@
                 <td>{{ stats.avg_max_favorable_pct }}%</td>
                 <td>{{ stats.avg_max_adverse_pct }}%</td>
                 <td>{{ stats.avg_close_result_pct }}%</td>
+            <td>{{ stats.avg_gap_fill_progress_pct }}%</td>
             </tr>
             {% endif %}
         {% endfor %}
