@@ -358,19 +358,53 @@ def calculate_gap_research_v2(
                 "down",
             )
         ),
-        "gap_size_buckets": calculate_gap_size_bucket_statistics(
-            records
-        ),
-        "fill_timing": calculate_fill_timing_statistics(
-            records
-        ),
+        "gap_size_buckets": {
+            "gap_ups": calculate_gap_size_bucket_statistics(
+                filter_direction(
+                    records,
+                    "up",
+                )
+            ),
+            "gap_downs": calculate_gap_size_bucket_statistics(
+                filter_direction(
+                    records,
+                    "down",
+                )
+            ),
+        },
+        "fill_timing": {
+            "gap_ups": calculate_fill_timing_statistics(
+                filter_direction(
+                    records,
+                    "up",
+                )
+            ),
+            "gap_downs": calculate_fill_timing_statistics(
+                filter_direction(
+                    records,
+                    "down",
+                )
+            ),
+        },
     }
 
     if target_gap_pct is not None:
-        result["comparable_gaps"] = calculate_comparable_gap_statistics(
-            records,
-            target_gap_pct,
-        )
+        result["comparable_gaps"] = {
+            "gap_ups": calculate_comparable_gap_statistics(
+                filter_direction(
+                    records,
+                    "up",
+                ),
+                target_gap_pct,
+            ),
+            "gap_downs": calculate_comparable_gap_statistics(
+                filter_direction(
+                    records,
+                    "down",
+                ),
+                target_gap_pct,
+            ),
+        }
 
     return result
 

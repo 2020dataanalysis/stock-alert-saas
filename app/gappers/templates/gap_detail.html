@@ -52,49 +52,30 @@
     </tbody>
 </table>
 
-<h2>Historical Research</h2>
-
-<table>
-    <tbody>
-        <tr>
-            <th>Status</th>
-            <td>{{ detail.historical_gap_research.status }}</td>
-        </tr>
-        <tr>
-            <th>Research Start</th>
-            <td>{{ detail.historical_gap_research.start_date }}</td>
-        </tr>
-        <tr>
-            <th>Research End</th>
-            <td>{{ detail.historical_gap_research.end_date }}</td>
-        </tr>
-        <tr>
-            <th>Historical Gaps Found</th>
-            <td>{{ detail.historical_gap_research.gap_count }}</td>
-        </tr>
-    </tbody>
-</table>
-
 <h2>Gap Research Statistics</h2>
 
-<h3>Summary</h3>
+<h3>Historical Gap {{ "Ups" if detail.active_gap_direction == "up" else "Downs" }}</h3>
 <table>
     <tbody>
         <tr>
             <th>Sample Size</th>
-            <td>{{ detail.research_statistics.record_count }}</td>
+            <td>{{ detail.active_direction_statistics.count }}</td>
         </tr>
         <tr>
-            <th>All Gaps Fill Rate</th>
-            <td>{{ detail.research_statistics.all_gaps.fill_rate_pct }}%</td>
+            <th>Fill Rate</th>
+            <td>{{ detail.active_direction_statistics.fill_rate_pct }}%</td>
         </tr>
         <tr>
-            <th>Gap Ups Fill Rate</th>
-            <td>{{ detail.research_statistics.gap_ups.fill_rate_pct }}%</td>
+            <th>Avg Max Favorable</th>
+            <td>{{ detail.active_direction_statistics.avg_max_favorable_pct }}%</td>
         </tr>
         <tr>
-            <th>Gap Downs Fill Rate</th>
-            <td>{{ detail.research_statistics.gap_downs.fill_rate_pct }}%</td>
+            <th>Avg Max Adverse</th>
+            <td>{{ detail.active_direction_statistics.avg_max_adverse_pct }}%</td>
+        </tr>
+        <tr>
+            <th>Avg Close Result</th>
+            <td>{{ detail.active_direction_statistics.avg_close_result_pct }}%</td>
         </tr>
     </tbody>
 </table>
@@ -104,31 +85,31 @@
     <tbody>
         <tr>
             <th>Minute Sample Size</th>
-            <td>{{ detail.research_statistics.fill_timing.minute_sample_size }}</td>
+            <td>{{ detail.active_direction_fill_timing.minute_sample_size }}</td>
         </tr>
         <tr>
             <th>Filled Within 5 Min</th>
-            <td>{{ detail.research_statistics.fill_timing.filled_within_5_min_pct }}%</td>
+            <td>{{ detail.active_direction_fill_timing.filled_within_5_min_pct }}%</td>
         </tr>
         <tr>
             <th>Filled Within 15 Min</th>
-            <td>{{ detail.research_statistics.fill_timing.filled_within_15_min_pct }}%</td>
+            <td>{{ detail.active_direction_fill_timing.filled_within_15_min_pct }}%</td>
         </tr>
         <tr>
             <th>Filled Within 30 Min</th>
-            <td>{{ detail.research_statistics.fill_timing.filled_within_30_min_pct }}%</td>
+            <td>{{ detail.active_direction_fill_timing.filled_within_30_min_pct }}%</td>
         </tr>
         <tr>
             <th>Filled Within 60 Min</th>
-            <td>{{ detail.research_statistics.fill_timing.filled_within_60_min_pct }}%</td>
+            <td>{{ detail.active_direction_fill_timing.filled_within_60_min_pct }}%</td>
         </tr>
         <tr>
             <th>Filled After 60 Min</th>
-            <td>{{ detail.research_statistics.fill_timing.filled_after_60_min_pct }}%</td>
+            <td>{{ detail.active_direction_fill_timing.filled_after_60_min_pct }}%</td>
         </tr>
         <tr>
             <th>Never Filled</th>
-            <td>{{ detail.research_statistics.fill_timing.never_filled_pct }}%</td>
+            <td>{{ detail.active_direction_fill_timing.never_filled_pct }}%</td>
         </tr>
     </tbody>
 </table>
@@ -146,7 +127,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for bucket, stats in detail.research_statistics.gap_size_buckets.items() %}
+        {% for bucket, stats in detail.active_direction_gap_size_buckets.items() %}
         <tr>
             <td>{{ bucket }}</td>
             <td>{{ stats.count }}</td>
@@ -160,7 +141,7 @@
 </table>
 
 <h3>Comparable Gaps</h3>
-{% if detail.research_statistics.comparable_gaps %}
+{% if detail.active_direction_comparable_gaps %}
 <table>
     <thead>
         <tr>
@@ -173,7 +154,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for bucket, stats in detail.research_statistics.comparable_gaps.items() %}
+        {% for bucket, stats in detail.active_direction_comparable_gaps.items() %}
             {% if bucket != "target_gap_pct" %}
             <tr>
                 <td>{{ bucket }}</td>
