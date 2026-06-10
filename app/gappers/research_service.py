@@ -232,6 +232,13 @@ def calculate_gap_size_bucket_statistics(
     records,
 ):
     return {
+        "1_to_2": calculate_statistics(
+            filter_gap_size(
+                records,
+                1.0,
+                2.0,
+            )
+        ),
         "2_to_3": calculate_statistics(
             filter_gap_size(
                 records,
