@@ -75,8 +75,85 @@
     </tbody>
 </table>
 
-<h2>Similar Gaps</h2>
-<p>Coming soon.</p>
+<h2>Gap Research Statistics</h2>
+
+<h3>Summary</h3>
+<table>
+    <tbody>
+        <tr>
+            <th>Sample Size</th>
+            <td>{{ detail.research_statistics.record_count }}</td>
+        </tr>
+        <tr>
+            <th>All Gaps Fill Rate</th>
+            <td>{{ detail.research_statistics.all_gaps.fill_rate_pct }}%</td>
+        </tr>
+        <tr>
+            <th>Gap Ups Fill Rate</th>
+            <td>{{ detail.research_statistics.gap_ups.fill_rate_pct }}%</td>
+        </tr>
+        <tr>
+            <th>Gap Downs Fill Rate</th>
+            <td>{{ detail.research_statistics.gap_downs.fill_rate_pct }}%</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Gap Size Buckets</h3>
+<table>
+    <thead>
+        <tr>
+            <th>Bucket</th>
+            <th>Count</th>
+            <th>Fill Rate</th>
+            <th>Avg Max Favorable</th>
+            <th>Avg Max Adverse</th>
+            <th>Avg Close Result</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for bucket, stats in detail.research_statistics.gap_size_buckets.items() %}
+        <tr>
+            <td>{{ bucket }}</td>
+            <td>{{ stats.count }}</td>
+            <td>{{ stats.fill_rate_pct }}%</td>
+            <td>{{ stats.avg_max_favorable_pct }}%</td>
+            <td>{{ stats.avg_max_adverse_pct }}%</td>
+            <td>{{ stats.avg_close_result_pct }}%</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<h3>Comparable Gaps</h3>
+{% if detail.research_statistics.comparable_gaps %}
+<table>
+    <thead>
+        <tr>
+            <th>Range</th>
+            <th>Count</th>
+            <th>Fill Rate</th>
+            <th>Avg Max Favorable</th>
+            <th>Avg Max Adverse</th>
+            <th>Avg Close Result</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for bucket, stats in detail.research_statistics.comparable_gaps.items() %}
+            {% if bucket != "target_gap_pct" %}
+            <tr>
+                <td>{{ bucket }}</td>
+                <td>{{ stats.count }}</td>
+                <td>{{ stats.fill_rate_pct }}%</td>
+                <td>{{ stats.avg_max_favorable_pct }}%</td>
+                <td>{{ stats.avg_max_adverse_pct }}%</td>
+                <td>{{ stats.avg_close_result_pct }}%</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
 
 {% else %}
 

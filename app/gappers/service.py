@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from app.gappers.historical_gap_service import get_or_build_historical_gap_sample
+from app.gappers.research_service import calculate_gap_research_v2
 
 from app.config import load_settings
 from app.data_adapters.movers_adapter import get_mover_symbols
@@ -161,60 +162,12 @@ def get_gap_event_detail(
             minimum_gap_pct=minimum_gap_pct,
             lookback_days=research_lookback_days or 365,
         ),
-    }
-
-
-def get_gap_event_detail(
-    symbol: str,
-    trade_date: str,
-    minimum_gap_pct: float = 2.0,
-    research_lookback_days: int | None = 365,
-):
-    from app.gappers.storage import (
-        get_gap_event,
-        get_gap_outcome,
-        count_prior_gap_events,
-        count_prior_gap_events_by_direction,
-    )
-
-    event = get_gap_event(
-        symbol=symbol,
-        trade_date=trade_date,
-    )
-
-    if not event:
-        return {
-            "found": False,
-        }
-
-    outcome = get_gap_outcome(
-        event["id"]
-    )
-
-    return {
-        "found": True,
-        "event": event,
-        "outcome": outcome,
-        "historical_sample": {
-            "minimum_gap_pct": minimum_gap_pct,
-            "research_lookback_days": research_lookback_days,
-            "total": count_prior_gap_events(
-                symbol=symbol,
-                trade_date=trade_date,
-                minimum_gap_pct=minimum_gap_pct,
-                lookback_days=research_lookback_days,
-            ),
-            "directions": count_prior_gap_events_by_direction(
-                symbol=symbol,
-                trade_date=trade_date,
-                minimum_gap_pct=minimum_gap_pct,
-                lookback_days=research_lookback_days,
-            ),
-        },
-        "historical_gap_research": get_or_build_historical_gap_sample(
+        "research_statistics": calculate_gap_research_v2(
             symbol=symbol,
-            minimum_gap_pct=minimum_gap_pct,
-            lookback_days=research_lookback_days or 365,
+            start_date="2025-06-09",
+            end_date=trade_date,
+            minimum_gap_pct=1.0,
+            target_gap_pct=event["gap_pct"],
         ),
     }
 
@@ -270,5 +223,74 @@ def get_gap_event_detail(
             symbol=symbol,
             minimum_gap_pct=minimum_gap_pct,
             lookback_days=research_lookback_days or 365,
+        ),
+        "research_statistics": calculate_gap_research_v2(
+            symbol=symbol,
+            start_date="2025-06-09",
+            end_date=trade_date,
+            minimum_gap_pct=1.0,
+            target_gap_pct=event["gap_pct"],
+        ),
+    }
+
+
+def get_gap_event_detail(
+    symbol: str,
+    trade_date: str,
+    minimum_gap_pct: float = 2.0,
+    research_lookback_days: int | None = 365,
+):
+    from app.gappers.storage import (
+        get_gap_event,
+        get_gap_outcome,
+        count_prior_gap_events,
+        count_prior_gap_events_by_direction,
+    )
+
+    event = get_gap_event(
+        symbol=symbol,
+        trade_date=trade_date,
+    )
+
+    if not event:
+        return {
+            "found": False,
+        }
+
+    outcome = get_gap_outcome(
+        event["id"]
+    )
+
+    return {
+        "found": True,
+        "event": event,
+        "outcome": outcome,
+        "historical_sample": {
+            "minimum_gap_pct": minimum_gap_pct,
+            "research_lookback_days": research_lookback_days,
+            "total": count_prior_gap_events(
+                symbol=symbol,
+                trade_date=trade_date,
+                minimum_gap_pct=minimum_gap_pct,
+                lookback_days=research_lookback_days,
+            ),
+            "directions": count_prior_gap_events_by_direction(
+                symbol=symbol,
+                trade_date=trade_date,
+                minimum_gap_pct=minimum_gap_pct,
+                lookback_days=research_lookback_days,
+            ),
+        },
+        "historical_gap_research": get_or_build_historical_gap_sample(
+            symbol=symbol,
+            minimum_gap_pct=minimum_gap_pct,
+            lookback_days=research_lookback_days or 365,
+        ),
+        "research_statistics": calculate_gap_research_v2(
+            symbol=symbol,
+            start_date="2025-06-09",
+            end_date=trade_date,
+            minimum_gap_pct=1.0,
+            target_gap_pct=event["gap_pct"],
         ),
     }
