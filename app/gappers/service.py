@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
-from app.gappers.historical_gap_service import get_or_build_historical_gap_sample
+from app.gappers.historical_gap_service import get_or_build_historical_gap_sample, import_missing_daily_history
 from app.gappers.research_service import calculate_gap_research_v2
 
 from app.config import load_settings
@@ -135,6 +135,11 @@ def get_gap_event_detail(
 
     outcome = get_gap_outcome(
         event["id"]
+    )
+
+    import_missing_daily_history(
+        symbol=symbol,
+        lookback_days=research_lookback_days or 365,
     )
 
     return {
