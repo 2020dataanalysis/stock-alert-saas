@@ -346,7 +346,28 @@ def process_symbol(
     runtime,
     quote_conn,
 ):
-    quote = adapter.get_quote(symbol)
+    try:
+        quote = adapter.get_quote(symbol)
+
+    except Exception as e:
+
+        log(
+            f"FAILED TO FETCH QUOTE {symbol}: "
+            f"{type(e).__name__}: {e}"
+        )
+
+        save_system_event(
+            event_type="QUOTE_FETCH_FAILED",
+            service="quote_streamer",
+            status="WARNING",
+            message=str(e),
+            metadata={
+                "symbol": symbol,
+                "exception_type": type(e).__name__,
+            },
+        )
+
+        return quote_conn, False
 
     if quote is None:
 
