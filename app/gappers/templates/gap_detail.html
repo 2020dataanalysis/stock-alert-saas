@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Gap Detail{% endblock %}
+{% block title %}Gappers Intel{% endblock %}
 
 {% block content %}
 
-<h1>Gap Details</h1>
+<h1>Gappers Intel</h1>
 
 <p>
     <a href="/gappers">← Back to Gappers</a>
@@ -12,21 +12,34 @@
 
 {% if detail.found %}
 
-<h2>Current Gap</h2>
+<h2>{{ detail.event.symbol }} Gap Intel Summary</h2>
 
 <table>
     <tbody>
         <tr><th>Symbol</th><td>{{ detail.event.symbol }}</td></tr>
+        <tr><th>Today’s Gap</th><td>{{ detail.event.gap_pct }}% {{ detail.event.gap_direction }}</td></tr>
+        <tr><th>Current Price</th><td>{{ detail.event.last_price }}</td></tr>
+        <tr><th>Historical Fill Rate</th><td>{{ detail.active_direction_statistics.fill_rate_pct }}%</td></tr>
+        <tr><th>Avg Favorable Move</th><td>{{ detail.active_direction_statistics.avg_max_favorable_pct }}%</td></tr>
+        <tr><th>Avg Adverse Move</th><td>{{ detail.active_direction_statistics.avg_max_adverse_pct }}%</td></tr>
+        <tr><th>Avg Close Result</th><td>{{ detail.active_direction_statistics.avg_close_result_pct }}%</td></tr>
+    </tbody>
+</table>
+
+<h2>Today’s Gap Setup</h2>
+
+<table>
+    <tbody>
         <tr><th>Date</th><td>{{ detail.event.trade_date }}</td></tr>
-        <tr><th>Gap %</th><td>{{ detail.event.gap_pct }}</td></tr>
         <tr><th>Direction</th><td>{{ detail.event.gap_direction }}</td></tr>
+        <tr><th>Gap %</th><td>{{ detail.event.gap_pct }}%</td></tr>
         <tr><th>Previous Close</th><td>{{ detail.event.previous_close }}</td></tr>
         <tr><th>Open</th><td>{{ detail.event.open_price }}</td></tr>
         <tr><th>Last</th><td>{{ detail.event.last_price }}</td></tr>
     </tbody>
 </table>
 
-<h2>Outcome</h2>
+<h2>Today’s Outcome</h2>
 
 <table>
     <tbody>
@@ -41,7 +54,75 @@
     </tbody>
 </table>
 
-<h2>Historical Sample</h2>
+<h2>Comparable Historical Gaps</h2>
+
+{% if detail.active_direction_comparable_gaps %}
+<table>
+    <thead>
+        <tr>
+            <th>Range</th>
+            <th>Count</th>
+            <th>Fill Rate</th>
+            <th>Avg Max Favorable</th>
+            <th>Avg Max Adverse</th>
+            <th>Avg Close Result</th>
+            <th>Avg Gap Fill Progress</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for bucket, stats in detail.active_direction_comparable_gaps.items() %}
+            {% if bucket != "target_gap_pct" %}
+            <tr>
+                <td>
+                    {% if bucket == "plus_minus_1_pct" %}
+                        Within ±1%
+                    {% elif bucket == "plus_minus_2_pct" %}
+                        Within ±2%
+                    {% elif bucket == "plus_minus_3_pct" %}
+                        Within ±3%
+                    {% elif bucket == "all_gaps" %}
+                        All Comparable Gaps
+                    {% else %}
+                        {{ bucket }}
+                    {% endif %}
+                </td>
+                <td>{{ stats.count }}</td>
+                <td>{{ stats.fill_rate_pct }}%</td>
+                <td>{{ stats.avg_max_favorable_pct }}%</td>
+                <td>{{ stats.avg_max_adverse_pct }}%</td>
+                <td>{{ stats.avg_close_result_pct }}%</td>
+                <td>{{ stats.avg_gap_fill_progress_pct }}%</td>
+            </tr>
+            {% endif %}
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No comparable gap statistics available.</p>
+{% endif %}
+
+<h2>Historical Odds</h2>
+
+<h3>Historical Gap {{ "Ups" if detail.active_gap_direction == "up" else "Downs" }}</h3>
+
+<table>
+    <tbody>
+        <tr><th>Sample Size</th><td>{{ detail.active_direction_statistics.count }}</td></tr>
+        <tr><th>Fill Rate</th><td>{{ detail.active_direction_statistics.fill_rate_pct }}%</td></tr>
+        <tr><th>Avg Max Favorable</th><td>{{ detail.active_direction_statistics.avg_max_favorable_pct }}%</td></tr>
+        <tr><th>Avg Max Adverse</th><td>{{ detail.active_direction_statistics.avg_max_adverse_pct }}%</td></tr>
+        <tr><th>Avg Close Result</th><td>{{ detail.active_direction_statistics.avg_close_result_pct }}%</td></tr>
+        <tr><th>Avg Gap Fill Progress</th><td>{{ detail.active_direction_statistics.avg_gap_fill_progress_pct }}%</td></tr>
+    </tbody>
+</table>
+
+<h2>Pending / Advanced Research</h2>
+
+<p>
+    Nothing below was removed. These sections are still useful, but they are secondary to the main intel summary above.
+</p>
+
+<h3>Historical Sample</h3>
 
 <table>
     <tbody>
@@ -52,73 +133,22 @@
     </tbody>
 </table>
 
-<h2>Gap Research Statistics</h2>
-
-<h3>Historical Gap {{ "Ups" if detail.active_gap_direction == "up" else "Downs" }}</h3>
-<table>
-    <tbody>
-        <tr>
-            <th>Sample Size</th>
-            <td>{{ detail.active_direction_statistics.count }}</td>
-        </tr>
-        <tr>
-            <th>Fill Rate</th>
-            <td>{{ detail.active_direction_statistics.fill_rate_pct }}%</td>
-        </tr>
-        <tr>
-            <th>Avg Max Favorable</th>
-            <td>{{ detail.active_direction_statistics.avg_max_favorable_pct }}%</td>
-        </tr>
-        <tr>
-            <th>Avg Max Adverse</th>
-            <td>{{ detail.active_direction_statistics.avg_max_adverse_pct }}%</td>
-        </tr>
-        <tr>
-            <th>Avg Close Result</th>
-            <td>{{ detail.active_direction_statistics.avg_close_result_pct }}%</td>
-        </tr>
-        <tr>
-            <th>Avg Gap Fill Progress</th>
-            <td>{{ detail.active_direction_statistics.avg_gap_fill_progress_pct }}%</td>
-        </tr>
-    </tbody>
-</table>
-
 <h3>Fill Timing</h3>
+
 <table>
     <tbody>
-        <tr>
-            <th>Minute Sample Size</th>
-            <td>{{ detail.active_direction_fill_timing.minute_sample_size }}</td>
-        </tr>
-        <tr>
-            <th>Filled Within 5 Min</th>
-            <td>{{ detail.active_direction_fill_timing.filled_within_5_min_pct }}%</td>
-        </tr>
-        <tr>
-            <th>Filled Within 15 Min</th>
-            <td>{{ detail.active_direction_fill_timing.filled_within_15_min_pct }}%</td>
-        </tr>
-        <tr>
-            <th>Filled Within 30 Min</th>
-            <td>{{ detail.active_direction_fill_timing.filled_within_30_min_pct }}%</td>
-        </tr>
-        <tr>
-            <th>Filled Within 60 Min</th>
-            <td>{{ detail.active_direction_fill_timing.filled_within_60_min_pct }}%</td>
-        </tr>
-        <tr>
-            <th>Filled After 60 Min</th>
-            <td>{{ detail.active_direction_fill_timing.filled_after_60_min_pct }}%</td>
-        </tr>
-        <tr>
-            <th>Never Filled</th>
-            <td>{{ detail.active_direction_fill_timing.never_filled_pct }}%</td>
-        </tr>
+        <tr><th>Minute Sample Size</th><td>{{ detail.active_direction_fill_timing.minute_sample_size }}</td></tr>
+        <tr><th>Filled Within 5 Min</th><td>{{ detail.active_direction_fill_timing.filled_within_5_min_pct }}%</td></tr>
+        <tr><th>Filled Within 15 Min</th><td>{{ detail.active_direction_fill_timing.filled_within_15_min_pct }}%</td></tr>
+        <tr><th>Filled Within 30 Min</th><td>{{ detail.active_direction_fill_timing.filled_within_30_min_pct }}%</td></tr>
+        <tr><th>Filled Within 60 Min</th><td>{{ detail.active_direction_fill_timing.filled_within_60_min_pct }}%</td></tr>
+        <tr><th>Filled After 60 Min</th><td>{{ detail.active_direction_fill_timing.filled_after_60_min_pct }}%</td></tr>
+        <tr><th>Never Filled</th><td>{{ detail.active_direction_fill_timing.never_filled_pct }}%</td></tr>
     </tbody>
 </table>
 
 <h3>Gap Size Buckets</h3>
+
 <table>
     <thead>
         <tr>
@@ -146,37 +176,24 @@
     </tbody>
 </table>
 
-<h3>Comparable Gaps</h3>
-{% if detail.active_direction_comparable_gaps %}
+<h3>Future Todo: Prior Gap History</h3>
+
 <table>
-    <thead>
-        <tr>
-            <th>Range</th>
-            <th>Count</th>
-            <th>Fill Rate</th>
-            <th>Avg Max Favorable</th>
-            <th>Avg Max Adverse</th>
-            <th>Avg Close Result</th>
-            <th>Avg Gap Fill Progress</th>
-        </tr>
-    </thead>
     <tbody>
-        {% for bucket, stats in detail.active_direction_comparable_gaps.items() %}
-            {% if bucket != "target_gap_pct" %}
-            <tr>
-                <td>{{ bucket }}</td>
-                <td>{{ stats.count }}</td>
-                <td>{{ stats.fill_rate_pct }}%</td>
-                <td>{{ stats.avg_max_favorable_pct }}%</td>
-                <td>{{ stats.avg_max_adverse_pct }}%</td>
-                <td>{{ stats.avg_close_result_pct }}%</td>
-            <td>{{ stats.avg_gap_fill_progress_pct }}%</td>
-            </tr>
-            {% endif %}
-        {% endfor %}
+        <tr>
+            <th>Individual Prior Gaps</th>
+            <td>Todo: show prior gap events as rows with date, gap %, fill result, minutes to fill, max favorable, max adverse, and close result.</td>
+        </tr>
+        <tr>
+            <th>Daily Chart With Gap Labels</th>
+            <td>Todo: add link to a daily chart where each prior gap is labeled by date, number, or gap percentage.</td>
+        </tr>
+        <tr>
+            <th>Replay Link</th>
+            <td>Todo: add a replay link for each historical gap day.</td>
+        </tr>
     </tbody>
 </table>
-{% endif %}
 
 {% else %}
 
