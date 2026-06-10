@@ -26,6 +26,17 @@ def calculate_daily_gap_outcome(
 
         closest_price = low_price
 
+        gap_size = open_price - previous_close
+        gap_progress = open_price - low_price
+
+        gap_fill_progress_pct = min(
+            100,
+            max(
+                0,
+                gap_progress / gap_size * 100,
+            ),
+        )
+
         closest_distance_pct = (
             abs(low_price - previous_close)
             / previous_close
@@ -50,6 +61,17 @@ def calculate_daily_gap_outcome(
         )
 
         closest_price = high_price
+
+        gap_size = previous_close - open_price
+        gap_progress = high_price - open_price
+
+        gap_fill_progress_pct = min(
+            100,
+            max(
+                0,
+                gap_progress / gap_size * 100,
+            ),
+        )
 
         closest_distance_pct = (
             abs(high_price - previous_close)
@@ -84,6 +106,10 @@ def calculate_daily_gap_outcome(
         ),
         "closest_distance_pct": round(
             closest_distance_pct,
+            4,
+        ),
+        "gap_fill_progress_pct": round(
+            gap_fill_progress_pct,
             4,
         ),
         "max_favorable_pct": round(

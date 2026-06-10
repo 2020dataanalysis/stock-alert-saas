@@ -18,6 +18,7 @@ def calculate_statistics(outcomes):
             "avg_max_favorable_pct": 0,
             "avg_max_adverse_pct": 0,
             "avg_close_result_pct": 0,
+            "avg_gap_fill_progress_pct": 0,
         }
 
     count = len(outcomes)
@@ -51,6 +52,13 @@ def calculate_statistics(outcomes):
         "avg_close_result_pct": round(
             sum(
                 o["close_result_pct"]
+                for o in outcomes
+            ) / count,
+            2,
+        ),
+        "avg_gap_fill_progress_pct": round(
+            sum(
+                o["gap_fill_progress_pct"]
                 for o in outcomes
             ) / count,
             2,
