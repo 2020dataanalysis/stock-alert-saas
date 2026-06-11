@@ -12,7 +12,11 @@ This module is intended to expand into:
     - market hours
 """
 
+import csv
+from io import StringIO
+
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 
 from app.on_demand_market_data.history_service import (
     fetch_price_history,
@@ -31,9 +35,10 @@ def market_data_history_api(
     interval: str = "1m",
     need_extended_hours_data: bool = True,
     need_previous_close: bool = True,
+    format: str = "json",
 ):
     try:
-        return fetch_price_history(
+        result = fetch_price_history(
             symbol=symbol,
             days=days,
             start_date=start_date,
@@ -42,6 +47,47 @@ def market_data_history_api(
             need_extended_hours_data=need_extended_hours_data,
             need_previous_close=need_previous_close,
         )
+
+        if format.lower() == "csv":
+            output = StringIO()
+            writer = csv.DictWriter(
+                output,
+                fieldnames=[
+                    "datetime",
+                    "open",
+                    "high",
+                    "low",
+                    "close",
+                    "volume",
+                ],
+            )
+            writer.writeheader()
+
+            for candle in result["candles"]:
+                writer.writerow({
+                    "datetime": candle.get("datetime"),
+                    "open": candle.get("open"),
+                    "high": candle.get("high"),
+                    "low": candle.get("low"),
+                    "close": candle.get("close"),
+                    "volume": candle.get("volume"),
+                })
+
+            filename = (
+                f"{result['symbol']}_"
+                f"{result['request']['request_mode']}_"
+                f"{result['interval']}.csv"
+            )
+
+            return Response(
+                content=output.getvalue(),
+                media_type="text/csv",
+                headers={
+                    "Content-Disposition": f'attachment; filename="{filename}"'
+                },
+            )
+
+        return result
     except Exception as error:
         raise HTTPException(
             status_code=400,
