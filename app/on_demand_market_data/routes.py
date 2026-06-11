@@ -13,6 +13,7 @@ This module is intended to expand into:
 """
 
 import csv
+from datetime import datetime
 from io import StringIO
 
 from fastapi import APIRouter, HTTPException
@@ -54,6 +55,7 @@ def market_data_history_api(
                 output,
                 fieldnames=[
                     "datetime",
+                    "timestamp",
                     "open",
                     "high",
                     "low",
@@ -64,8 +66,15 @@ def market_data_history_api(
             writer.writeheader()
 
             for candle in result["candles"]:
+                epoch_ms = candle.get("datetime")
+
+                timestamp = datetime.fromtimestamp(
+                    epoch_ms / 1000
+                ).astimezone().isoformat()
+
                 writer.writerow({
-                    "datetime": candle.get("datetime"),
+                    "datetime": epoch_ms,
+                    "timestamp": timestamp,
                     "open": candle.get("open"),
                     "high": candle.get("high"),
                     "low": candle.get("low"),
