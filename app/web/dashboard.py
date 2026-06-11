@@ -47,6 +47,7 @@ from app.statistics.routes import router as statistics_router
 
 from app.live.routes import router as live_router
 from app.gappers.routes import router as gappers_router
+from app.on_demand_market_data.routes import router as on_demand_market_data_router
 
 import sqlite3
 
@@ -102,6 +103,7 @@ app.include_router(historical_replay_router)
 app.include_router(statistics_router)
 app.include_router(live_router)
 app.include_router(gappers_router)
+app.include_router(on_demand_market_data_router)
 
 templates = Jinja2Templates(directory="app/web/templates")
 

@@ -14,10 +14,18 @@ from app.historical_data.bars.imports.schwab_importer import (
 )
 
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+BASE_DIR = Path(__file__).resolve().parent
+
+STOCK_ALERT_SAAS_DIR = (
+    BASE_DIR.parent.parent.parent.parent
+)
+
+STOCK_ALERT_PLATFORM_DIR = (
+    STOCK_ALERT_SAAS_DIR.parent
+)
 
 SCHWAB_CLIENT_REPO_PATH = (
-    BASE_DIR.parent / "schwab-api-client"
+    STOCK_ALERT_PLATFORM_DIR / "schwab-api-client"
 )
 
 CREDENTIALS_FILE = (
