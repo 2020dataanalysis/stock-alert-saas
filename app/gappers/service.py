@@ -11,6 +11,10 @@ from app.data_adapters.movers_adapter import get_mover_symbols
 from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.gappers.db_init import initialize_gap_database
 from app.gappers.storage import save_gap_event
+from app.services.market_hours_service import (
+    get_market_session,
+    PREMARKET,
+)
 
 
 def _calculate_gap_pct(open_price: float | None, previous_close: float | None) -> float | None:
@@ -45,14 +49,22 @@ def get_live_gappers(
 
     rows: list[dict[str, Any]] = []
 
+    session = get_market_session()
+
     for symbol in mover_symbols:
         quote = adapter.get_quote(symbol)
 
         if not quote:
             continue
 
+        reference_price = (
+            quote.get("last")
+            if session == PREMARKET
+            else quote.get("open")
+        )
+
         gap_pct = _calculate_gap_pct(
-            quote.get("open"),
+            reference_price,
             quote.get("previous_close"),
         )
 
