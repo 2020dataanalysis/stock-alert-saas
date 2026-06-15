@@ -63,6 +63,9 @@ def get_live_gappers(
             else quote.get("open")
         )
 
+        if reference_price in (None, 0):
+            continue
+
         gap_pct = _calculate_gap_pct(
             reference_price,
             quote.get("previous_close"),
