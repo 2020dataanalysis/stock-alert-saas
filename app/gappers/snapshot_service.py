@@ -131,3 +131,119 @@ def save_gap_dashboard_snapshot_if_changed(
             "payload_hash": current_hash,
             "captured_at": now,
         }
+
+
+def list_gap_dashboard_snapshots(
+    limit: int = 25,
+) -> list[dict[str, Any]]:
+    initialize_gap_snapshot_table()
+
+    with get_gap_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                id,
+                captured_at,
+                page,
+                source_url,
+                snapshot_key,
+                payload_hash,
+                payload_json,
+                created_at
+            FROM gap_dashboard_snapshots
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+
+    results = []
+
+    for row in rows:
+        item = dict(row)
+
+        try:
+            payload = json.loads(item["payload_json"])
+        except json.JSONDecodeError:
+            payload = {}
+
+        item["gapper_count"] = payload.get("gapper_count")
+        item["mover_count"] = payload.get("mover_count")
+        item["minimum_gap_pct"] = payload.get("minimum_gap_pct")
+        item["payload_hash_short"] = item["payload_hash"][:12]
+
+        item.pop("payload_json", None)
+
+        results.append(item)
+
+    return results
+
+
+def get_gap_dashboard_snapshot(
+    snapshot_id: int,
+) -> dict[str, Any] | None:
+    initialize_gap_snapshot_table()
+
+    with get_gap_connection() as conn:
+        row = conn.execute(
+            """
+            SELECT
+                id,
+                captured_at,
+                page,
+                source_url,
+                snapshot_key,
+                payload_hash,
+                payload_json,
+                created_at
+            FROM gap_dashboard_snapshots
+            WHERE id = ?
+            """,
+            (snapshot_id,),
+        ).fetchone()
+
+    if not row:
+        return None
+
+    item = dict(row)
+
+    try:
+        payload = json.loads(item["payload_json"])
+    except json.JSONDecodeError:
+        payload = {}
+
+    item["payload"] = payload
+    item["payload_hash_short"] = item["payload_hash"][:12]
+    item.pop("payload_json", None)
+
+    return item
+
+
+def export_gap_dashboard_snapshots(
+    limit: int = 100,
+) -> dict[str, Any]:
+    initialize_gap_snapshot_table()
+
+    snapshots = []
+
+    with get_gap_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT id
+            FROM gap_dashboard_snapshots
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        ).fetchall()
+
+    for row in rows:
+        snapshot = get_gap_dashboard_snapshot(row["id"])
+        if snapshot:
+            snapshots.append(snapshot)
+
+    return {
+        "exported_at": _utc_now_iso(),
+        "snapshot_count": len(snapshots),
+        "snapshots": snapshots,
+    }

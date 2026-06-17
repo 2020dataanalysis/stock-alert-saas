@@ -96,4 +96,87 @@ async function loadGappers() {
     }
 }
 
+function formatSnapshotTime(value) {
+    if (!value) {
+        return "-";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return date.toLocaleString();
+}
+
+async function loadGappersSnapshots() {
+    const body = document.getElementById("gappers-snapshots-body");
+    const summary = document.getElementById("gappers-snapshots-summary");
+
+    if (!body) {
+        return;
+    }
+
+    body.innerHTML = `
+        <tr>
+            <td colspan="8">Loading snapshots...</td>
+        </tr>
+    `;
+
+    try {
+        const response = await fetch("/api/gappers/snapshots?limit=25");
+
+        if (!response.ok) {
+            throw new Error("Failed to load gappers snapshots");
+        }
+
+        const data = await response.json();
+        const snapshots = data.snapshots || [];
+
+        if (summary) {
+            summary.textContent = `Recent snapshots: ${snapshots.length}`;
+        }
+
+        if (!snapshots.length) {
+            body.innerHTML = `
+                <tr>
+                    <td colspan="8">No snapshots saved yet.</td>
+                </tr>
+            `;
+            return;
+        }
+
+        body.innerHTML = snapshots.map((snapshot) => {
+            const url = `/api/gappers/snapshots/${snapshot.id}`;
+
+            return `
+                <tr>
+                    <td>#${snapshot.id}</td>
+                    <td>${formatSnapshotTime(snapshot.captured_at)}</td>
+                    <td>${snapshot.snapshot_key}</td>
+                    <td>${snapshot.gapper_count ?? "-"}</td>
+                    <td>${snapshot.mover_count ?? "-"}</td>
+                    <td>${snapshot.payload_hash_short ?? "-"}</td>
+                    <td>
+                        <a href="${url}" target="_blank">👁 View</a>
+                    </td>
+                    <td>
+                        <a href="${url}/download">⬇ Export</a>
+                    </td>
+                </tr>
+            `;
+        }).join("");
+
+    } catch (error) {
+        body.innerHTML = `
+            <tr>
+                <td colspan="8">Error loading snapshots.</td>
+            </tr>
+        `;
+        console.error(error);
+    }
+}
+
 loadGappers();
+loadGappersSnapshots();

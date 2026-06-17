@@ -1,11 +1,16 @@
 from pathlib import Path
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, HTTPException, Response
 from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
 
 from app.gappers.service import get_live_gappers, get_gap_event_detail
-from app.gappers.snapshot_service import save_gap_dashboard_snapshot_if_changed
+from app.gappers.snapshot_service import (
+    save_gap_dashboard_snapshot_if_changed,
+    list_gap_dashboard_snapshots,
+    get_gap_dashboard_snapshot,
+    export_gap_dashboard_snapshots,
+)
 
 
 router = APIRouter()
@@ -45,6 +50,84 @@ def gappers_api(
     payload["snapshot"] = snapshot
 
     return payload
+
+
+@router.get("/api/gappers/snapshots")
+def gappers_snapshots_api(
+    limit: int = 25,
+):
+    return {
+        "snapshots": list_gap_dashboard_snapshots(
+            limit=limit,
+        )
+    }
+
+
+
+def _json_download_response(
+    *,
+    filename: str,
+    payload: dict,
+) -> Response:
+    import json
+
+    return Response(
+        content=json.dumps(payload, indent=2, default=str),
+        media_type="application/json",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
+    )
+
+
+@router.get("/api/gappers/snapshots/export")
+def gappers_snapshots_export_api(
+    limit: int = 100,
+):
+    payload = export_gap_dashboard_snapshots(
+        limit=limit,
+    )
+
+    return _json_download_response(
+        filename="gappers_snapshots_export.json",
+        payload=payload,
+    )
+
+
+@router.get("/api/gappers/snapshots/{snapshot_id}/download")
+def gappers_snapshot_download_api(
+    snapshot_id: int,
+):
+    snapshot = get_gap_dashboard_snapshot(
+        snapshot_id=snapshot_id,
+    )
+
+    if not snapshot:
+        raise HTTPException(
+            status_code=404,
+            detail="Gappers snapshot not found",
+        )
+
+    return _json_download_response(
+        filename=f"gappers_snapshot_{snapshot_id}.json",
+        payload=snapshot,
+    )
+
+@router.get("/api/gappers/snapshots/{snapshot_id}")
+def gappers_snapshot_detail_api(
+    snapshot_id: int,
+):
+    snapshot = get_gap_dashboard_snapshot(
+        snapshot_id=snapshot_id,
+    )
+
+    if not snapshot:
+        raise HTTPException(
+            status_code=404,
+            detail="Gappers snapshot not found",
+        )
+
+    return snapshot
 
 
 @router.get("/gappers")

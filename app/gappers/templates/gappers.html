@@ -48,6 +48,40 @@
         </tr>
     </tbody>
 </table>
+
+<h2>Recent Gappers Snapshots</h2>
+
+<p class="subtitle">
+    These links show what the Gappers page data looked like at that time.
+</p>
+
+<div id="gappers-snapshots-summary"></div>
+
+<p>
+    <a href="/api/gappers/snapshots/export?limit=100" target="_blank">
+        ⬇ Export All Snapshots
+    </a>
+</p>
+
+<table>
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Captured</th>
+            <th>Snapshot Key</th>
+            <th>Gappers</th>
+            <th>Movers</th>
+            <th>Hash</th>
+            <th>View</th>
+            <th>Export</th>
+        </tr>
+    </thead>
+    <tbody id="gappers-snapshots-body">
+        <tr>
+            <td colspan="8">Loading snapshots...</td>
+        </tr>
+    </tbody>
+</table>
 {% endblock %}
 
 {% block extra_scripts %}
