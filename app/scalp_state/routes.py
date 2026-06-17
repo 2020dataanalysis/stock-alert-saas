@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.requests import Request
 from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
@@ -33,6 +33,28 @@ templates.env.loader = FileSystemLoader([
 ])
 
 
+
+
+def parse_temporary_symbols(temporary_symbols):
+    if not temporary_symbols:
+        return []
+
+    symbols = []
+
+    for raw_symbol in temporary_symbols.split(","):
+        symbol = raw_symbol.strip().upper()
+
+        if not symbol:
+            continue
+
+        if not symbol.replace(".", "").replace("-", "").isalnum():
+            continue
+
+        symbols.append(symbol)
+
+    return list(dict.fromkeys(symbols))
+
+
 @router.get("/scalp-state")
 def scalp_state_page(request: Request):
 
@@ -48,10 +70,22 @@ def scalp_state_page(request: Request):
 
 
 @router.get("/api/scalp-state")
-def scalp_state_api():
+def scalp_state_api(
+    temporary_symbols: str = Query(default="")
+):
+
+    temporary_symbol_list = parse_temporary_symbols(
+        temporary_symbols
+    )
+
+    symbols = None
+
+    if temporary_symbol_list:
+        symbols = temporary_symbol_list
 
     return {
-        "rows": get_scalp_state_rows()
+        "temporary_symbols": temporary_symbol_list,
+        "rows": get_scalp_state_rows(symbols=symbols)
     }
 
 

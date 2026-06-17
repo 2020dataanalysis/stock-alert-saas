@@ -1,6 +1,7 @@
 let audioAlertsEnabled = false;
 let audioContext = null;
 let seenTransitionKeys = new Set();
+let temporarySymbols = "";
 
 
 function enableAudioAlerts() {
@@ -110,7 +111,13 @@ function handleNewTransitions(transitions) {
 
 async function loadScalpState() {
     try {
-        const response = await fetch("/api/scalp-state");
+        let url = "/api/scalp-state";
+
+        if (temporarySymbols) {
+            url += `?temporary_symbols=${encodeURIComponent(temporarySymbols)}`;
+        }
+
+        const response = await fetch(url);
         const data = await response.json();
 
         const tbody = document.getElementById("scalp-state-body");
@@ -295,9 +302,39 @@ document.addEventListener("DOMContentLoaded", () => {
         button.addEventListener("click", enableAudioAlerts);
     }
 
+    setupTemporarySymbolsControls();
+
     loadScalpState();
     loadStateTransitions();
 
     setInterval(loadScalpState, 5000);
     setInterval(loadStateTransitions, 5000);
 });
+
+function setupTemporarySymbolsControls() {
+    const input = document.getElementById("temporary-symbols-input");
+    const analyzeButton = document.getElementById("temporary-symbols-button");
+    const clearButton = document.getElementById("clear-temporary-symbols-button");
+
+    if (!input || !analyzeButton || !clearButton) {
+        return;
+    }
+
+    analyzeButton.addEventListener("click", () => {
+        temporarySymbols = input.value.trim().toUpperCase();
+        loadScalpState();
+    });
+
+    clearButton.addEventListener("click", () => {
+        input.value = "";
+        temporarySymbols = "";
+        loadScalpState();
+    });
+
+    input.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            temporarySymbols = input.value.trim().toUpperCase();
+            loadScalpState();
+        }
+    });
+}
