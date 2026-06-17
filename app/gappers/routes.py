@@ -5,6 +5,7 @@ from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
 
 from app.gappers.service import get_live_gappers, get_gap_event_detail
+from app.gappers.snapshot_service import save_gap_dashboard_snapshot_if_changed
 
 
 router = APIRouter()
@@ -26,10 +27,24 @@ def gappers_api(
     minimum_gap_pct: float = 2.0,
     limit: int | None = None,
 ):
-    return get_live_gappers(
+    payload = get_live_gappers(
         minimum_gap_pct=minimum_gap_pct,
         limit=limit,
     )
+
+    snapshot = save_gap_dashboard_snapshot_if_changed(
+        page="gappers",
+        source_url="/api/gappers",
+        snapshot_key=(
+            f"gappers:min_gap={minimum_gap_pct}:"
+            f"limit={limit or 'default'}"
+        ),
+        payload=payload,
+    )
+
+    payload["snapshot"] = snapshot
+
+    return payload
 
 
 @router.get("/gappers")
