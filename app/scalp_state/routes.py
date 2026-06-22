@@ -111,3 +111,16 @@ def scalp_state_logs_api(
             symbol=clean_symbol,
         )
     }
+
+
+@router.post("/api/scalp-state/logs/clear")
+def clear_scalp_state_logs_api():
+
+    from app.scalp_state.database import scalp_state_db_connection
+
+    with scalp_state_db_connection() as conn:
+        conn.execute("DELETE FROM scalp_state_log")
+
+    return {
+        "ok": True
+    }

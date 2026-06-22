@@ -2,6 +2,7 @@ let audioAlertsEnabled = false;
 let audioContext = null;
 let seenTransitionKeys = new Set();
 let temporarySymbols = "";
+let scalpLogVisible = false;
 
 
 function enableAudioAlerts() {
@@ -297,6 +298,10 @@ async function loadStateTransitions() {
 
 
 async function loadScalpStateLogs() {
+    if (!scalpLogVisible) {
+        return;
+    }
+
     try {
         const response = await fetch("/api/scalp-state/logs?limit=100");
         const data = await response.json();
@@ -335,6 +340,91 @@ async function loadScalpStateLogs() {
 }
 
 
+function setScalpLogVisible(visible) {
+    scalpLogVisible = visible;
+
+    const table = document.getElementById("scalp-log-table");
+    const showButton = document.getElementById("show-scalp-log-button");
+    const hideButton = document.getElementById("hide-scalp-log-button");
+    const clearButton = document.getElementById("clear-scalp-log-button");
+
+    if (table) {
+        table.style.display = visible ? "" : "none";
+    }
+
+    if (showButton) {
+        showButton.style.display = visible ? "none" : "";
+    }
+
+    if (hideButton) {
+        hideButton.style.display = visible ? "" : "none";
+    }
+
+    if (clearButton) {
+        clearButton.style.display = visible ? "" : "none";
+    }
+
+    if (visible) {
+        loadScalpStateLogs();
+    }
+}
+
+
+async function clearScalpStateLog() {
+    const confirmed = confirm(
+        "Delete all scalp intelligence log entries?"
+    );
+
+    if (!confirmed) {
+        return;
+    }
+
+    try {
+        const response = await fetch(
+            "/api/scalp-state/logs/clear",
+            {
+                method: "POST"
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Clear log request failed");
+        }
+
+        await loadScalpStateLogs();
+
+    } catch (err) {
+        console.error("Failed clearing scalp state log:", err);
+        alert("Failed to clear scalp log.");
+    }
+}
+
+
+function setupScalpLogControls() {
+    const showButton = document.getElementById("show-scalp-log-button");
+    const hideButton = document.getElementById("hide-scalp-log-button");
+    const clearButton = document.getElementById("clear-scalp-log-button");
+
+    if (showButton) {
+        showButton.addEventListener("click", () => {
+            setScalpLogVisible(true);
+        });
+    }
+
+    if (hideButton) {
+        hideButton.addEventListener("click", () => {
+            setScalpLogVisible(false);
+        });
+    }
+
+    if (clearButton) {
+        clearButton.addEventListener("click", clearScalpStateLog);
+    }
+
+    setScalpLogVisible(false);
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
     const button = document.getElementById("enable-audio-button");
 
@@ -343,6 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setupTemporarySymbolsControls();
+    setupScalpLogControls();
 
     loadScalpState();
     loadStateTransitions();
