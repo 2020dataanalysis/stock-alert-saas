@@ -295,6 +295,46 @@ async function loadStateTransitions() {
 }
 
 
+
+async function loadScalpStateLogs() {
+    try {
+        const response = await fetch("/api/scalp-state/logs?limit=100");
+        const data = await response.json();
+
+        const tbody = document.getElementById("scalp-log-body");
+
+        if (!tbody) {
+            return;
+        }
+
+        tbody.innerHTML = "";
+
+        for (const log of data.logs) {
+            const tr = document.createElement("tr");
+
+            tr.innerHTML = `
+                <td>${log.timestamp}</td>
+                <td>${log.symbol}</td>
+                <td>${log.event_type ?? "-"}</td>
+                <td class="${log.state}">${log.state}</td>
+                <td>${log.previous_state ?? "-"}</td>
+                <td class="${log.action}">${log.action ?? "-"}</td>
+                <td>${log.score ?? "-"}</td>
+                <td>${log.latest ?? "-"}</td>
+                <td>${log.range_pct ?? "-"}</td>
+                <td>${log.range_velocity ?? "-"}</td>
+                <td>${log.reason ?? "-"}</td>
+            `;
+
+            tbody.appendChild(tr);
+        }
+
+    } catch (err) {
+        console.error("Failed loading scalp state logs:", err);
+    }
+}
+
+
 document.addEventListener("DOMContentLoaded", () => {
     const button = document.getElementById("enable-audio-button");
 
@@ -306,9 +346,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     loadScalpState();
     loadStateTransitions();
+    loadScalpStateLogs();
 
     setInterval(loadScalpState, 5000);
     setInterval(loadStateTransitions, 5000);
+    setInterval(loadScalpStateLogs, 5000);
 });
 
 function setupTemporarySymbolsControls() {

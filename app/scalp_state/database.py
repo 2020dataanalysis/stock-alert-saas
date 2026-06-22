@@ -41,3 +41,43 @@ def init_scalp_state_db():
                 priority TEXT
             )
         """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS scalp_state_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT NOT NULL,
+                symbol TEXT NOT NULL,
+                state TEXT NOT NULL,
+                previous_state TEXT,
+                action TEXT,
+                score INTEGER,
+                latest REAL,
+                range_pct REAL,
+                range_velocity REAL,
+                older_range_pct REAL,
+                recent_range_pct REAL,
+                directional_efficiency REAL,
+                compression_maturity_score INTEGER,
+                compression_label TEXT,
+                expansion_exhaustion_score INTEGER,
+                expansion_exhaustion_label TEXT,
+                volume_samples INTEGER,
+                volume_delta REAL,
+                volume_delta_per_sample REAL,
+                volume_efficiency REAL,
+                relative_volume_ratio REAL,
+                relative_volume_label TEXT,
+                reason TEXT,
+                event_type TEXT
+            )
+        """)
+
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_scalp_state_log_symbol_id
+            ON scalp_state_log(symbol, id)
+        """)
+
+        conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_scalp_state_log_timestamp
+            ON scalp_state_log(timestamp)
+        """)

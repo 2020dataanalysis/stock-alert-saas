@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
 from jinja2 import FileSystemLoader
 from app.scalp_state.service import (
+    get_recent_scalp_state_logs,
     get_recent_state_transitions,
     get_scalp_state_rows,
 )
@@ -94,4 +95,19 @@ def scalp_state_transitions_api():
 
     return {
         "transitions": get_recent_state_transitions()
+    }
+
+@router.get("/api/scalp-state/logs")
+def scalp_state_logs_api(
+    symbol: str = Query(default=""),
+    limit: int = Query(default=200)
+):
+
+    clean_symbol = symbol.strip().upper() or None
+
+    return {
+        "logs": get_recent_scalp_state_logs(
+            limit=limit,
+            symbol=clean_symbol,
+        )
     }
