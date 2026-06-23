@@ -1,8 +1,11 @@
 from pathlib import Path
+import csv
+from io import StringIO
 
 from fastapi import APIRouter
 from fastapi import Request
 from fastapi.templating import Jinja2Templates
+from fastapi.responses import Response
 from jinja2 import FileSystemLoader
 
 from app.historical_data.replay.catalog_service import (
@@ -86,11 +89,54 @@ def replay_quotes_api(
     symbol: str,
     trade_date: str | None = None,
     limit: int = 10000,
+    format: str = "json",
 ):
-    return get_replay_quotes(
+    result = get_replay_quotes(
         symbol=symbol,
         trade_date=trade_date,
         limit=limit,
+    )
+
+    if format.lower() != "csv":
+        return result
+
+    output = StringIO()
+    quotes = result.get("quotes", [])
+
+    fieldnames = [
+        "symbol",
+        "timestamp",
+        "last",
+        "bid",
+        "ask",
+        "volume",
+        "trade_date",
+    ]
+
+    writer = csv.DictWriter(
+        output,
+        fieldnames=fieldnames,
+        extrasaction="ignore",
+    )
+    writer.writeheader()
+
+    for quote in quotes:
+        row = dict(quote)
+        row["symbol"] = result.get("symbol", symbol.upper())
+        row["trade_date"] = trade_date or ""
+        writer.writerow(row)
+
+    normalized_symbol = symbol.upper().strip()
+    date_part = trade_date or "all"
+
+    filename = f"{normalized_symbol}_{date_part}_historical_quotes.csv"
+
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
     )
 
 

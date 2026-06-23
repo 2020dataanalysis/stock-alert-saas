@@ -75,6 +75,58 @@ function buildQuoteUrl(symbol, tradeDate = null) {
     return `/api/replay/quotes?${params.toString()}`;
 }
 
+function buildReplayDownloadUrl(symbol, tradeDate = null, format = "csv") {
+    const params = new URLSearchParams();
+    params.set("symbol", symbol);
+    params.set("format", format);
+
+    if (tradeDate) {
+        params.set("trade_date", tradeDate);
+    }
+
+    return `/api/replay/quotes?${params.toString()}`;
+}
+
+function buildMarketDataDownloadUrl(symbol, days = 10, format = "csv") {
+    const params = new URLSearchParams();
+    params.set("days", String(days));
+    params.set("interval", "1m");
+    params.set("need_extended_hours_data", "true");
+    params.set("format", format);
+
+    return `/api/market-data/history/${encodeURIComponent(symbol)}?${params.toString()}`;
+}
+
+function updateReplayDownloadLinks(tradeDate = null) {
+    const symbol = getQueryParam("symbol");
+
+    const sessionCsvLink = document.getElementById("download-session-csv-link");
+    const symbolCsvLink = document.getElementById("download-symbol-csv-link");
+    const allDataLink = document.getElementById("download-all-symbol-data-link");
+
+    if (!symbol || !sessionCsvLink || !symbolCsvLink || !allDataLink) {
+        return;
+    }
+
+    sessionCsvLink.href = buildReplayDownloadUrl(symbol, tradeDate, "csv");
+    symbolCsvLink.href = buildMarketDataDownloadUrl(symbol, 10, "csv");
+    allDataLink.href = buildReplayDownloadUrl(symbol, null, "csv");
+
+    const latestTradeDate = replaySessions.length
+        ? replaySessions[replaySessions.length - 1].trade_date
+        : null;
+
+    sessionCsvLink.textContent = tradeDate === latestTradeDate
+        ? `Export Today (${tradeDate})`
+        : tradeDate
+            ? `Export ${tradeDate}`
+            : "Export Session";
+
+    symbolCsvLink.textContent = "Export Last 10 Days";
+    allDataLink.textContent = "Export All Data";
+}
+
+
 function resizeChart() {
     if (!replayChart) {
         return;
@@ -473,6 +525,7 @@ function selectSession(index) {
     const selectedSession = replaySessions[selectedSessionIndex];
 
     renderSelectedSession(selectedSession);
+    updateReplayDownloadLinks(selectedSession.trade_date);
     loadReplayQuotes(selectedSession.trade_date);
     updateSessionNavigationButtons();
 }
@@ -487,6 +540,7 @@ async function loadReplaySummary() {
 
     if (!symbol) {
         summaryElement.textContent = "No symbol selected.";
+        updateReplayDownloadLinks(null);
         return;
     }
 
