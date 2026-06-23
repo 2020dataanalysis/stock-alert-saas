@@ -46,6 +46,169 @@ function formatDayOfWeek(tradeDate) {
     });
 }
 
+function formatSessionCardDate(tradeDate) {
+    const date = new Date(`${tradeDate}T00:00:00`);
+
+    return date.toLocaleDateString("en-US", {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+    });
+}
+
+function formatMonthHeading(tradeDate) {
+    const date = new Date(`${tradeDate}T00:00:00`);
+
+    return date.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+    });
+}
+
+function getWeekStartDate(tradeDate) {
+    const date = new Date(`${tradeDate}T00:00:00`);
+    const day = date.getDay();
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+
+    date.setDate(date.getDate() + diffToMonday);
+
+    return date;
+}
+
+function formatWeekHeading(tradeDate) {
+    const weekStart = getWeekStartDate(tradeDate);
+
+    return `Week of ${weekStart.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+    })}`;
+}
+
+function formatPacificTime(timestamp) {
+    if (!timestamp) {
+        return "";
+    }
+
+    const date = new Date(timestamp);
+
+    return date.toLocaleTimeString("en-US", {
+        timeZone: "America/Los_Angeles",
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+}
+
+function formatSessionTimeRange(row) {
+    return `${formatPacificTime(row.first_quote)} → ${formatPacificTime(row.last_quote)} PT`;
+}
+
+function groupReplaySessionsByMonthAndWeek(sessions) {
+    const grouped = [];
+
+    sessions.forEach((row, index) => {
+        const monthKey = row.trade_date.slice(0, 7);
+        const weekStart = getWeekStartDate(row.trade_date);
+        const weekKey = weekStart.toISOString().slice(0, 10);
+
+        let monthGroup = grouped.find((group) => group.key === monthKey);
+
+        if (!monthGroup) {
+            monthGroup = {
+                key: monthKey,
+                label: formatMonthHeading(row.trade_date),
+                weeks: [],
+            };
+            grouped.push(monthGroup);
+        }
+
+        let weekGroup = monthGroup.weeks.find((week) => week.key === weekKey);
+
+        if (!weekGroup) {
+            weekGroup = {
+                key: weekKey,
+                label: formatWeekHeading(row.trade_date),
+                sessions: [],
+            };
+            monthGroup.weeks.push(weekGroup);
+        }
+
+        weekGroup.sessions.push({
+            ...row,
+            index,
+        });
+    });
+
+    return grouped;
+}
+
+function renderReplaySessionCards() {
+    const datesElement = document.getElementById("replay-dates");
+
+    if (!datesElement) {
+        return;
+    }
+
+    const groups = groupReplaySessionsByMonthAndWeek(replaySessions);
+
+    datesElement.innerHTML = groups.map((monthGroup) => {
+        const weeksHtml = monthGroup.weeks.map((weekGroup) => {
+            const cardsHtml = weekGroup.sessions.map((row) => {
+                const selectedClass = row.index === selectedSessionIndex
+                    ? " selected"
+                    : "";
+
+                const selectedText = row.index === selectedSessionIndex
+                    ? `<div style="margin-top: 6px; font-weight: 700;">✓ Selected</div>`
+                    : "";
+
+                return `
+                    <button
+                        type="button"
+                        class="replay-session-card${selectedClass}"
+                        data-session-index="${row.index}"
+                    >
+                        <div style="font-weight: 700;">
+                            ${formatSessionCardDate(row.trade_date)}
+                        </div>
+                        <div>
+                            ${formatNumber(row.quote_count)} quotes
+                        </div>
+                        <div style="font-size: 0.9em; opacity: 0.85;">
+                            ${formatSessionTimeRange(row)}
+                        </div>
+                        ${selectedText}
+                    </button>
+                `;
+            }).join("");
+
+            return `
+                <div style="margin-top: 16px;">
+                    <div style="font-weight: 700; margin-bottom: 8px;">
+                        ${weekGroup.label}
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        return `
+            <section style="margin-top: 24px;">
+                <h3>${monthGroup.label}</h3>
+                ${weeksHtml}
+            </section>
+        `;
+    }).join("");
+
+    document.querySelectorAll(".replay-session-card").forEach((button) => {
+        button.addEventListener("click", () => {
+            const index = Number(button.dataset.sessionIndex);
+            selectSession(index);
+        });
+    });
+}
+
 function formatReplayTimestamp(unixMs) {
     if (!unixMs) {
         return "";
@@ -526,6 +689,7 @@ function selectSession(index) {
 
     renderSelectedSession(selectedSession);
     updateReplayDownloadLinks(selectedSession.trade_date);
+    renderReplaySessionCards();
     loadReplayQuotes(selectedSession.trade_date);
     updateSessionNavigationButtons();
 }
@@ -633,25 +797,7 @@ async function loadReplayDates() {
 
     replaySessions = dates;
 
-    datesElement.innerHTML = replaySessions.map((row, index) => {
-        return `
-            <button
-                type="button"
-                class="replay-session-button"
-                data-session-index="${index}"
-                style="display: block; margin-bottom: 8px;"
-            >
-                ${row.trade_date} (${formatNumber(row.quote_count)} quotes)
-            </button>
-        `;
-    }).join("");
-
-    document.querySelectorAll(".replay-session-button").forEach((button) => {
-        button.addEventListener("click", () => {
-            const index = Number(button.dataset.sessionIndex);
-            selectSession(index);
-        });
-    });
+    renderReplaySessionCards();
 
     document.getElementById("previous-session-button").addEventListener("click", () => {
         selectSession(selectedSessionIndex - 1);
