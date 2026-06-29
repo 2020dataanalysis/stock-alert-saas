@@ -41,14 +41,28 @@ def create_adapter():
 
 def refresh_access_token_by_time():
     adapter.client.oauth.get_access_token()
-    remaining_seconds = None
 
-    if remaining_seconds is None:
-        log("⚠️ Access token remaining seconds unknown")
-        return
+    try:
+        token_status = get_token_status()
 
-    log(f"🔑 Access token seconds remaining: {remaining_seconds:.0f}")
+        remaining_seconds = token_status.get(
+            "access_token_seconds_remaining"
+        )
 
+        if remaining_seconds is None:
+            log("⚠️ Access token remaining seconds unknown")
+            return
+
+        log(
+            f"🔑 Access token seconds remaining: "
+            f"{remaining_seconds}"
+        )
+
+    except Exception as e:
+        log(
+            f"FAILED TO READ TOKEN STATUS: "
+            f"{type(e).__name__}: {e}"
+        )
 
 
 

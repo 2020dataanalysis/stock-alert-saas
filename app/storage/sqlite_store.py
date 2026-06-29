@@ -318,7 +318,11 @@ def save_quote_with_connection(conn, quote):
         quote.get("last_size"),
         quote.get("volume"),
         int(quote.get("is_shortable", False)),
-        int(quote.get("hard_to_borrow", False)),
+        (
+            int(quote["hard_to_borrow"])
+            if quote.get("hard_to_borrow") is not None
+            else None
+        ),
         quote.get("htb_rate"),
     ))
 
