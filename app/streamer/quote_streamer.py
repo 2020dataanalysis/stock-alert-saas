@@ -2,7 +2,7 @@
 
 import time
 from datetime import datetime, UTC
-# from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo
 
 from app.config import load_settings
 from app.data_adapters.schwab_adapter import SchwabAdapter
@@ -27,7 +27,8 @@ from app.services.alert_rule_service import (
     generate_mover_rules,
 )
 
-# PACIFIC = ZoneInfo("America/Los_Angeles")
+PACIFIC = ZoneInfo("America/Los_Angeles")
+PREMARKET_STREAM_START_HOUR = 6
 
 settings = load_settings()
 
@@ -65,6 +66,50 @@ def refresh_access_token_by_time():
         )
 
 
+
+def wait_until_premarket_start():
+    """
+    When manually started before 6:00 AM Pacific, remain idle until 6:00 AM.
+
+    The short sleep interval keeps the process interruptible instead of using
+    one long sleep for the entire overnight period.
+    """
+    waiting_logged = False
+
+    while True:
+        now_pacific = datetime.now(PACIFIC)
+
+        if now_pacific.hour >= PREMARKET_STREAM_START_HOUR:
+            if waiting_logged:
+                log(
+                    "✅ 6:00 AM Pacific reached. "
+                    "Starting premarket quote streamer."
+                )
+            return
+
+        if not waiting_logged:
+            log(
+                "🌙 Streamer started before 6:00 AM Pacific. "
+                "Waiting to begin premarket streaming."
+            )
+
+            save_system_event(
+                event_type="STREAMER_WAITING_FOR_PREMARKET",
+                service="quote_streamer",
+                status="WAITING",
+                message="Waiting until 6:00 AM Pacific to start streaming",
+                metadata={
+                    "current_time_pacific": now_pacific.isoformat(),
+                    "start_hour_pacific": PREMARKET_STREAM_START_HOUR,
+                },
+            )
+
+            waiting_logged = True
+
+        time.sleep(30)
+
+
+wait_until_premarket_start()
 
 adapter = create_adapter()
 log("✅ Schwab adapter initialized")
