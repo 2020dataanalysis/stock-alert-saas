@@ -485,7 +485,7 @@ def stream_quotes():
 
 
             if (
-                runtime["session"] in ("CLOSED", "UNKNOWN")
+                runtime["session"] == "CLOSED"
             ):
 
                 save_system_event(
