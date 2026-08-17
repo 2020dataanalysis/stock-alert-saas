@@ -20,6 +20,10 @@ from app.storage.sqlite_store import (
     save_alert,
 )
 from app.services.watchlist_service import build_watchlist
+from app.gappers.db_init import initialize_gap_database
+from app.notifications.gap_alert import (
+    process_premarket_gap_quote,
+)
 
 
 from app.services.alert_rule_service import (
@@ -121,6 +125,7 @@ FAILED_CYCLE_LIMIT = 3
 failed_quote_cycles = 0
 
 init_db()
+initialize_gap_database()
 
 POLL_SECONDS = settings["poll_seconds"]
 
@@ -442,6 +447,40 @@ def process_symbol(
     )
 
     log(f"QUOTE: {quote}")
+
+    if runtime["session"] == "PREMARKET":
+        try:
+            gap_result = process_premarket_gap_quote(
+                quote,
+                minimum_gap_pct=settings.get(
+                    "premarket_gap_alert_pct",
+                    2.0,
+                ),
+            )
+
+            if gap_result["status"] == "dispatched":
+                notification = gap_result["notification"]
+                log(
+                    f"📣 GAP NOTIFICATION {symbol}: "
+                    f"{notification}"
+                )
+
+        except Exception as e:
+            log(
+                f"FAILED TO PROCESS GAP ALERT {symbol}: "
+                f"{type(e).__name__}: {e}"
+            )
+
+            save_system_event(
+                event_type="GAP_ALERT_FAILED",
+                service="quote_streamer",
+                status="WARNING",
+                message=str(e),
+                metadata={
+                    "symbol": symbol,
+                    "exception_type": type(e).__name__,
+                },
+            )
 
     if runtime["should_process_alerts"]:
 

@@ -10,6 +10,7 @@ DEFAULT_SETTINGS = {
     "auto_generate_mover_alerts": False,
     "clear_existing_mover_alerts_on_startup": False,
     "poll_seconds": 1,
+    "premarket_gap_alert_pct": 2.0,
 }
 
 

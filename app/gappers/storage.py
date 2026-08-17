@@ -28,7 +28,7 @@ def save_gap_event(
     created_at = utc_now_iso()
 
     with get_gap_connection() as conn:
-        conn.execute(
+        cursor = conn.execute(
             """
             INSERT OR IGNORE INTO gap_events (
                 symbol,
@@ -74,7 +74,12 @@ def save_gap_event(
             (symbol.upper(), trade_date),
         ).fetchone()
 
-    return dict(row) if row else {}
+    if not row:
+        return {}
+
+    result = dict(row)
+    result["_created"] = cursor.rowcount == 1
+    return result
 
 
 def get_gap_event(
