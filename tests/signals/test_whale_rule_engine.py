@@ -16,11 +16,14 @@ def test_whale_spike_triggers_after_window_filled():
         "price_change_pct": 1.0,
         "volume_change_pct": 10.0,
         "window_size": 3,
+        "price_move_type": "percent",
+        "price_move_cents": 0,
+        "require_volume_confirmation": True,
     }
 
     assert evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 100, "volume": 1000}) is False
     assert evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 100.5, "volume": 1050}) is False
-    assert evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 102, "volume": 1200}) is True
+    assert evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 102, "volume": 1200})
 
 
 def test_whale_drop_triggers_after_window_filled():
@@ -33,11 +36,14 @@ def test_whale_drop_triggers_after_window_filled():
         "price_change_pct": 1.0,
         "volume_change_pct": 10.0,
         "window_size": 3,
+        "price_move_type": "percent",
+        "price_move_cents": 0,
+        "require_volume_confirmation": True,
     }
 
     assert evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 100, "volume": 1000}) is False
     assert evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 99.5, "volume": 1050}) is False
-    assert evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 98, "volume": 1200}) is True
+    assert evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 98, "volume": 1200})
 
 
 def test_whale_rule_requires_volume_confirmation():
@@ -50,6 +56,9 @@ def test_whale_rule_requires_volume_confirmation():
         "price_change_pct": 1.0,
         "volume_change_pct": 50.0,
         "window_size": 3,
+        "price_move_type": "percent",
+        "price_move_cents": 0,
+        "require_volume_confirmation": True,
     }
 
     evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 100, "volume": 1000})
@@ -68,10 +77,13 @@ def test_whale_windows_are_symbol_specific():
         "price_change_pct": 1.0,
         "volume_change_pct": 10.0,
         "window_size": 3,
+        "price_move_type": "percent",
+        "price_move_cents": 0,
+        "require_volume_confirmation": True,
     }
 
     evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 100, "volume": 1000})
     evaluate_whale_rule(rule, {"symbol": "MSFT", "last": 200, "volume": 1000})
     evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 100.5, "volume": 1050})
 
-    assert evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 102, "volume": 1200}) is True
+    assert evaluate_whale_rule(rule, {"symbol": "AAPL", "last": 102, "volume": 1200})

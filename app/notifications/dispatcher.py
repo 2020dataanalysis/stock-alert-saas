@@ -34,7 +34,25 @@ class NotificationDispatcher:
     def dispatch(self, event: AlertEvent) -> dict:
         alert_type = event.alert_type.lower()
 
-        if alert_type not in self.settings.enabled_types:
+        email_types = (
+            self.settings.email_enabled_types
+            or self.settings.enabled_types
+        )
+        ha_types = (
+            self.settings.ha_enabled_types
+            or self.settings.enabled_types
+        )
+
+        send_email_for_type = (
+            self.settings.email_enabled
+            and alert_type in email_types
+        )
+        send_ha_for_type = (
+            self.settings.ha_webhook_enabled
+            and alert_type in ha_types
+        )
+
+        if not send_email_for_type and not send_ha_for_type:
             return {
                 "alert_type": alert_type,
                 "status": "skipped",
@@ -44,13 +62,13 @@ class NotificationDispatcher:
 
         results: dict[str, dict] = {}
 
-        if self.settings.email_enabled:
+        if send_email_for_type:
             results["email"] = self._attempt(
                 self.email_sender,
                 event,
             )
 
-        if self.settings.ha_webhook_enabled:
+        if send_ha_for_type:
             results["home_assistant"] = self._attempt(
                 self.ha_sender,
                 event,

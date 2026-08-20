@@ -12,7 +12,28 @@
     <input name="poll_seconds" type="number"
            value="{{ settings['poll_seconds'] }}"><br><br>
 
-    <button type="submit">Save</button>
+    <h3>Notifications</h3>
+
+    <label>
+        <input
+            name="alert_ha_tts_enabled"
+            type="checkbox"
+            value="true"
+            {% if settings.get(
+                'alert_ha_tts_enabled',
+                true
+            ) %}checked{% endif %}
+        >
+        Enable Home Assistant TTS alerts
+    </label>
+
+    <p>
+        Announces premarket gaps, price thresholds,
+        whale spikes, and whale drops.
+        Email settings are unaffected.
+    </p>
+
+    <button type="submit">Save Settings</button>
 
 </form>
 

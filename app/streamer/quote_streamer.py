@@ -24,6 +24,9 @@ from app.gappers.db_init import initialize_gap_database
 from app.notifications.gap_alert import (
     process_premarket_gap_quote,
 )
+from app.notifications.typed_alert import (
+    dispatch_typed_alert,
+)
 
 
 from app.services.alert_rule_service import (
@@ -498,6 +501,35 @@ def process_symbol(
             log(f"🚨 ALERT: {alert}")
 
             save_alert(alert)
+
+            try:
+                notification = dispatch_typed_alert(
+                    alert
+                )
+                log(
+                    f"📣 TYPED NOTIFICATION {symbol}: "
+                    f"{notification}"
+                )
+
+            except Exception as e:
+                log(
+                    f"FAILED TO NOTIFY ALERT {symbol}: "
+                    f"{type(e).__name__}: {e}"
+                )
+
+                save_system_event(
+                    event_type=(
+                        "ALERT_NOTIFICATION_FAILED"
+                    ),
+                    service="quote_streamer",
+                    status="WARNING",
+                    message=str(e),
+                    metadata={
+                        "symbol": symbol,
+                        "alert_type": alert.get("type"),
+                        "exception_type": type(e).__name__,
+                    },
+                )
 
     return quote_conn, True
 

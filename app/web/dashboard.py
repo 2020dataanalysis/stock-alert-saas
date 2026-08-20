@@ -193,9 +193,13 @@ async def settings_page(request: Request):
 @app.post("/settings")
 async def update_settings(
     poll_seconds: int = Form(...),
+    alert_ha_tts_enabled: bool = Form(False),
 ):
     settings = load_settings()
     settings["poll_seconds"] = poll_seconds
+    settings["alert_ha_tts_enabled"] = (
+        alert_ha_tts_enabled
+    )
 
     path = Path("config/settings.json")
     path.parent.mkdir(parents=True, exist_ok=True)

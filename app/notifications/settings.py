@@ -5,6 +5,8 @@ from dataclasses import dataclass
 
 from dotenv import load_dotenv
 
+from app.config import load_settings as load_app_settings
+
 
 load_dotenv()
 
@@ -35,6 +37,16 @@ def _enabled_types() -> frozenset[str]:
     )
 
 
+def _types(name: str, default: str) -> frozenset[str]:
+    value = os.getenv(name, default)
+
+    return frozenset(
+        item.strip().lower()
+        for item in value.split(",")
+        if item.strip()
+    )
+
+
 @dataclass(frozen=True, slots=True)
 class NotificationSettings:
     enabled_types: frozenset[str]
@@ -45,14 +57,22 @@ class NotificationSettings:
     to_email: str | None
     ha_webhook_url: str | None
     request_timeout_seconds: float
+    email_enabled_types: frozenset[str] | None = None
+    ha_enabled_types: frozenset[str] | None = None
 
 
 def load_notification_settings() -> NotificationSettings:
+    enabled_types = _enabled_types()
+    app_settings = load_app_settings()
+
     return NotificationSettings(
-        enabled_types=_enabled_types(),
+        enabled_types=enabled_types,
         email_enabled=_enabled("ALERT_EMAIL_ENABLED"),
-        ha_webhook_enabled=_enabled(
-            "ALERT_HA_TTS_ENABLED"
+        ha_webhook_enabled=bool(
+            app_settings.get(
+                "alert_ha_tts_enabled",
+                _enabled("ALERT_HA_TTS_ENABLED"),
+            )
         ),
         gmail_username=os.getenv(
             "GMAIL_SMTP_USERNAME"
@@ -69,5 +89,13 @@ def load_notification_settings() -> NotificationSettings:
                 "ALERT_REQUEST_TIMEOUT_SECONDS",
                 "5",
             )
+        ),
+        email_enabled_types=_types(
+            "ALERT_EMAIL_ENABLED_TYPES",
+            "premarket_gap",
+        ),
+        ha_enabled_types=_types(
+            "ALERT_HA_ENABLED_TYPES",
+            "premarket_gap,threshold,whale_spike,whale_drop",
         ),
     )
