@@ -6,9 +6,7 @@ from zoneinfo import ZoneInfo
 
 from app.config import load_settings
 from app.data_adapters.schwab_adapter import SchwabAdapter
-# from app.storage.sqlite_store import init_db, save_quote, save_alert
 from app.storage.sqlite_store import save_system_event
-# from app.services.status_service import get_streamer_mode
 from app.services.streamer_runtime_service import get_runtime_state
 from app.signals.typed_rule_engine import evaluate_typed_rules
 from app.services.token_status_service import get_token_status
@@ -132,6 +130,11 @@ initialize_gap_database()
 
 POLL_SECONDS = settings["poll_seconds"]
 
+WATCHLIST_REFRESH_SECONDS = settings.get(
+    "watchlist_refresh_seconds",
+    60,
+)
+
 
 startup_watchlist = build_watchlist()
 
@@ -199,14 +202,6 @@ save_system_event(
         "poll_seconds": POLL_SECONDS,
     }
 )
-
-
-
-
-
-
-
-
 
 
 
@@ -330,9 +325,6 @@ def handle_self_healing(
         failed_quote_cycles = 0
 
 
-
-
-
 def get_safe_runtime_state():
     try:
         return get_runtime_state(POLL_SECONDS)
@@ -346,7 +338,6 @@ def get_safe_runtime_state():
             "should_process_alerts": False,
             "sleep_seconds": POLL_SECONDS,
         }
-
 
 
 
@@ -372,16 +363,39 @@ def maybe_save_heartbeat(last_heartbeat, runtime):
     return now
 
 
-def get_current_watchlist():
-    watchlist = build_watchlist()
+def get_current_watchlist(previous_watchlist):
+    try:
+        watchlist = build_watchlist()
 
-    log(f"FAVORITE SYMBOLS: {watchlist['favorites']}")
-    log(f"MOVERS WATCHLIST: {watchlist['movers']}")
-    log(f"FINAL STREAM WATCHLIST: {watchlist['symbols']}")
+        log(f"FAVORITE SYMBOLS: {watchlist['favorites']}")
+        log(f"MOVERS WATCHLIST: {watchlist['movers']}")
+        log(f"FINAL STREAM WATCHLIST: {watchlist['symbols']}")
 
-    return watchlist
+        return watchlist
 
+    except Exception as e:
+        log(
+            f"⚠️ Unable to refresh Schwab movers: "
+            f"{type(e).__name__}: {e}"
+        )
+        log(
+            "⚠️ Keeping the previous watchlist and retrying "
+            "on the next scheduled refresh."
+        )
 
+        save_system_event(
+            event_type="WATCHLIST_REFRESH_FAILED",
+            service="quote_streamer",
+            status="WARNING",
+            message=str(e),
+            metadata={
+                "exception_type": type(e).__name__,
+                "retry_seconds": WATCHLIST_REFRESH_SECONDS,
+                "preserved_symbols": previous_watchlist["symbols"],
+            },
+        )
+
+        return previous_watchlist
 
 
 def save_quote_safely(quote_conn, quote):
@@ -403,8 +417,6 @@ def save_quote_safely(quote_conn, quote):
         log("✅ Recreated long-lived quote DB connection")
 
         return quote_conn
-
-
 
 
 
@@ -541,6 +553,9 @@ def stream_quotes():
     global adapter
 
     last_heartbeat = datetime.now(UTC)
+    watchlist = startup_watchlist
+    last_watchlist_refresh = time.monotonic()
+
 
     quote_conn = get_connection()
 
@@ -589,7 +604,15 @@ def stream_quotes():
 
             refresh_access_token_by_time()
 
-            watchlist = get_current_watchlist()
+            now_monotonic = time.monotonic()
+
+            if (
+                now_monotonic - last_watchlist_refresh
+                >= WATCHLIST_REFRESH_SECONDS
+            ):
+                watchlist = get_current_watchlist(watchlist)
+                last_watchlist_refresh = now_monotonic
+
 
             for symbol in watchlist["symbols"]:
 
@@ -602,12 +625,6 @@ def stream_quotes():
                 if success:
 
                     successful_quotes += 1
-
-            # TEMPORARILY DISABLED SELF-HEALING
-            # handle_self_healing(
-            #     successful_quotes,
-            #     runtime,
-            # )
 
             time.sleep(runtime["sleep_seconds"])
 

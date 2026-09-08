@@ -7,6 +7,7 @@ DEFAULT_SETTINGS = {
     "favorite_symbols": ["AAPL", "TSLA", "NVDA"],
     "use_movers": True,
     "movers_limit": 10,
+    "watchlist_refresh_seconds": 60,
     "auto_generate_mover_alerts": False,
     "clear_existing_mover_alerts_on_startup": False,
     "poll_seconds": 1,
