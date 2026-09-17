@@ -1,6 +1,7 @@
 # app/web/dashboard.py
 
 import json
+import socket
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Form
@@ -51,7 +52,30 @@ from app.on_demand_market_data.routes import router as on_demand_market_data_rou
 
 import sqlite3
 
+def _get_lan_ip() -> str:
+    """Return the LAN address used to reach this Mac."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        sock.connect(("192.0.2.1", 80))
+        return sock.getsockname()[0]
+    except OSError:
+        return "127.0.0.1"
+    finally:
+        sock.close()
+
+
 app = FastAPI()
+
+_lan_ip = _get_lan_ip()
+print(
+    "\n"
+    "===============================================\n"
+    " STOCK ALERT DASHBOARD\n"
+    " This Mac:        http://127.0.0.1:8000\n"
+    f" Other computer:  http://{_lan_ip}:8000\n"
+    "===============================================\n",
+    flush=True,
+)
 
 app.mount(
     "/static",
