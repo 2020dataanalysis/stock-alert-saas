@@ -238,9 +238,10 @@ async def update_settings(
 @app.get("/logs", response_class=HTMLResponse)
 async def logs_page(request: Request):
     log_files = {
-        "debug_log": "logs/debug.log",
-        "streamer_out": "logs/streamer.out.log",
-        "streamer_err": "logs/streamer.err.log",
+        "streamer_out": "/Users/server/Library/Logs/com.stockalert.streamer.log",
+        "streamer_err": "/Users/server/Library/Logs/com.stockalert.streamer-error.log",
+        "web_out": "/Users/server/Library/Logs/com.stockalert.web.log",
+        "web_err": "/Users/server/Library/Logs/com.stockalert.web-error.log",
     }
 
     logs = {}
