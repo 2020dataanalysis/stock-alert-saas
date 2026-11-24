@@ -5,7 +5,7 @@ from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
 
 from app.config import load_settings
-from app.data_adapters.movers_adapter import get_mover_symbols
+from app.services.frontend_mover_service import get_fresh_mover_symbols
 
 
 router = APIRouter()
@@ -37,7 +37,7 @@ def live_page(
 
     if settings.get("use_movers"):
         try:
-            mover_symbols = get_mover_symbols(
+            mover_symbols = get_fresh_mover_symbols(
                 limit=settings.get("movers_limit", 10)
             )
         except Exception:

@@ -1,10 +1,11 @@
 from datetime import datetime, timezone
 from app.storage.sqlite_store import get_connection, get_log_connection
 
-from app.services.token_status_service import get_token_status
+from fastapi import HTTPException
+from app.services.backend_client import backend_get
 from app.services.market_hours_service import get_market_status
 
-from app.services.watchlist_service import build_watchlist
+from app.services.watchlist_service import load_watchlist
 
 from app.storage.sqlite_store import (
     market_db_connection,
@@ -120,7 +121,7 @@ def get_latest_provider_error(cursor):
 
 def get_status_metrics():
 
-    watchlist = build_watchlist()
+    watchlist = load_watchlist()
 
     symbols_tracked = watchlist["count"]
 
@@ -257,7 +258,22 @@ def get_status_metrics():
             60
         )
 
-    token_status = get_token_status()
+    try:
+        token_status = backend_get("/token-status")
+    except HTTPException:
+        token_status = {
+            "token_file_exists": None,
+            "token_status": "UNAVAILABLE",
+            "expires_in": 0,
+            "access_token_expiration_time": 0,
+            "refresh_token_expiration_time": 0,
+            "access_token_seconds_remaining": 0,
+            "refresh_token_seconds_remaining": 0,
+            "access_token_expires_at": 0,
+            "refresh_token_expires_at": 0,
+            "access_token_expiry_display": "N/A",
+            "refresh_token_expiry_display": "N/A",
+        }
     market_status_data = get_market_status()
 
     return {

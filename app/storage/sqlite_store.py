@@ -106,6 +106,30 @@ def init_db():
 
     with sqlite3.connect(DB_PATH) as conn:
         conn.execute("""
+            CREATE TABLE IF NOT EXISTS market_hours (
+                market_date TEXT PRIMARY KEY,
+                payload TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS market_hours (
+                market_date TEXT PRIMARY KEY,
+                payload TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS mover_snapshot (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                symbols TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+        """)
+
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS quotes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp TEXT NOT NULL,
@@ -376,6 +400,120 @@ def save_alert(alert):
             alert.get("oldest_volume"),
             alert.get("newest_volume"),
         ))
+
+
+def save_market_hours(market_hours):
+    market_date = market_hours.get("date")
+
+    if not market_date:
+        raise ValueError("Missing market hours date")
+
+    ensure_db_initialized()
+
+    with market_db_connection() as conn:
+        conn.execute("""
+            INSERT INTO market_hours (
+                market_date,
+                payload,
+                updated_at
+            )
+            VALUES (?, ?, ?)
+            ON CONFLICT(market_date) DO UPDATE SET
+                payload = excluded.payload,
+                updated_at = excluded.updated_at
+        """, (
+            market_date,
+            json.dumps(market_hours),
+            datetime.now(UTC).isoformat(),
+        ))
+
+
+def load_market_hours(market_date):
+    ensure_db_initialized()
+
+    with market_db_connection() as conn:
+        row = conn.execute("""
+            SELECT payload
+            FROM market_hours
+            WHERE market_date = ?
+        """, (market_date,)).fetchone()
+
+        return json.loads(row[0]) if row else None
+
+
+def save_market_hours(market_hours):
+    market_date = market_hours.get("date")
+
+    if not market_date:
+        raise ValueError("Missing market hours date")
+
+    ensure_db_initialized()
+
+    with market_db_connection() as conn:
+        conn.execute("""
+            INSERT INTO market_hours (
+                market_date,
+                payload,
+                updated_at
+            )
+            VALUES (?, ?, ?)
+            ON CONFLICT(market_date) DO UPDATE SET
+                payload = excluded.payload,
+                updated_at = excluded.updated_at
+        """, (
+            market_date,
+            json.dumps(market_hours),
+            datetime.now(UTC).isoformat(),
+        ))
+
+
+def load_market_hours(market_date):
+    ensure_db_initialized()
+
+    with market_db_connection() as conn:
+        row = conn.execute("""
+            SELECT payload
+            FROM market_hours
+            WHERE market_date = ?
+        """, (market_date,)).fetchone()
+
+        return json.loads(row[0]) if row else None
+
+
+def save_mover_symbols(symbols):
+    ensure_db_initialized()
+
+    with market_db_connection() as conn:
+        conn.execute("""
+            INSERT INTO mover_snapshot (
+                id,
+                symbols,
+                updated_at
+            )
+            VALUES (1, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                symbols = excluded.symbols,
+                updated_at = excluded.updated_at
+        """, (
+            json.dumps(symbols),
+            datetime.now(UTC).isoformat(),
+        ))
+
+
+def load_mover_symbols(limit=10):
+    ensure_db_initialized()
+
+    with market_db_connection() as conn:
+        row = conn.execute("""
+            SELECT symbols
+            FROM mover_snapshot
+            WHERE id = 1
+        """).fetchone()
+
+        if row is None:
+            return []
+
+        return json.loads(row[0])[:limit]
 
 
 def get_top_movers(limit=5):

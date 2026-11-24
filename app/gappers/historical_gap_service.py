@@ -171,7 +171,6 @@ def build_daily_history_import_plan(
     }
 
 
-from app.data_adapters.schwab_adapter import SchwabAdapter
 from app.gappers.storage import (
     save_daily_bar,
     save_minute_bar,
@@ -204,6 +203,8 @@ def import_missing_daily_history(
             "status": "already_current",
             "imported_count": 0,
         }
+
+    from app.data_adapters.schwab_adapter import SchwabAdapter
 
     adapter = SchwabAdapter()
 
@@ -359,6 +360,8 @@ def import_minute_bars_for_gap_day(
     symbol: str,
     trade_date: str,
 ) -> dict[str, Any]:
+    from app.data_adapters.schwab_adapter import SchwabAdapter
+
     adapter = SchwabAdapter()
 
     start_ms = int(

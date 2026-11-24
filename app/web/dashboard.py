@@ -15,7 +15,7 @@ from app.services.provider_error_service import get_recent_provider_errors
 from app.services.system_event_service import get_recent_system_events
 # from app.storage.sqlite_store import clear_alerts, save_system_event
 from app.services.market_hours_service import get_market_status
-from app.data_adapters.movers_adapter import get_mover_symbols
+from app.services.frontend_mover_service import get_fresh_mover_symbols
 from fastapi.staticfiles import StaticFiles
 
 from app.storage.sqlite_store import (
@@ -134,7 +134,7 @@ templates = Jinja2Templates(directory="app/web/templates")
 
 
 @app.get("/", response_class=HTMLResponse)
-async def overview(request: Request):
+def overview(request: Request):
     settings = load_settings()
 
 
@@ -147,7 +147,7 @@ async def overview(request: Request):
 
     if settings["use_movers"]:
         mover_symbols = set(
-            get_mover_symbols(
+            get_fresh_mover_symbols(
                 limit=settings["movers_limit"]
             )
         )
@@ -487,9 +487,28 @@ async def delete_alert_rule_route(rule_id: int):
 
 
 @app.post("/alert-rules/generate-movers")
-async def generate_mover_alert_rules():
+def generate_mover_alert_rules():
+    from fastapi import HTTPException
+    from app.services.backend_client import backend_get
 
-    movers = get_mover_symbols(limit=10)
+    try:
+        result = backend_get(
+            "/movers",
+            params={"limit": 10},
+        )
+    except HTTPException:
+        return RedirectResponse(
+            "/alert-rules?message=Mover+acquisition+unavailable&message_type=warning",
+            status_code=303,
+        )
+
+    movers = result["symbols"]
+
+    if not movers:
+        return RedirectResponse(
+            "/alert-rules?message=No+movers+returned&message_type=warning",
+            status_code=303,
+        )
 
     created = generate_mover_rules(movers)
 

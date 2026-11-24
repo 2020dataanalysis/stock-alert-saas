@@ -1,12 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import HTMLResponse
 
-from app.historical_data.bars.imports.backfill_service import (
-    backfill_daily_history,
-    backfill_default_watchlist_daily,
-    backfill_default_watchlist_intraday,
-    backfill_intraday_history,
-)
+from app.services.backend_client import backend_post
 
 from app.historical_data.studies.gaps.gap_analysis_service import (
     calculate_gap_bucket_statistics,
@@ -18,7 +13,6 @@ from app.historical_data.studies.gaps.gap_opening_summary_service import (
 )
 
 from app.historical_data.bars.imports.import_service import (
-    import_live_schwab_price_history,
     import_schwab_price_history_response,
 )
 
@@ -202,14 +196,17 @@ def import_live_schwab_price_history_api(
     need_extended_hours_data: bool = True,
     need_previous_close: bool = True,
 ):
-    return import_live_schwab_price_history(
-        symbol=symbol,
-        period_type=period_type,
-        period=period,
-        frequency_type=frequency_type,
-        frequency=frequency,
-        need_extended_hours_data=need_extended_hours_data,
-        need_previous_close=need_previous_close,
+    return backend_post(
+        "/historical-data/import/live-schwab-price-history",
+        params={
+            "symbol": symbol,
+            "period_type": period_type,
+            "period": period,
+            "frequency_type": frequency_type,
+            "frequency": frequency,
+            "need_extended_hours_data": need_extended_hours_data,
+            "need_previous_close": need_previous_close,
+        },
     )
 
 
@@ -258,10 +255,13 @@ def backfill_intraday_api(
         if symbol.strip()
     ]
 
-    return backfill_intraday_history(
-        symbols=symbol_list,
-        period=period,
-        frequency=frequency,
+    return backend_post(
+        "/historical-data/backfill/intraday",
+        params={
+            "symbols": ",".join(symbol_list),
+            "period": period,
+            "frequency": frequency,
+        },
     )
 
 
@@ -324,9 +324,12 @@ def backfill_watchlist_api(
     period: int = 10,
     frequency: int = 1,
 ):
-    return backfill_default_watchlist_intraday(
-        period=period,
-        frequency=frequency,
+    return backend_post(
+        "/historical-data/backfill/watchlist",
+        params={
+            "period": period,
+            "frequency": frequency,
+        },
     )
 
 @router.get("/api/historical-data/health")
@@ -345,9 +348,12 @@ def backfill_daily_api(
         if symbol.strip()
     ]
 
-    return backfill_daily_history(
-        symbols=symbol_list,
-        period=period,
+    return backend_post(
+        "/historical-data/backfill/daily",
+        params={
+            "symbols": ",".join(symbol_list),
+            "period": period,
+        },
     )
 
 
@@ -355,8 +361,11 @@ def backfill_daily_api(
 def backfill_watchlist_daily_api(
     period: int = 1,
 ):
-    return backfill_default_watchlist_daily(
-        period=period,
+    return backend_post(
+        "/historical-data/backfill/watchlist-daily",
+        params={
+            "period": period,
+        },
     )
 
 @router.get("/api/historical-data/watchlist/gaps/statistics")

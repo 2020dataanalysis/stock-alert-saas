@@ -19,9 +19,7 @@ from io import StringIO
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 
-from app.on_demand_market_data.history_service import (
-    fetch_price_history,
-)
+from app.services.backend_client import backend_get
 
 
 router = APIRouter()
@@ -39,14 +37,16 @@ def market_data_history_api(
     format: str = "json",
 ):
     try:
-        result = fetch_price_history(
-            symbol=symbol,
-            days=days,
-            start_date=start_date,
-            end_date=end_date,
-            interval=interval,
-            need_extended_hours_data=need_extended_hours_data,
-            need_previous_close=need_previous_close,
+        result = backend_get(
+            f"/market-data/history/{symbol}",
+            params={
+                "days": days,
+                "start_date": start_date,
+                "end_date": end_date,
+                "interval": interval,
+                "need_extended_hours_data": need_extended_hours_data,
+                "need_previous_close": need_previous_close,
+            },
         )
 
         if format.lower() == "csv":
@@ -97,6 +97,8 @@ def market_data_history_api(
             )
 
         return result
+    except HTTPException:
+        raise
     except Exception as error:
         raise HTTPException(
             status_code=400,

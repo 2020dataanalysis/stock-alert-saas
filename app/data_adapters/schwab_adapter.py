@@ -1,5 +1,4 @@
 from pathlib import Path
-import sys
 import json
 
 from app.storage.sqlite_store import (
@@ -11,12 +10,6 @@ from app.storage.sqlite_store import (
 PROJECT_PARENT = Path(__file__).resolve().parents[3]
 SCHWAB_PATH = PROJECT_PARENT / "schwab-api-client"
 
-if not SCHWAB_PATH.exists():
-    raise RuntimeError(f"Schwab repo not found at: {SCHWAB_PATH}")
-
-if str(SCHWAB_PATH) not in sys.path:
-    sys.path.insert(0, str(SCHWAB_PATH))
-
 from schwab_client.client import SchwabClient
 
 
@@ -25,7 +18,7 @@ from schwab_client.client import SchwabClient
 
 
 class SchwabAdapter:
-    def __init__(self):
+    def __init__(self, interactive_auth=False):
         credentials_file = SCHWAB_PATH / "private" / "credentials.json"
         token_file = SCHWAB_PATH / "private" / "refresh_token.json"
 
@@ -37,6 +30,7 @@ class SchwabAdapter:
             app_secret=credentials["app_secret"],
             redirect_uri=credentials["redirect_uri"],
             token_file=token_file,
+            interactive_auth=interactive_auth,
         )
 
 

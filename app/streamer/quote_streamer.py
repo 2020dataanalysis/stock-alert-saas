@@ -42,7 +42,11 @@ def log(message):
     print(f"{timestamp} {message}")
 
 def create_adapter():
-    return SchwabAdapter()
+    import sys
+
+    return SchwabAdapter(
+        interactive_auth=sys.stdin.isatty(),
+    )
 
 
 def refresh_access_token_by_time():

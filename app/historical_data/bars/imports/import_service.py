@@ -3,7 +3,6 @@ from pathlib import Path
 import time
 from datetime import datetime, timezone
 
-from schwab_client import SchwabClient
 
 from app.historical_data.bars.repository import (
     init_historical_db,
@@ -43,6 +42,8 @@ def load_schwab_credentials():
 
 
 def get_schwab_client():
+    from schwab_client import SchwabClient
+
     credentials = load_schwab_credentials()
 
     return SchwabClient(

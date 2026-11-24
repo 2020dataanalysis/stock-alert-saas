@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request, HTTPException, Response
 from fastapi.templating import Jinja2Templates
 from jinja2 import FileSystemLoader
 
-from app.gappers.service import get_live_gappers, get_gap_event_detail
+from app.services.backend_client import backend_get, backend_post
 from app.gappers.snapshot_service import (
     save_gap_dashboard_snapshot_if_changed,
     list_gap_dashboard_snapshots,
@@ -32,9 +32,12 @@ def gappers_api(
     minimum_gap_pct: float = 2.0,
     limit: int | None = None,
 ):
-    payload = get_live_gappers(
-        minimum_gap_pct=minimum_gap_pct,
-        limit=limit,
+    payload = backend_get(
+        "/gappers",
+        params={
+            "minimum_gap_pct": minimum_gap_pct,
+            "limit": limit,
+        },
     )
 
     snapshot = save_gap_dashboard_snapshot_if_changed(
@@ -174,9 +177,11 @@ def import_daily_history_api(
     symbol: str,
     lookback_days: int = 365,
 ):
-    return import_missing_daily_history(
-        symbol=symbol,
-        lookback_days=lookback_days,
+    return backend_post(
+        f"/gappers/{symbol}/import-daily-history",
+        params={
+            "lookback_days": lookback_days,
+        },
     )
 
 
@@ -206,11 +211,12 @@ def gap_detail_api(
     minimum_gap_pct: float = 2.0,
     research_lookback_days: int = 365,
 ):
-    return get_gap_event_detail(
-        symbol=symbol,
-        trade_date=trade_date,
-        minimum_gap_pct=minimum_gap_pct,
-        research_lookback_days=research_lookback_days,
+    return backend_get(
+        f"/gappers/{symbol}/{trade_date}",
+        params={
+            "minimum_gap_pct": minimum_gap_pct,
+            "research_lookback_days": research_lookback_days,
+        },
     )
 
 
@@ -220,9 +226,8 @@ def gap_detail_page(
     symbol: str,
     trade_date: str,
 ):
-    detail = get_gap_event_detail(
-        symbol=symbol,
-        trade_date=trade_date,
+    detail = backend_get(
+        f"/gappers/{symbol}/{trade_date}",
     )
 
     return templates.TemplateResponse(
@@ -238,7 +243,6 @@ def gap_detail_page(
 from app.gappers.historical_gap_service import (
     get_daily_history_status,
     build_daily_history_import_plan,
-    import_missing_daily_history,
 )
 
 

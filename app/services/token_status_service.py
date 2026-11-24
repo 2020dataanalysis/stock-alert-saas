@@ -2,8 +2,11 @@ import json
 from datetime import datetime, UTC
 from pathlib import Path
 
-TOKEN_FILE = Path(
-    "/Users/ultrasupersam/apps/stock-alert-platform/schwab-api-client/private/refresh_token.json"
+TOKEN_FILE = (
+    Path(__file__).resolve().parents[3]
+    / "schwab-api-client"
+    / "private"
+    / "refresh_token.json"
 )
 
 _token_cache = None

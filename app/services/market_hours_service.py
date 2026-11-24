@@ -1,7 +1,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from app.data_adapters.schwab_adapter import SchwabAdapter
+from app.storage.sqlite_store import load_market_hours
 
 PACIFIC = ZoneInfo("America/Los_Angeles")
 
@@ -41,29 +41,9 @@ def get_market_windows():
 
 
 def get_schwab_equity_market_hours():
-    try:
-        adapter = SchwabAdapter()
-        response = adapter.get_market_hours("equity")
+    market_date = datetime.now(PACIFIC).date().isoformat()
 
-        if not isinstance(response, dict):
-            print(
-                "FAILED TO GET SCHWAB MARKET HOURS: "
-                f"invalid response type {type(response).__name__}"
-            )
-            return None
-
-        return (
-            response
-            .get("equity", {})
-            .get("EQ")
-        )
-
-    except Exception as e:
-        print(
-            "FAILED TO GET SCHWAB MARKET HOURS: "
-            f"{type(e).__name__}: {e}"
-        )
-        return None
+    return load_market_hours(market_date)
 
 
 def format_session_display(session_list):
@@ -144,12 +124,16 @@ def is_trading_session():
 
 
 def get_market_is_open():
-    market_hours = get_schwab_equity_market_hours()
+    session = get_market_session()
 
-    if not market_hours:
+    if session == UNKNOWN:
         return None
 
-    return market_hours.get("isOpen", False)
+    return session in {
+        PREMARKET,
+        REGULAR,
+        AFTER_HOURS,
+    }
 
 
 def get_market_status():
