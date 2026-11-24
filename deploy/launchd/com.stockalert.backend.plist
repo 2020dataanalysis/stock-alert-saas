@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+    "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.stockalert.backend</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>__HOME__/apps/stock-alert-platform/stock-alert-saas/.venv-backend/bin/python</string>
+        <string>-m</string>
+        <string>uvicorn</string>
+        <string>app.backend.api:app</string>
+        <string>--host</string>
+        <string>127.0.0.1</string>
+        <string>--port</string>
+        <string>8004</string>
+    </array>
+
+    <key>WorkingDirectory</key>
+    <string>__HOME__/apps/stock-alert-platform/stock-alert-saas</string>
+
+    <key>RunAtLoad</key>
+    <true/>
+
+    <key>KeepAlive</key>
+    <true/>
+
+    <key>ThrottleInterval</key>
+    <integer>30</integer>
+
+    <key>StandardOutPath</key>
+    <string>__HOME__/Library/Logs/com.stockalert.backend.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>__HOME__/Library/Logs/com.stockalert.backend-error.log</string>
+</dict>
+</plist>

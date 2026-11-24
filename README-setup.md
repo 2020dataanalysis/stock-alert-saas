@@ -1,212 +1,231 @@
+# Stock Alert SaaS — Setup and Deployment
 
-Use this as your startup README section for the local MVP.
+## 1. Project Structure
 
-````markdown
-# Stock Alert SaaS — Local Startup
+    ~/apps/stock-alert-platform/
+    ├── schwab-api-client/
+    │   ├── .venv/
+    │   ├── private/
+    │   └── requirements.txt
+    └── stock-alert-saas/
+        ├── .venv-frontend/
+        ├── .venv-backend/
+        ├── .env
+        ├── app/
+        ├── config/
+        ├── data/
+        ├── deploy/launchd/
+        ├── scripts/
+        ├── requirements-frontend.txt
+        └── requirements-backend.txt
 
-## Project Structure
+The Schwab SDK is an independent reusable Python library.
 
-Parent folder:
+The frontend communicates with the backend through an internal
+HTTP API and reads persisted application data.
 
-```bash
-/Users/ultrasupersam/apps/stock-alert-platform
-````
+The backend owns Schwab API access, market data acquisition,
+OAuth authentication, streaming and historical updates.
 
-Repos:
+## 2. Install Python Environments
 
-```bash
-2024schwab/
-stock-alert-saas/
-```
+### Schwab SDK
 
----
+    cd ~/apps/stock-alert-platform/schwab-api-client
+    python3.14 -m venv .venv
+    .venv/bin/python -m pip install -r requirements.txt -e .
 
-# 1. Start Web Dashboard
+### SaaS Frontend
 
-Open terminal:
+    cd ~/apps/stock-alert-platform/stock-alert-saas
+    python3.14 -m venv .venv-frontend
+    .venv-frontend/bin/python -m pip install -r requirements-frontend.txt
 
-```bash
-cd /Users/ultrasupersam/apps/stock-alert-platform/stock-alert-saas
+### SaaS Backend
 
-source ../.venv/bin/activate
+    cd ~/apps/stock-alert-platform/stock-alert-saas
+    python3.14 -m venv .venv-backend
+    .venv-backend/bin/python -m pip install -r requirements-backend.txt
 
-python -m uvicorn app.web.dashboard:app --reload
-```
+The backend requirements include the local Schwab SDK.
 
-Dashboard:
+## 3. Configuration
 
-```text
-http://127.0.0.1:8000
-```
+Provide the application configuration in:
+
+    stock-alert-saas/.env
+
+Provide Schwab credentials and authorization data in:
+
+    schwab-api-client/private/credentials.json
+    schwab-api-client/private/refresh_token.json
+
+Never commit credentials, tokens or .env files.
+
+## 4. Manual Startup
+
+Run these commands from the SaaS repository root.
+
+Do not start duplicate processes if LaunchAgents are already running.
+
+### Backend API
+
+    .venv-backend/bin/python -m uvicorn app.backend.api:app --host 127.0.0.1 --port 8004
+
+### Backend Orchestrator
+
+    .venv-backend/bin/python -u -m app.backend.orchestrator
+
+The orchestrator acquires market hours and movers.
+Interactive OAuth recovery is available when run from a terminal.
+
+### Frontend Dashboard
+
+    .venv-frontend/bin/python -m uvicorn app.web.dashboard:app --host 0.0.0.0 --port 8003
+
+### Quote Streamer
+
+    .venv-backend/bin/python -u -m app.streamer.quote_streamer
+
+### Historical Data Updater
+
+    .venv-backend/bin/python -u scripts/update_historical_data.py
+
+## 5. Automated Deployment — macOS LaunchAgents
+
+Five LaunchAgent templates are provided in deploy/launchd/.
+
+| Service | Schedule |
+|---|---|
+| web | Continuous |
+| backend | Continuous |
+| orchestrator | Every 5 minutes |
+| streamer | Weekdays at 6:00 AM |
+| history | Weekdays at 2:00 PM |
+
+Schedules use the Mac's local timezone.
+Trading sessions are determined using Schwab market hours.
+
+For a fresh installation, generate the LaunchAgent files:
+
+    mkdir -p ~/Library/LaunchAgents ~/Library/Logs
+
+    .venv-backend/bin/python -c '
+    from pathlib import Path
+    home = Path.home()
+    for template in Path("deploy/launchd").glob("*.plist"):
+        target = home / "Library/LaunchAgents" / template.name
+        if target.exists():
+            print("Already exists:", target)
+            continue
+        target.write_text(template.read_text().replace("__HOME__", str(home)))
+        print("Installed:", target)
+    '
+
+Load the services:
+
+    for service in backend orchestrator web streamer history; do
+        launchctl bootstrap "gui/$(id -u)" \
+            "$HOME/Library/LaunchAgents/com.stockalert.$service.plist"
+    done
+
+Restart an existing service:
+
+    launchctl kickstart -k "gui/$(id -u)/com.stockalert.web"
+
+## 6. Application URLs
+
+Frontend:
+
+    http://127.0.0.1:8003/
 
 Pages:
 
-```text
-/status
-/charts
-/alerts
-/settings
-/logs
-```
+    /status
+    /live
+    /charts
+    /gappers
+    /alerts
+    /alert-rules
+    /settings
+    /logs
 
----
+Internal backend health:
 
-# 2. Start Streamer
+    http://127.0.0.1:8004/health
 
-Open SECOND terminal:
+The backend API is restricted to localhost.
 
-```bash
-cd /Users/ultrasupersam/apps/stock-alert-platform/stock-alert-saas
+## 7. Databases
 
-source ../.venv/bin/activate
+Market data:
 
-python -u -m app.streamer.quote_streamer_config
-```
+    data/market_data.db
 
-Expected startup:
+System events and provider errors:
 
-```text
-FAVORITE SYMBOLS: [...]
-MOVERS WATCHLIST: [...]
-FINAL STREAM WATCHLIST: [...]
-QUOTE: {...}
-```
+    data/logs.db
 
----
+Recent quotes:
 
-# 3. Verify Streamer Health
+    sqlite3 data/market_data.db \
+        "SELECT symbol, timestamp FROM quotes ORDER BY id DESC LIMIT 10;"
 
-Latest quotes:
+Streamer control:
 
-```bash
-sqlite3 data/market_data.db "
-SELECT symbol, timestamp
-FROM quotes
-ORDER BY id DESC
-LIMIT 10;
-"
-```
+    sqlite3 data/market_data.db "SELECT * FROM streamer_control;"
 
-Streamer mode:
+Recent provider errors:
 
-```bash
-sqlite3 data/market_data.db "
-SELECT * FROM streamer_control;
-"
-```
+    sqlite3 data/logs.db \
+        "SELECT * FROM provider_errors ORDER BY id DESC LIMIT 20;"
 
----
+## 8. Logs
 
-# 4. Provider Errors
+LaunchAgent logs are located in:
 
-Recent Schwab/provider failures:
+    ~/Library/Logs/
 
-```bash
-sqlite3 data/market_data.db "
-SELECT
-    timestamp,
-    provider,
-    symbol,
-    error_type,
-    message
-FROM provider_errors
-ORDER BY id DESC
-LIMIT 20;
-"
-```
+Examples:
 
----
+    tail -f ~/Library/Logs/com.stockalert.web.log
+    tail -f ~/Library/Logs/com.stockalert.backend.log
+    tail -f ~/Library/Logs/com.stockalert.orchestrator.log
+    tail -f ~/Library/Logs/com.stockalert.streamer.log
+    tail -f ~/Library/Logs/com.stockalert.history.log
 
-# 5. Restart Streamer
+Each service also has a corresponding -error.log file.
 
-```bash
-pkill -f quote_streamer_config
+## 9. Git Workflow
 
-cd /Users/ultrasupersam/apps/stock-alert-platform/stock-alert-saas
+Create a feature branch:
 
-source ../.venv/bin/activate
+    git switch -c feature/my-feature
 
-python -u -m app.streamer.quote_streamer_config
-```
+After implementation and testing:
 
----
+    git add .
+    git commit -m "Describe change"
+    git switch master
+    git merge feature/my-feature
+    git push origin master
+    git branch -d feature/my-feature
 
-# 6. Logs
+## 10. Dependency Management
 
-Streamer stdout:
+Maintain separate frozen requirements for each environment.
 
-```bash
-tail -f logs/streamer.out.log
-```
+Frontend:
 
-Streamer stderr:
+    .venv-frontend/bin/python -m pip freeze > requirements-frontend.txt
 
-```bash
-tail -f logs/streamer.err.log
-```
+Backend:
 
----
+    .venv-backend/bin/python -m pip freeze > requirements-backend.txt
 
-# 7. Git Workflow
+After freezing backend dependencies, normalize the local Schwab
+SDK dependency to ../schwab-api-client for portability.
 
-Create feature branch:
+The Schwab SDK maintains its own requirements.txt.
 
-```bash
-git checkout -b feature/my-feature
-```
-
-Create fix branch:
-
-```bash
-git checkout -b fix/my-fix
-```
-
-Commit:
-
-```bash
-git add .
-git commit -m "description"
-```
-
-Merge back:
-
-```bash
-git checkout master
-git merge feature/my-feature
-```
-
----
-
-# 8. Database
-
-SQLite DB:
-
-```text
-data/market_data.db
-```
-
-Tables:
-
-```text
-quotes
-alerts
-streamer_control
-provider_errors
-```
-
-```
-```
-
-[1]: https://chatgpt.com/c/69fe2060-2f58-83e8-89d6-c8a6afef0d3b "SaaS Web Down Fix"
-[2]: https://chatgpt.com/c/69f7ff76-e718-83e8-8bfd-f1b42fec3e24 "ML Alert for Stock Gaps"
-[3]: https://chatgpt.com/c/69f9ed9f-1194-8326-9a75-bcb00751ac11 "SaaS Streamer Next Steps"
-[4]: https://chatgpt.com/c/69fc108a-6b40-83e8-8e05-96082ffabb78 "Git Branching Workflow"
-[5]: https://chatgpt.com/c/69f2d1d4-5968-83e8-8b1f-845a64740997 "BigQuery Pub/Sub Integration"
-[6]: https://chatgpt.com/c/69fd5f9a-276c-83e8-87c9-15ed284b04fe "Streamer Control Design"
-[7]: file://my_files/file_00000000e9a471fd956814138a5aa5a2 "Pasted text.txt"
-[8]: file://my_files/file_000000007d9071fd92f3723a1999c270 "Pasted text.txt"
-[9]: file://my_files/file_00000000d77c722fafb73348446e4c50 "Pasted text.txt"
-[10]: file://my_files/file_000000002d5471f5841554b6adbcc1ad "Pasted text.txt"
-[11]: file://my_files/file_000000003d1871fdb70da1524a140e24 "Pasted text.txt"
-[12]: file://my_files/file_00000000bae071f8bc4cadbfdd1a2feb "Screenshot 2026-05-06 at 4.18.56 PM.png"
-[13]: file://my_files/file_00000000b6b071f88e77e491456b7eb4 "Screenshot 2026-05-06 at 4.31.25 PM.png"
+Never commit virtual environment directories.

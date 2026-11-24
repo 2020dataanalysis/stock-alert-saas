@@ -1,8 +1,8 @@
 #!/bin/zsh
 # stock-alert-saas/scripts/start_streamer.sh
 
-APP_DIR="/Users/ultrasupersam/apps/stock-alert-platform/stock-alert-saas"
-PYTHON="/Users/ultrasupersam/apps/stock-alert-platform/.venv/bin/python"
+APP_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+PYTHON="$APP_DIR/.venv-backend/bin/python"
 
 cd "$APP_DIR" || exit 1
 

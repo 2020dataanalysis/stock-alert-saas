@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+		<key>PYTHONUNBUFFERED</key>
+		<string>1</string>
+	</dict>
+	<key>KeepAlive</key>
+	<true/>
+	<key>Label</key>
+	<string>com.stockalert.web</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>__HOME__/apps/stock-alert-platform/stock-alert-saas/.venv-frontend/bin/python</string>
+		<string>-m</string>
+		<string>uvicorn</string>
+		<string>app.web.dashboard:app</string>
+		<string>--host</string>
+		<string>0.0.0.0</string>
+		<string>--port</string>
+		<string>8003</string>
+		<string>--proxy-headers</string>
+		<string>--forwarded-allow-ips</string>
+		<string>127.0.0.1</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>__HOME__/Library/Logs/com.stockalert.web-error.log</string>
+	<key>StandardOutPath</key>
+	<string>__HOME__/Library/Logs/com.stockalert.web.log</string>
+	<key>ThrottleInterval</key>
+	<integer>30</integer>
+	<key>WorkingDirectory</key>
+	<string>__HOME__/apps/stock-alert-platform/stock-alert-saas</string>
+</dict>
+</plist>
